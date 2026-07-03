@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GeoROAD TOGO — Réseau Routier</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+:root{--gold:#C8A64B;--gold-dark:#A68A3A;--gold-light:#D4B96A;--gold-pale:rgba(200,166,75,.10);--cream:#F8F6F0;--cream-2:#F0EDE4;--cream-3:#E8E4D9;--cream-border:#DDD8CA;--text:#2C2A24;--text-2:#5C5850;--text-3:#8B8578;--text-4:#A9A49A;--white:#FFF;--shadow:rgba(44,42,36,.06);--shadow-md:rgba(44,42,36,.1);--shadow-lg:rgba(44,42,36,.16)}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:'Outfit',sans-serif;background:var(--cream);color:var(--text);overflow-x:hidden;line-height:1.6}
+a{text-decoration:none;color:inherit}
+ul{list-style:none}
+
+/* Preloader */
+#preloader{position:fixed;inset:0;z-index:10000;background:var(--cream);display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .6s,visibility .6s}
+#preloader.hidden{opacity:0;visibility:hidden}
+.spinner{width:40px;height:40px;border:3px solid var(--cream-3);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#preloader span{margin-top:16px;font-size:.8rem;letter-spacing:4px;color:var(--text-3);font-weight:400;text-transform:uppercase}
+
+/* Mobile menu overlay — removed, no burger */
+
+/* Navbar */
+#navbar{position:fixed;top:0;left:0;right:0;z-index:9999;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;transition:all .4s;gap:12px}
+#navbar.scrolled{background:rgba(248,246,240,.95);backdrop-filter:blur(18px);border-bottom:1px solid var(--cream-border);padding:10px 16px;box-shadow:0 1px 8px var(--shadow)}
+.nav-logo{display:flex;align-items:center;gap:8px;font-size:1.1rem;font-weight:700;letter-spacing:-.3px;color:var(--text);flex-shrink:0}
+.nav-logo .icon{width:32px;height:32px;border-radius:8px;object-fit:contain}
+.nav-links{display:flex;align-items:center;gap:8px;overflow-x:auto;scrollbar-width:none;-ms-overflow-style:none;flex-shrink:1}
+.nav-links::-webkit-scrollbar{display:none}
+.nav-links a{font-size:.8rem;font-weight:500;color:var(--text-3);transition:color .3s;white-space:nowrap;padding:6px 10px;border-radius:8px}
+.nav-links a:hover{color:var(--gold-dark);background:var(--gold-pale)}
+.nav-links .cta-nav{padding:7px 16px;border-radius:8px;background:linear-gradient(135deg,var(--gold),var(--gold-dark));color:var(--white);font-weight:600;font-size:.78rem;transition:transform .3s,box-shadow .3s;flex-shrink:0}
+.nav-links .cta-nav:hover{transform:translateY(-1px);box-shadow:0 4px 20px rgba(200,166,75,.35)}
+@media(min-width:769px){#navbar{padding:16px 40px}.nav-logo{font-size:1.2rem;gap:10px}.nav-logo .icon{width:36px;height:36px;border-radius:10px}.nav-links{gap:28px;overflow:visible}.nav-links a{font-size:.88rem;padding:0}.nav-links .cta-nav{padding:9px 24px;border-radius:10px;font-size:.85rem}}
+
+/* Hero */
+#hero{position:relative;min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;overflow:hidden;padding:120px 24px 80px}
+#particles-canvas{position:absolute;inset:0;z-index:0}
+.hero-grid{position:absolute;inset:0;z-index:0;background-image:linear-gradient(rgba(200,166,75,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(200,166,75,.04) 1px,transparent 1px);background-size:60px 60px;animation:gridMove 20s linear infinite}
+@keyframes gridMove{to{background-position:60px 60px}}
+.hero-glow{position:absolute;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(200,166,75,.1) 0%,transparent 70%);z-index:0;top:50%;left:50%;transform:translate(-50%,-50%)}
+.hero-content{position:relative;z-index:1;max-width:860px}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;padding:8px 20px;border-radius:50px;border:1px solid var(--cream-border);background:rgba(200,166,75,.06);font-size:.72rem;letter-spacing:2.5px;color:var(--text-3);margin-bottom:32px;font-weight:500;text-transform:uppercase}
+.hero-badge i{color:var(--gold);font-size:.65rem}
+.hero-flag{width:22px;height:auto;border-radius:3px;object-fit:contain;box-shadow:0 1px 3px rgba(0,0,0,.15)}
+.hero-title{font-family:'Cormorant Garamond',serif;font-size:4.2rem;font-weight:700;line-height:1.1;margin-bottom:12px;letter-spacing:-.5px;color:var(--text)}
+.hero-title .line1{display:block}
+.hero-title .line2{display:block;color:var(--gold-dark);font-style:italic;font-weight:600}
+.hero-subtitle{font-size:1.05rem;color:var(--text-2);max-width:680px;margin:0 auto 32px;font-weight:300;line-height:1.8;letter-spacing:.1px}
+#typewriter-container{min-height:28px;margin-bottom:40px}
+#typewriter{font-size:1rem;color:var(--text-3);font-weight:400;font-style:italic}
+#typewriter .cursor{color:var(--gold);animation:blink 1s step-end infinite}
+@keyframes blink{50%{opacity:0}}
+.hero-buttons{display:flex;gap:16px;justify-content:center;flex-wrap:wrap}
+.btn-primary{padding:14px 32px;border-radius:12px;background:linear-gradient(135deg,var(--gold),var(--gold-dark));color:var(--white);font-weight:600;font-size:.95rem;border:none;cursor:pointer;transition:transform .3s,box-shadow .3s;display:inline-flex;align-items:center;gap:8px;font-family:'Outfit',sans-serif}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(200,166,75,.35)}
+.btn-ghost{padding:14px 32px;border-radius:12px;background:transparent;color:var(--text-2);font-weight:500;font-size:.95rem;border:1px solid var(--cream-border);cursor:pointer;transition:all .3s;display:inline-flex;align-items:center;gap:8px;font-family:'Outfit',sans-serif}
+.btn-ghost:hover{border-color:var(--gold);color:var(--gold-dark);background:var(--gold-pale)}
+.scroll-indicator{position:absolute;bottom:30px;left:50%;transform:translateX(-50%);z-index:1;display:flex;flex-direction:column;align-items:center;gap:8px;color:var(--text-4);font-size:.75rem;animation:float 2s ease-in-out infinite}
+.scroll-indicator i{font-size:1.2rem;color:var(--gold)}
+@keyframes float{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-8px)}}
+@media(max-width:768px){.hero-title{font-size:2.4rem}.hero-subtitle{font-size:.88rem;padding:0 8px}.hero-buttons{flex-direction:column;align-items:center;width:100%}.hero-buttons .btn-primary,.hero-buttons .btn-ghost{width:100%;max-width:320px;justify-content:center}.hero-badge{font-size:.6rem;padding:6px 14px;letter-spacing:1.5px}.hero-flag{width:18px}#typewriter{font-size:.88rem}.scroll-indicator{display:none}}
+
+/* Stats bar */
+#stats{position:relative;z-index:2;background:var(--white);border-top:1px solid var(--cream-border);border-bottom:1px solid var(--cream-border);box-shadow:0 2px 16px var(--shadow)}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);max-width:1100px;margin:0 auto}
+.stat-item{padding:36px 20px;text-align:center;position:relative}
+.stat-item:not(:last-child)::after{content:'';position:absolute;right:0;top:20%;height:60%;width:1px;background:var(--cream-border)}
+.stat-icon{font-size:1.4rem;color:var(--gold);margin-bottom:10px}
+.stat-number{font-size:2.2rem;font-weight:800;color:var(--gold-dark);font-family:'Outfit',sans-serif}
+.stat-label{font-size:.85rem;color:var(--text-3);margin-top:4px;font-weight:400}
+@media(max-width:768px){.stats-grid{grid-template-columns:repeat(2,1fr)}.stat-item{padding:20px 12px}.stat-number{font-size:1.6rem}.stat-label{font-size:.78rem}.stat-icon{font-size:1.1rem}}
+
+/* Sections */
+.section{padding:100px 24px;position:relative}
+.section-tag{display:inline-flex;align-items:center;gap:8px;font-size:.72rem;letter-spacing:3px;color:var(--gold-dark);font-weight:600;text-transform:uppercase;margin-bottom:14px}
+.section-tag i{font-size:.6rem;color:var(--gold)}
+.section-title{font-family:'Cormorant Garamond',serif;font-size:2.6rem;font-weight:700;margin-bottom:16px;letter-spacing:-.3px;color:var(--text)}
+.section-subtitle{color:var(--text-3);max-width:600px;font-weight:300;font-size:1rem;line-height:1.7}
+@media(max-width:768px){.section{padding:50px 14px}.section-title{font-size:1.7rem}.section-subtitle{font-size:.9rem}.section-tag{font-size:.65rem;letter-spacing:2px}}
+
+/* How it works */
+#how-it-works{background:var(--cream)}
+.steps-container{max-width:900px;margin:50px auto 0;position:relative}
+.steps-container::before{content:'';position:absolute;left:24px;top:0;bottom:0;width:2px;border-left:2px dashed var(--cream-border)}
+.step-item{display:flex;gap:24px;align-items:flex-start;margin-bottom:40px;position:relative}
+.step-circle{flex-shrink:0;width:50px;height:50px;border-radius:50%;background:var(--white);border:2px solid var(--gold);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1rem;color:var(--gold-dark);z-index:1;transition:all .3s;box-shadow:0 2px 8px var(--shadow)}
+.step-item:hover .step-circle{background:var(--gold);color:var(--white);box-shadow:0 0 20px rgba(200,166,75,.3)}
+.step-content h3{font-size:1.15rem;font-weight:600;margin-bottom:6px;color:var(--text)}
+.step-content p{color:var(--text-3);font-size:.9rem;font-weight:300}
+@media(max-width:768px){.steps-container::before{left:24px}}
+
+/* Features */
+#features{background:var(--white)}
+.features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;max-width:1100px;margin:50px auto 0}
+.feature-card{padding:36px;border-radius:16px;background:var(--cream);border:1px solid var(--cream-border);transition:all .4s;box-shadow:0 1px 4px var(--shadow)}
+.feature-card:hover{transform:translateY(-4px);border-color:var(--gold);box-shadow:0 8px 40px var(--shadow-lg)}
+.feature-icon{width:56px;height:56px;border-radius:14px;background:var(--gold-pale);border:1px solid rgba(200,166,75,.15);display:flex;align-items:center;justify-content:center;font-size:1.3rem;color:var(--gold-dark);margin-bottom:20px}
+.feature-card h3{font-size:1.2rem;font-weight:700;margin-bottom:12px;color:var(--text)}
+.feature-card p{color:var(--text-3);font-size:.9rem;line-height:1.7;font-weight:300}
+.feature-card .feature-list{margin-top:14px}
+.feature-card .feature-list li{color:var(--text-3);font-size:.85rem;padding:4px 0;display:flex;align-items:center;gap:8px}
+.feature-card .feature-list li i{color:var(--gold);font-size:.7rem}
+@media(max-width:768px){.features-grid{grid-template-columns:1fr;gap:16px}.feature-card{padding:24px 18px}.feature-icon{width:44px;height:44px;font-size:1.1rem}}
+
+/* Regions */
+#regions{background:var(--cream)}
+.regions-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;max-width:1100px;margin:50px auto 0}
+.region-card{padding:32px;border-radius:16px;background:var(--white);border:1px solid var(--cream-border);position:relative;overflow:hidden;transition:all .4s;box-shadow:0 1px 4px var(--shadow)}
+.region-card:hover{transform:translateY(-4px);border-color:var(--gold);box-shadow:0 8px 40px var(--shadow-lg)}
+.region-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--gold-dark),var(--gold-light))}
+.region-name{font-size:1.4rem;font-weight:700;margin-bottom:4px;color:var(--text)}
+.region-coords{font-size:.75rem;color:var(--text-4);margin-bottom:20px}
+.region-stats{display:flex;flex-direction:column;gap:12px}
+.region-stat{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-radius:10px;background:var(--cream);border:1px solid var(--cream-2)}
+.region-stat .label{font-size:.8rem;color:var(--text-3)}
+.region-stat .value{font-size:.95rem;font-weight:600;color:var(--gold-dark)}
+.region-stat .value.blue{color:var(--text-2)}
+@media(max-width:768px){.regions-grid{grid-template-columns:1fr;gap:16px}.region-card{padding:24px 18px}.region-name{font-size:1.2rem}}
+
+/* About */
+#about{background:var(--white)}
+.about-grid{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center;max-width:1100px;margin:50px auto 0}
+.about-image{border-radius:20px;overflow:hidden;aspect-ratio:4/3;position:relative;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--cream-2),var(--gold-pale));border:1px solid var(--cream-border)}
+.about-image .tg-logo-img{width:70%;height:auto;object-fit:contain;opacity:.85}
+.about-image .overlay-icon{position:absolute;bottom:16px;right:16px;width:48px;height:48px;border-radius:12px;background:var(--gold-pale);border:1px solid rgba(200,166,75,.2);display:flex;align-items:center;justify-content:center;color:var(--gold-dark);font-size:1.2rem}
+.about-text h3{font-family:'Cormorant Garamond',serif;font-size:1.7rem;font-weight:700;margin-bottom:16px;letter-spacing:-.2px;color:var(--text)}
+.about-text p{color:var(--text-3);font-size:.95rem;line-height:1.8;margin-bottom:20px;font-weight:300}
+.about-text ul{margin-bottom:28px}
+.about-text ul li{padding:6px 0;color:var(--text-3);font-size:.9rem;display:flex;align-items:flex-start;gap:10px}
+.about-text ul li i{color:var(--gold);margin-top:4px;font-size:.75rem}
+@media(max-width:768px){.about-grid{grid-template-columns:1fr;gap:24px}.about-text h3{font-size:1.4rem}.about-text p{font-size:.88rem}.about-image{aspect-ratio:16/10}}
+
+/* Network */
+#network{background:var(--cream)}
+.network-types{display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:1100px;margin:40px auto 0}
+.type-card{padding:28px;border-radius:16px;background:var(--white);border:1px solid var(--cream-border);box-shadow:0 1px 4px var(--shadow)}
+.type-card h3{font-size:1.15rem;font-weight:700;margin-bottom:8px;color:var(--text)}
+.type-card .type-desc{color:var(--text-3);font-size:.85rem;margin-bottom:16px;font-weight:300}
+.type-badge{display:inline-flex;padding:4px 12px;border-radius:6px;font-size:.75rem;font-weight:600;margin:3px}
+.type-badge.rn{background:rgba(184,92,56,.1);color:#8B4513}
+.type-badge.rr{background:var(--gold-pale);color:var(--gold-dark)}
+.type-badge.rl{background:rgba(122,139,111,.1);color:#5E6E54}
+.type-badge.rc{background:rgba(59,130,246,.08);color:#3B82F6}
+.type-badge.cu{background:var(--cream-2);color:var(--text-3)}
+.coverage-section{max-width:1100px;margin:50px auto 0}
+.coverage-section h3{font-size:1.2rem;font-weight:600;margin-bottom:24px;color:var(--text)}
+.coverage-bars{display:flex;flex-direction:column;gap:20px}
+.coverage-item{display:flex;align-items:center;gap:16px}
+.coverage-label{width:100px;font-size:.85rem;font-weight:500;flex-shrink:0;color:var(--text-2)}
+.coverage-bar{flex:1;height:10px;border-radius:10px;background:var(--cream-2);overflow:hidden;border:1px solid var(--cream-border)}
+.coverage-fill{height:100%;border-radius:10px;background:linear-gradient(90deg,var(--gold-dark),var(--gold-light));width:0;transition:width 1.5s ease-out}
+.coverage-value{width:80px;text-align:right;font-size:.9rem;font-weight:600;color:var(--gold-dark)}
+@media(max-width:768px){.network-types{grid-template-columns:1fr;gap:16px}.type-card{padding:20px 16px}.coverage-item{flex-wrap:wrap;gap:8px}.coverage-label{width:100%}.coverage-value{width:auto;text-align:left}.coverage-section{margin-top:30px}}
+
+@media(max-width:768px){#cta-section{padding:60px 14px}#cta-section .section-title{font-size:1.7rem}}
+@media(max-width:480px){#cta-section .btn-primary{width:100%}}
+#cta-section{padding:100px 24px;text-align:center;position:relative;overflow:hidden;background:var(--white)}
+.cta-glow{position:absolute;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(200,166,75,.1) 0%,transparent 70%);top:50%;left:50%;transform:translate(-50%,-50%)}
+#cta-section .section-title{position:relative;z-index:1}
+#cta-section .section-subtitle{position:relative;z-index:1;margin:0 auto 32px}
+#cta-section .btn-primary{position:relative;z-index:1}
+
+/* Footer */
+#footer{background:var(--text);border-top:1px solid rgba(200,166,75,.15);padding:60px 24px 24px}
+.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:40px;max-width:1100px;margin:0 auto 40px}
+.footer-brand .nav-logo{margin-bottom:14px}
+.footer-brand .nav-logo span{color:var(--white)}
+.footer-brand p{color:rgba(255,255,255,.5);font-size:.85rem;line-height:1.7;font-weight:300;max-width:300px}
+.footer-col h4{font-size:.9rem;font-weight:600;margin-bottom:16px;color:var(--white)}
+.footer-col a{display:block;color:rgba(255,255,255,.45);font-size:.85rem;padding:5px 0;transition:color .3s}
+.footer-col a:hover{color:var(--gold-light)}
+.footer-bottom{border-top:1px solid rgba(255,255,255,.08);padding-top:20px;text-align:center;color:rgba(255,255,255,.35);font-size:.8rem;display:flex;align-items:center;justify-content:center;gap:8px}
+.footer-flag{width:20px;height:auto;border-radius:2px;object-fit:contain;opacity:.6}
+@media(max-width:768px){.footer-grid{grid-template-columns:1fr;gap:20px}#footer{padding:40px 16px 20px}.footer-brand p{max-width:100%}.footer-bottom{flex-wrap:wrap;justify-content:center;font-size:.72rem;gap:6px}}
+
+/* Scroll reveal */
+.reveal{opacity:0;transform:translateY(30px);transition:all .8s cubic-bezier(.16,1,.3,1)}
+.reveal.visible{opacity:1;transform:translateY(0)}
+</style>
+</head>
+<body>
+
+<!-- Preloader -->
+<div id="preloader">
+  <div class="spinner"></div>
+  <span>GeoROAD</span>
+</div>
+
+<!-- Navbar -->
+<nav id="navbar">
+  <a href="index.html" class="nav-logo">
+    <img src="resources/logo.png" alt="Logo" class="icon">
+    <span>GeoROAD TOGO</span>
+  </a>
+  <div class="nav-links">
+    <a href="#about">À propos</a>
+    <a href="#features">Fonctionnalités</a>
+    <a href="#network">Réseau</a>
+    <a href="#regions">Régions</a>
+    <a href="geoportail.html" class="cta-nav">Géoportail</a>
+  </div>
+</nav>
+
+<!-- Hero -->
+<section id="hero">
+  <canvas id="particles-canvas"></canvas>
+  <div class="hero-grid"></div>
+  <div class="hero-glow"></div>
+  <div class="hero-content">
+    <div class="hero-badge">
+      <img src="resources/drapeau-togo.jpg" alt="Drapeau du Togo" class="hero-flag">
+      RÉPUBLIQUE DU TOGO — INFRASTRUCTURE ROUTIÈRE
+    </div>
+    <h1 class="hero-title">
+      <span class="line1">GeoROAD</span>
+      <span class="line2">Réseau Routier National</span>
+    </h1>
+    <p class="hero-subtitle">Plateforme Géomatique Intégrée de Gestion, de Classification et de Délimitation des Emprises du Réseau Routier National</p>
+    <div id="typewriter-container">
+      <span id="typewriter"></span><span class="cursor">|</span>
+    </div>
+    <div class="hero-buttons">
+      <a href="geoportail.html" class="btn-primary">
+        Explorer le Géoportail <i class="fas fa-arrow-right"></i>
+      </a>
+      <a href="#about" class="btn-ghost">
+        En savoir plus <i class="fas fa-arrow-down"></i>
+      </a>
+    </div>
+  </div>
+  <div class="scroll-indicator">
+    <span>Défiler</span>
+    <i class="fas fa-chevron-down"></i>
+  </div>
+</section>
+
+<!-- Stats -->
+<section id="stats">
+  <div class="stats-grid">
+    <div class="stat-item reveal">
+      <div class="stat-icon"><i class="fas fa-road"></i></div>
+      <div class="stat-number" data-target="48">0</div>
+      <div class="stat-label">Routes</div>
+    </div>
+    <div class="stat-item reveal">
+      <div class="stat-icon"><i class="fas fa-map"></i></div>
+      <div class="stat-number" data-target="3">0</div>
+      <div class="stat-label">Régions</div>
+    </div>
+    <div class="stat-item reveal">
+      <div class="stat-icon"><i class="fas fa-map-marker-alt"></i></div>
+      <div class="stat-number" data-target="19">0</div>
+      <div class="stat-label">Préfectures</div>
+    </div>
+    <div class="stat-item reveal">
+      <div class="stat-icon"><i class="fas fa-ruler-horizontal"></i></div>
+      <div class="stat-number" data-target="1669" data-suffix=" km">0</div>
+      <div class="stat-label">Longueur totale</div>
+    </div>
+  </div>
+</section>
+
+<!-- How it works -->
+<section id="how-it-works" class="section">
+  <div style="text-align:center">
+    <div class="section-tag"><i class="fas fa-circle"></i> GUIDE</div>
+    <h2 class="section-title">Comment ça marche</h2>
+    <p class="section-subtitle" style="margin:0 auto">Explorez le réseau routier du Togo en quelques étapes simples</p>
+  </div>
+  <div class="steps-container">
+    <div class="step-item reveal">
+      <div class="step-circle">1</div>
+      <div class="step-content">
+        <h3>Explorez la carte</h3>
+        <p>Naviguez sur la carte interactive avec le fond satellite ou OpenStreetMap pour visualiser le réseau routier togolais.</p>
+      </div>
+    </div>
+    <div class="step-item reveal">
+      <div class="step-circle">2</div>
+      <div class="step-content">
+        <h3>Filtrez & Recherchez</h3>
+        <p>Utilisez les couches et la recherche pour filtrer les routes par catégorie, région ou préfecture.</p>
+      </div>
+    </div>
+    <div class="step-item reveal">
+      <div class="step-circle">3</div>
+      <div class="step-content">
+        <h3>Consultez les données</h3>
+        <p>Cliquez sur une route ou une région pour afficher toutes les données attributaires dans le panneau d'information.</p>
+      </div>
+    </div>
+    <div class="step-item reveal">
+      <div class="step-circle">4</div>
+      <div class="step-content">
+        <h3>Exportez les résultats</h3>
+        <p>Téléchargez les données en CSV ou exportez la carte en image PNG pour vos rapports et présentations.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Features -->
+<section id="features" class="section">
+  <div style="text-align:center">
+    <div class="section-tag"><i class="fas fa-circle"></i> FONCTIONNALITÉS</div>
+    <h2 class="section-title">Outils puissants à votre disposition</h2>
+    <p class="section-subtitle" style="margin:0 auto">Une plateforme complète pour l'analyse du réseau routier</p>
+  </div>
+  <div class="features-grid">
+    <div class="feature-card reveal">
+      <div class="feature-icon"><i class="fas fa-layer-group"></i></div>
+      <h3>Cartographie Interactive</h3>
+      <p>Visualisez les données géospatiales sur une carte interactive avec plusieurs fonds de carte. Chaque couche peut être contrôlée indépendamment en opacité et en visibilité.</p>
+      <ul class="feature-list">
+        <li><i class="fas fa-check"></i> 5 couches de données vectorielles</li>
+        <li><i class="fas fa-check"></i> 3 fonds de carte (Satellite, OSM, Hybrid)</li>
+        <li><i class="fas fa-check"></i> Contrôle d'opacité par couche</li>
+        <li><i class="fas fa-check"></i> Flèche du nord et échelle dynamique</li>
+      </ul>
+    </div>
+    <div class="feature-card reveal">
+      <div class="feature-icon"><i class="fas fa-database"></i></div>
+      <h3>Données Attributaires Complètes</h3>
+      <p>Accédez aux données détaillées de chaque entité géographique du réseau.</p>
+      <ul class="feature-list">
+        <li><i class="fas fa-check"></i> Population et urbanisation</li>
+        <li><i class="fas fa-check"></i> Indice d'Accès Rural (IAR)</li>
+        <li><i class="fas fa-check"></i> Longueurs et emprises des routes</li>
+      </ul>
+    </div>
+    <div class="feature-card reveal">
+      <div class="feature-icon"><i class="fas fa-download"></i></div>
+      <h3>Export Données & Cartes</h3>
+      <p>Exportez facilement les données et les cartes pour vos analyses hors ligne.</p>
+      <ul class="feature-list">
+        <li><i class="fas fa-check"></i> Export CSV par catégorie (routes, régions...)</li>
+        <li><i class="fas fa-check"></i> Export PNG avec sélection de zone</li>
+        <li><i class="fas fa-check"></i> Table attributaire avec tri et filtre</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- Regions -->
+<section id="regions" class="section">
+  <div style="text-align:center">
+    <div class="section-tag"><i class="fas fa-circle"></i> RÉGIONS</div>
+    <h2 class="section-title">Les 3 Régions Couvertes</h2>
+    <p class="section-subtitle" style="margin:0 auto">Centrale, Kara et Savanes — le nord du Togo</p>
+  </div>
+  <div class="regions-grid">
+    <div class="region-card reveal">
+      <div class="region-name">Centre</div>
+      <div class="region-coords"><i class="fas fa-map-pin"></i> 7.9°N — 9.2°N</div>
+      <div class="region-stats">
+        <div class="region-stat">
+          <span class="label"><i class="fas fa-users"></i> Population</span>
+          <span class="value">795 529 hab</span>
+        </div>
+        <div class="region-stat">
+          <span class="label"><i class="fas fa-road"></i> Réseau routier</span>
+          <span class="value blue">443 km</span>
+        </div>
+        <div class="region-stat">
+          <span class="label"><i class="fas fa-chart-line"></i> IAR</span>
+          <span class="value">14.05%</span>
+        </div>
+        <div class="region-stat">
+          <span class="label"><i class="fas fa-city"></i> Urbanisation</span>
+          <span class="value">25.5%</span>
+        </div>
+      </div>
+    </div>
+    <div class="region-card reveal">
+      <div class="region-name">Kara</div>
+      <div class="region-coords"><i class="fas fa-map-pin"></i> 9.0°N — 10.2°N</div>
+      <div class="region-stats">
+        <div class="region-stat">
+          <span class="label"><i class="fas fa-users"></i> Population</span>
+          <span class="value">985 512 hab</span>
+        </div>
+        <div class="region-stat">
+          <span class="label"><i class="fas fa-road"></i> Réseau routier</span>
+          <span class="value blue">705 km</span>
+        </div>
+        <div class="region-stat">
+          <span class="label"><i class="fas fa-chart-line"></i> IAR</span>
+          <span class="value">26.73%</span>
+        </div>
+        <div class="region-stat">
+          <span class="label"><i class="fas fa-city"></i> Urbanisation</span>
+          <span class="value">28.9%</span>
+        </div>
+      </div>
+    </div>
+    <div class="region-card reveal">
+      <div class="region-name">Savanes</div>
+      <div class="region-coords"><i class="fas fa-map-pin"></i> 10.0°N — 11.1°N</div>
+      <div class="region-stats">
+        <div class="region-stat">
+          <span class="label"><i class="fas fa-users"></i> Population</span>
+          <span class="value">1 143 520 hab</span>
+        </div>
+        <div class="region-stat">
+          <span class="label"><i class="fas fa-road"></i> Réseau routier</span>
+          <span class="value blue">520 km</span>
+        </div>
+        <div class="region-stat">
+          <span class="label"><i class="fas fa-chart-line"></i> IAR</span>
+          <span class="value">24.11%</span>
+        </div>
+        <div class="region-stat">
+          <span class="label"><i class="fas fa-city"></i> Urbanisation</span>
+          <span class="value">21.2%</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- About -->
+<section id="about" class="section">
+  <div class="section-tag"><i class="fas fa-circle"></i> À PROPOS</div>
+  <div class="about-grid">
+    <div class="about-image reveal">
+      <img src="resources/logo.png" alt="Logo GeoROAD TOGO" class="tg-logo-img">
+      <div class="overlay-icon"><i class="fas fa-road"></i></div>
+    </div>
+    <div class="about-text reveal">
+      <h3>Une plateforme géomatique au service de l'aménagement du territoire</h3>
+      <p>GeoROAD a été conçu pour cartographier et analyser le réseau routier des régions Centre, Kara et Savanes du Togo. Il offre des outils interactifs pour la visualisation, la recherche et l'export de données géospatiales, au service de l'aménagement du territoire et de l'amélioration de l'accès des populations rurales aux infrastructures routières.</p>
+      <ul>
+        <li><i class="fas fa-check"></i> Cartographie interactive avec fond satellite et OSM</li>
+        <li><i class="fas fa-check"></i> 48 tronçons routiers répertoriés sur 1 669 km</li>
+        <li><i class="fas fa-check"></i> Données de population rurale et d'urbanisation</li>
+        <li><i class="fas fa-check"></i> Indice d'Accès Rural (IAR) par région</li>
+        <li><i class="fas fa-check"></i> Zones tampon d'emprise routière (30 à 70 m)</li>
+        <li><i class="fas fa-check"></i> Export CSV par catégorie et image PNG</li>
+        <li><i class="fas fa-check"></i> Géolocalisation et lecture de coordonnées</li>
+      </ul>
+      <a href="geoportail.html" class="btn-primary" style="display:inline-flex">
+        Accéder au Géoportail <i class="fas fa-arrow-right"></i>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- Network -->
+<section id="network" class="section">
+  <div style="text-align:center">
+    <div class="section-tag"><i class="fas fa-circle"></i> RÉSEAU</div>
+    <h2 class="section-title">Le Réseau Routier</h2>
+    <p class="section-subtitle" style="margin:0 auto">48 routes réparties en 5 catégories couvrant les régions Centre, Kara et Savanes du Togo</p>
+  </div>
+  <div class="network-types reveal">
+    <div class="type-card">
+      <h3><i class="fas fa-road" style="color:var(--gold);margin-right:8px"></i>Routes Nationales & Régionales</h3>
+      <p class="type-desc">Les axes structurants du réseau, reliant les grandes villes et régions du nord Togo. Les routes nationales (RN) et régionales (RR) forment l'ossature principale de la desserte routière.</p>
+      <div>
+        <span class="type-badge rn">4 Route Nationale — 173 km</span>
+        <span class="type-badge rr">17 Route Régionale — 412 km</span>
+      </div>
+      <div style="margin-top:14px;font-size:1.3rem;font-weight:700;color:var(--gold-dark)">585 km <span style="font-size:.85rem;font-weight:400;color:var(--text-3)">au total</span></div>
+    </div>
+    <div class="type-card">
+      <h3><i class="fas fa-road" style="color:var(--text-3);margin-right:8px"></i>Routes Locales, Communales & Communautaires</h3>
+      <p class="type-desc">Le réseau secondaire et tertiaire, indispensable pour la desserte des populations rurales et l'accès aux services de base.</p>
+      <div>
+        <span class="type-badge rl">3 Route Locale — 4 km</span>
+        <span class="type-badge rc">2 Route Communale — 19 km</span>
+        <span class="type-badge cu">22 Route Communautaire — 1 062 km</span>
+      </div>
+      <div style="margin-top:14px;font-size:1.3rem;font-weight:700;color:var(--text-3)">1 085 km <span style="font-size:.85rem;font-weight:400;color:var(--text-4)">au total</span></div>
+    </div>
+  </div>
+  <div class="coverage-section reveal">
+    <h3><i class="fas fa-chart-bar" style="color:var(--gold);margin-right:8px"></i>Couverture par région</h3>
+    <div class="coverage-bars">
+      <div class="coverage-item">
+        <span class="coverage-label">Centre</span>
+        <div class="coverage-bar"><div class="coverage-fill" data-width="62.8"></div></div>
+        <span class="coverage-value">443 km</span>
+      </div>
+      <div class="coverage-item">
+        <span class="coverage-label">Kara</span>
+        <div class="coverage-bar"><div class="coverage-fill" data-width="100"></div></div>
+        <span class="coverage-value">705 km</span>
+      </div>
+      <div class="coverage-item">
+        <span class="coverage-label">Savanes</span>
+        <div class="coverage-bar"><div class="coverage-fill" data-width="73.8"></div></div>
+        <span class="coverage-value">520 km</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section id="cta-section">
+  <div class="cta-glow"></div>
+  <div class="section-tag" style="justify-content:center;display:inline-flex"><i class="fas fa-circle"></i> GÉOPORTAIL</div>
+  <h2 class="section-title" style="text-align:center">Prêt à Explorer le Réseau Routier du Togo ?</h2>
+  <p class="section-subtitle" style="text-align:center;margin:0 auto 32px">Accédez à la carte interactive et découvrez toutes les données du réseau routier des régions Centre, Kara et Savanes.</p>
+  <a href="geoportail.html" class="btn-primary" style="margin:0 auto;display:inline-flex">
+    Ouvrir le Géoportail <i class="fas fa-arrow-right"></i>
+  </a>
+</section>
+
+<!-- Footer -->
+<footer id="footer">
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="index.html" class="nav-logo">
+        <img src="resources/logo.png" alt="Logo" class="icon">
+        <span>GeoROAD TOGO</span>
+      </a>
+      <p>Plateforme Géomatique Intégrée de Gestion, de Classification et de Délimitation des Emprises du Réseau Routier National.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Liens rapides</h4>
+      <a href="geoportail.html">Géoportail</a>
+      <a href="#features">Fonctionnalités</a>
+      <a href="#about">À propos</a>
+    </div>
+    <div class="footer-col">
+      <h4>Données</h4>
+      <a href="#network">Réseau</a>
+      <a href="#regions">Régions</a>
+      <a href="#stats">Statistiques</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <img src="resources/drapeau-togo.jpg" alt="" class="footer-flag"> © 2025 GeoROAD TOGO — Réseau Routier. Tous droits réservés.
+  </div>
+</footer>
+
+<script>
+/* Preloader */
+window.addEventListener('load',function(){setTimeout(function(){document.getElementById('preloader').classList.add('hidden')},600)});
+
+/* Particles - gold theme */
+(function(){var canvas=document.getElementById('particles-canvas');var ctx=canvas.getContext('2d');var particles=[];function resize(){canvas.width=window.innerWidth;canvas.height=window.innerHeight}resize();window.addEventListener('resize',resize);for(var i=0;i<35;i++){particles.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*2+.5,dx:(Math.random()-.5)*.3,dy:(Math.random()-.5)*.3,o:Math.random()*.25+.05})}function draw(){ctx.clearRect(0,0,canvas.width,canvas.height);for(var i=0;i<particles.length;i++){var p=particles[i];ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle='rgba(200,166,75,'+p.o+')';ctx.fill();p.x+=p.dx;p.y+=p.dy;if(p.x<0||p.x>canvas.width)p.dx*=-1;if(p.y<0||p.y>canvas.height)p.dy*=-1}for(var i=0;i<particles.length;i++){for(var j=i+1;j<particles.length;j++){var dx=particles[i].x-particles[j].x;var dy=particles[i].y-particles[j].y;var dist=Math.sqrt(dx*dx+dy*dy);if(dist<150){ctx.beginPath();ctx.moveTo(particles[i].x,particles[i].y);ctx.lineTo(particles[j].x,particles[j].y);ctx.strokeStyle='rgba(200,166,75,'+(1-dist/150)*.04+')';ctx.stroke()}}}requestAnimationFrame(draw)}draw()})();
+
+/* Typewriter */
+(function(){var phrases=["Gestion intelligente du réseau routier national","Classification automatique des routes","Délimitation précise des emprises routières","Visualisation cartographique interactive","Analyse spatiale pour l'aide à la décision","Centralisation des données géospatiales","Plateforme dédiée aux infrastructures routières","Géomatique au service du développement du territoire"];var el=document.getElementById('typewriter');var pi=0,ci=0,deleting=false;function tick(){var current=phrases[pi];if(deleting){el.textContent=current.substring(0,ci--);if(ci<0){deleting=false;pi=(pi+1)%phrases.length;setTimeout(tick,500);return}}else{el.textContent=current.substring(0,ci++);if(ci>current.length){deleting=true;setTimeout(tick,2000);return}}setTimeout(tick,deleting?30:60)}tick()})();
+
+/* Navbar scroll */
+window.addEventListener('scroll',function(){var nav=document.getElementById('navbar');if(window.scrollY>50)nav.classList.add('scrolled');else nav.classList.remove('scrolled')});
+
+/* Scroll reveal */
+var observer=new IntersectionObserver(function(entries){entries.forEach(function(e){if(e.isIntersecting)e.target.classList.add('visible')})},{threshold:.15,rootMargin:'0px 0px -40px 0px'});
+document.querySelectorAll('.reveal').forEach(function(el){observer.observe(el)});
+
+/* Counter animation */
+var counterObs=new IntersectionObserver(function(entries){entries.forEach(function(e){if(e.isIntersecting){var el=e.target;var target=parseInt(el.dataset.target);var suffix=el.dataset.suffix||'';var start=0;var duration=2000;var startTime=null;function animate(ts){if(!startTime)startTime=ts;var progress=Math.min((ts-startTime)/duration,1);var eased=1-Math.pow(1-progress,3);var current=Math.floor(eased*target);el.textContent=current.toLocaleString('fr-FR')+suffix;if(progress<1)requestAnimationFrame(animate);else el.textContent=target.toLocaleString('fr-FR')+suffix}requestAnimationFrame(animate);counterObs.unobserve(el)}})},{threshold:.5});
+document.querySelectorAll('.stat-number').forEach(function(el){counterObs.observe(el)});
+
+/* Coverage bars */
+var barObs=new IntersectionObserver(function(entries){entries.forEach(function(e){if(e.isIntersecting){var fills=e.target.querySelectorAll('.coverage-fill');fills.forEach(function(f,i){setTimeout(function(){f.style.width=f.dataset.width+'%'},i*200)});barObs.unobserve(e.target)}})},{threshold:.3});
+document.querySelectorAll('.coverage-bars').forEach(function(el){barObs.observe(el)});
+</script>
+</body>
+</html>

@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Géoportail — GeoROAD TOGO</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="geoportail.css">
+</head>
+<body>
+
+<!-- Navbar -->
+<nav id="gp-navbar">
+  <div class="gp-nav-left">
+    <a href="index.html" class="gp-logo">
+      <img src="resources/logo.png" alt="Logo" class="icon">
+      <span>GeoROAD TOGO</span>
+    </a>
+  </div>
+  <div class="gp-nav-links">
+    <a href="index.html">Accueil</a>
+    <a href="index.html#features">Fonctionnalités</a>
+    <a href="index.html#network">Réseau</a>
+    <a href="index.html#regions">Régions</a>
+    <a href="#" class="active">Géoportail</a>
+  </div>
+</nav>
+
+<!-- Map Container -->
+<div id="map-container">
+  <!-- Sidebar toggle (shown when sidebar is collapsed) -->
+  <button id="sidebar-toggle-btn" onclick="toggleSidebar()"><i class="fas fa-layer-group"></i></button>
+
+  <!-- Left Sidebar -->
+  <div id="sidebar">
+    <div class="sidebar-header">
+      <h3><i class="fas fa-layer-group"></i> Couches</h3>
+      <button class="sidebar-close" onclick="toggleSidebar()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="sidebar-body">
+      <!-- Search -->
+      <div class="sidebar-search">
+        <i class="fas fa-search"></i>
+        <input type="text" id="global-search" placeholder="Rechercher une route, préfecture..." autocomplete="off">
+        <div id="search-results"></div>
+      </div>
+
+      <!-- Base layers (Fonds) -->
+      <div class="layer-group">
+        <div class="layer-group-title"><i class="fas fa-globe"></i> Fonds de carte</div>
+        <div class="layer-toggle">
+          <label class="lt-switch"><input type="checkbox" checked data-layer="satellite"><span class="lt-slider"></span></label>
+          <span class="lt-name">Google Satellite</span>
+        </div>
+        <div class="layer-toggle">
+          <label class="lt-switch"><input type="checkbox" data-layer="osm"><span class="lt-slider"></span></label>
+          <span class="lt-name">OpenStreetMap</span>
+        </div>
+        <div class="layer-toggle">
+          <label class="lt-switch"><input type="checkbox" data-layer="hybrid"><span class="lt-slider"></span></label>
+          <span class="lt-name">Google Hybrid</span>
+        </div>
+      </div>
+
+      <!-- Line layers -->
+      <div class="layer-group">
+        <div class="layer-group-title"><i class="fas fa-grip-lines"></i> Lignes</div>
+        <div class="layer-toggle">
+          <label class="lt-switch"><input type="checkbox" checked data-layer="Rseauroutier_6"><span class="lt-slider"></span></label>
+          <span class="lt-name">Réseau routier</span>
+          <input type="range" class="lt-opacity" min="0" max="100" value="100" data-opacity-layer="Rseauroutier_6">
+        </div>
+        <!-- Road sub-categories -->
+        <div class="sub-layer-item">
+          <div class="sub-layer-line" style="background:#ff6011"></div>
+          <span class="sub-layer-name">Route Nationale (RN)</span>
+        </div>
+        <div class="sub-layer-item">
+          <div class="sub-layer-line" style="background:#838383"></div>
+          <span class="sub-layer-name">Route Régionale (RR)</span>
+        </div>
+        <div class="sub-layer-item">
+          <div class="sub-layer-line" style="background:#da00d2"></div>
+          <span class="sub-layer-name">Route Locale (RL)</span>
+        </div>
+        <div class="sub-layer-item">
+          <div class="sub-layer-line" style="background:#c60603"></div>
+          <span class="sub-layer-name">Route Communale (RC)</span>
+        </div>
+        <div class="sub-layer-item">
+          <div class="sub-layer-line" style="background:#000"></div>
+          <span class="sub-layer-name">Route Communautaire (CU)</span>
+        </div>
+      </div>
+
+      <!-- Emprise layers -->
+      <div class="layer-group">
+        <div class="layer-group-title"><i class="fas fa-vector-square"></i> Emprise</div>
+        <div class="layer-toggle">
+          <label class="lt-switch"><input type="checkbox" checked data-layer="Emprise_5"><span class="lt-slider"></span></label>
+          <span class="lt-name">Emprise (zones tampon)</span>
+          <input type="range" class="lt-opacity" min="0" max="100" value="60" data-opacity-layer="Emprise_5">
+        </div>
+      </div>
+
+      <!-- Administrative layers -->
+      <div class="layer-group">
+        <div class="layer-group-title"><i class="fas fa-draw-polygon"></i> Administratif</div>
+        <div class="layer-toggle">
+          <label class="lt-switch"><input type="checkbox" checked data-layer="Canton_4"><span class="lt-slider"></span></label>
+          <span class="lt-name">Canton</span>
+          <input type="range" class="lt-opacity" min="0" max="100" value="60" data-opacity-layer="Canton_4">
+        </div>
+        <div class="layer-toggle">
+          <label class="lt-switch"><input type="checkbox" checked data-layer="Prfecture_3"><span class="lt-slider"></span></label>
+          <span class="lt-name">Préfecture</span>
+          <input type="range" class="lt-opacity" min="0" max="100" value="60" data-opacity-layer="Prfecture_3">
+        </div>
+        <div class="layer-toggle">
+          <label class="lt-switch"><input type="checkbox" checked data-layer="Rgion_2"><span class="lt-slider"></span></label>
+          <span class="lt-name">Région</span>
+          <input type="range" class="lt-opacity" min="0" max="100" value="60" data-opacity-layer="Rgion_2">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Map -->
+  <div id="map"></div>
+
+  <!-- Popup (required by qgis2web) -->
+  <div id="popup" class="ol-popup"></div>
+
+  <!-- Map Toolbar -->
+  <div id="map-toolbar">
+    <button class="toolbar-btn" title="Zoom avant" onclick="map.getView().setZoom(map.getView().getZoom()+1)"><i class="fas fa-plus"></i></button>
+    <button class="toolbar-btn" title="Zoom arrière" onclick="map.getView().setZoom(map.getView().getZoom()-1)"><i class="fas fa-minus"></i></button>
+    <button class="toolbar-btn" title="Réinitialiser la vue" onclick="map.getView().fit(lyr_Rseauroutier_6.getSource().getExtent(),{size:map.getSize(),maxZoom:8})"><i class="fas fa-expand"></i></button>
+    <div class="toolbar-divider"></div>
+    <button class="toolbar-btn" id="btn-geolocate" title="Ma position" onclick="geolocateUser()"><i class="fas fa-location-arrow"></i></button>
+    <div class="toolbar-divider"></div>
+    <button class="toolbar-btn" title="Table attributaire" onclick="openModal('attr-table-modal')"><i class="fas fa-table"></i></button>
+    <button class="toolbar-btn" title="Statistiques" onclick="openModal('stats-modal')"><i class="fas fa-chart-bar"></i></button>
+    <button class="toolbar-btn" title="Exporter" onclick="openModal('export-modal')"><i class="fas fa-download"></i></button>
+  </div>
+
+  <!-- North Arrow -->
+  <div id="north-arrow" title="Nord">
+    <svg viewBox="0 0 24 24" fill="none">
+      <path d="M12 2L8 14h3v8h2v-8h3L12 2z" fill="#E8E4D9" stroke="#bbb" stroke-width="0.5"/>
+    </svg>
+  </div>
+
+  <!-- Scale Bar -->
+  <div id="scale-bar-container">
+    <div id="scale-line" style="width:100px"></div>
+    <div id="scale-text">—</div>
+  </div>
+
+  <!-- Bottom bar -->
+  <div id="bottom-bar">
+    <div id="coord-bar">
+      <div class="coord-left">
+        <i class="fas fa-crosshairs"></i>
+        <span id="coord-display">Lat: — , Lon: —</span>
+        <span class="user-pos-info" id="user-pos-display"></span>
+      </div>
+      <div class="coord-center">
+        <div class="coord-marquee-wrap">
+          <div class="coord-marquee" id="coord-marquee">Plateforme Géomatique Intégrée de Gestion, de Classification et de Délimitation des Emprises du Réseau Routier National</div>
+        </div>
+      </div>
+      <div class="coord-vals" id="zoom-display">Zoom: —</div>
+    </div>
+  </div>
+
+  <!-- Right Info Panel -->
+  <div id="info-panel">
+    <div class="info-panel-header">
+      <h3><i class="fas fa-info-circle"></i> Informations</h3>
+      <button class="info-panel-close" onclick="closeInfoPanel()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="info-panel-body" id="info-panel-body">
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Attribute Table -->
+<div class="modal-overlay" id="attr-table-modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2><i class="fas fa-table"></i> Table Attributaire</h2>
+      <button class="modal-close" onclick="closeModal('attr-table-modal')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="attr-table-controls">
+        <select id="attr-layer-select">
+          <option value="Rseauroutier_6">Réseau routier (48)</option>
+          <option value="Rgion_2">Région (3)</option>
+          <option value="Prfecture_3">Préfecture (19)</option>
+          <option value="Canton_4">Canton (202)</option>
+          <option value="Emprise_5">Emprise (48)</option>
+        </select>
+        <input type="text" id="attr-search-input" placeholder="Filtrer les données...">
+        <button class="btn-sm primary" onclick="exportAttrCSV()"><i class="fas fa-file-csv"></i> Export CSV</button>
+      </div>
+      <div class="attr-table-wrap">
+        <table class="attr-table" id="attr-table">
+          <thead id="attr-thead"></thead>
+          <tbody id="attr-tbody"></tbody>
+        </table>
+      </div>
+      <div class="attr-table-footer" id="attr-table-footer"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Statistics -->
+<div class="modal-overlay" id="stats-modal">
+  <div class="modal-content" style="max-width:1000px">
+    <div class="modal-header">
+      <h2><i class="fas fa-chart-bar"></i> Statistiques du Réseau Routier</h2>
+      <button class="modal-close" onclick="closeModal('stats-modal')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body" id="stats-body">
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Export -->
+<div class="modal-overlay" id="export-modal">
+  <div class="modal-content" style="max-width:760px">
+    <div class="modal-header">
+      <h2><i class="fas fa-download"></i> Exporter les données</h2>
+      <button class="modal-close" onclick="closeModal('export-modal')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="export-grid">
+        <div class="export-card" onclick="exportLayerCSV('Rseauroutier_6')">
+          <i class="fas fa-road"></i>
+          <h4>Réseau routier</h4>
+          <p>48 tronçons — CSV</p>
+        </div>
+        <div class="export-card" onclick="exportLayerCSV('Rgion_2')">
+          <i class="fas fa-map"></i>
+          <h4>Région</h4>
+          <p>3 régions — CSV</p>
+        </div>
+        <div class="export-card" onclick="exportLayerCSV('Prfecture_3')">
+          <i class="fas fa-map-marker-alt"></i>
+          <h4>Préfecture</h4>
+          <p>19 préfectures — CSV</p>
+        </div>
+        <div class="export-card" onclick="exportLayerCSV('Canton_4')">
+          <i class="fas fa-location-dot"></i>
+          <h4>Canton</h4>
+          <p>202 cantons — CSV</p>
+        </div>
+        <div class="export-card" onclick="exportLayerCSV('Emprise_5')">
+          <i class="fas fa-vector-square"></i>
+          <h4>Emprise</h4>
+          <p>48 zones tampon — CSV</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ===== SCRIPTS (critical order) ===== -->
+<script src="resources/qgis2web_expressions.js"></script>
+<script src="resources/proj4.js"></script>
+<script>proj4.defs('EPSG:4326','+proj=longlat +datum=WGS84 +no_defs');</script>
+<script src="resources/functions.js"></script>
+<script src="resources/ol.js"></script>
+<script src="resources/ol-layerswitcher.js"></script>
+<script src="resources/photon-geocoder-autocomplete.min.js"></script>
+<script src="resources/olms.js"></script>
+
+<!-- Layer data -->
+<script src="layers/Rgion_2.js"></script>
+<script src="layers/Prfecture_3.js"></script>
+<script src="layers/Canton_4.js"></script>
+<script src="layers/Emprise_5.js"></script>
+<script src="layers/Rseauroutier_6.js"></script>
+
+<!-- Styles -->
+<script src="styles/Rgion_2_style.js"></script>
+<script src="styles/Prfecture_3_style.js"></script>
+<script src="styles/Canton_4_style.js"></script>
+<script src="styles/Emprise_5_style.js"></script>
+<script src="styles/Rseauroutier_6_style.js"></script>
+
+<!-- Layers init -->
+<script src="layers/layers.js"></script>
+
+<!-- qgis2web core -->
+<script src="resources/Autolinker.min.js"></script>
+<script src="resources/qgis2web.js"></script>
+
+<!-- Our dashboard -->
+<script src="geoportail.js"></script>
+
+</body>
+</html>
