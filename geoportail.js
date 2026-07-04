@@ -684,9 +684,9 @@
     summaryHtml += '</div>';
 
     // Bar chart by category (full names)
-    var catOrder = ['RN', 'RR', 'RL', 'RC', 'CU'];
+    var catOrder = ['CU', 'RN', 'RR', 'RC', 'RL'];
     var catCssClass = { 'RN': 'c-rn', 'RR': 'c-rr', 'RL': 'c-rl', 'RC': 'c-rc', 'CU': 'c-cu' };
-    var donutColors = ['#8B4513', '#C8A64B', '#5E6E54', '#3b82f6', '#8B8578'];
+    var donutColors = ['#8B8578', '#8B4513', '#C8A64B', '#3b82f6', '#5E6E54'];
     var barsHtml1 = '<div class="chart-box"><h4><i class="fas fa-road" style="color:var(--gold)"></i>Répartition par type de route</h4><p class="chart-subtitle">Longueur en kilomètres par catégorie de route</p><div class="bar-chart">';
     catOrder.forEach(function(c) {
       var km = byCategory[c] || 0;
