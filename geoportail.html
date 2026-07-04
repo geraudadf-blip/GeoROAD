@@ -12,6 +12,15 @@
 </head>
 <body>
 
+<!-- Preloader -->
+<div id="gp-preloader">
+  <div class="gp-spinner"></div>
+  <span>Chargement de la carte...</span>
+</div>
+
+<!-- Toast container -->
+<div id="toast-container"></div>
+
 <!-- Navbar -->
 <nav id="gp-navbar">
   <div class="gp-nav-left">
@@ -134,17 +143,23 @@
   <!-- Popup (required by qgis2web) -->
   <div id="popup" class="ol-popup"></div>
 
-  <!-- Map Toolbar -->
+  <!-- Map Toolbar (expandable FAB) -->
   <div id="map-toolbar">
-    <button class="toolbar-btn" title="Zoom avant" onclick="map.getView().setZoom(map.getView().getZoom()+1)"><i class="fas fa-plus"></i></button>
-    <button class="toolbar-btn" title="Zoom arrière" onclick="map.getView().setZoom(map.getView().getZoom()-1)"><i class="fas fa-minus"></i></button>
-    <button class="toolbar-btn" title="Réinitialiser la vue" onclick="map.getView().fit(lyr_Rseauroutier_6.getSource().getExtent(),{size:map.getSize(),maxZoom:8})"><i class="fas fa-expand"></i></button>
-    <div class="toolbar-divider"></div>
-    <button class="toolbar-btn" id="btn-geolocate" title="Ma position" onclick="geolocateUser()"><i class="fas fa-location-arrow"></i></button>
-    <div class="toolbar-divider"></div>
-    <button class="toolbar-btn" title="Table attributaire" onclick="openModal('attr-table-modal')"><i class="fas fa-table"></i></button>
-    <button class="toolbar-btn" title="Statistiques" onclick="openModal('stats-modal')"><i class="fas fa-chart-bar"></i></button>
-    <button class="toolbar-btn" title="Exporter" onclick="openModal('export-modal')"><i class="fas fa-download"></i></button>
+    <button class="toolbar-btn" id="toolbar-fab" title="Outils" onclick="toggleToolbarMenu()"><i class="fas fa-ellipsis-vertical"></i></button>
+    <div id="toolbar-menu" class="toolbar-menu">
+      <button class="toolbar-btn toolbar-menu-btn" title="Zoom avant" onclick="map.getView().setZoom(map.getView().getZoom()+1)"><i class="fas fa-plus"></i></button>
+      <button class="toolbar-btn toolbar-menu-btn" title="Zoom arrière" onclick="map.getView().setZoom(map.getView().getZoom()-1)"><i class="fas fa-minus"></i></button>
+      <button class="toolbar-btn toolbar-menu-btn" title="Réinitialiser la vue" onclick="map.getView().fit(lyr_Rseauroutier_6.getSource().getExtent(),{size:map.getSize(),maxZoom:8})"><i class="fas fa-expand"></i></button>
+      <div class="toolbar-divider"></div>
+      <button class="toolbar-btn toolbar-menu-btn" id="btn-geolocate" title="Ma position" onclick="geolocateUser()"><i class="fas fa-location-arrow"></i></button>
+      <div class="toolbar-divider"></div>
+      <button class="toolbar-btn toolbar-menu-btn" title="Table attributaire" onclick="openModal('attr-table-modal')"><i class="fas fa-table"></i></button>
+      <button class="toolbar-btn toolbar-menu-btn" title="Statistiques" onclick="openModal('stats-modal')"><i class="fas fa-chart-bar"></i></button>
+      <button class="toolbar-btn toolbar-menu-btn" title="Exporter" onclick="openModal('export-modal')"><i class="fas fa-download"></i></button>
+      <div class="toolbar-divider"></div>
+      <button class="toolbar-btn toolbar-menu-btn" id="btn-fullscreen" title="Plein écran" onclick="toggleFullscreen()"><i class="fas fa-maximize"></i></button>
+      <button class="toolbar-btn toolbar-menu-btn" title="Capturer la carte" onclick="exportMapPNG()"><i class="fas fa-camera"></i></button>
+    </div>
   </div>
 
   <!-- North Arrow -->
@@ -165,7 +180,7 @@
     <div id="coord-bar">
       <div class="coord-left">
         <i class="fas fa-crosshairs"></i>
-        <span id="coord-display">Lat: — , Lon: —</span>
+        <span id="coord-display" class="coord-clickable" title="Cliquer pour copier">Lat: — , Lon: —</span>
         <span class="user-pos-info" id="user-pos-display"></span>
       </div>
       <div class="coord-center">
@@ -239,6 +254,11 @@
     </div>
     <div class="modal-body">
       <div class="export-grid">
+        <div class="export-card" onclick="exportMapPNG()">
+          <i class="fas fa-camera"></i>
+          <h4>Capturer la carte</h4>
+          <p>Image PNG de la vue actuelle</p>
+        </div>
         <div class="export-card" onclick="exportLayerCSV('Rseauroutier_6')">
           <i class="fas fa-road"></i>
           <h4>Réseau routier</h4>

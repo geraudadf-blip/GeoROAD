@@ -6,6 +6,28 @@
   if (typeof doHighlight !== 'undefined') doHighlight = false;
   if (typeof doHover !== 'undefined') doHover = false;
 
+  // 1b. Toast notification system
+  function showToast(msg, icon) {
+    var container = document.getElementById('toast-container');
+    if (!container) return;
+    var toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.innerHTML = '<i class="fas fa-' + (icon || 'check-circle') + '"></i> ' + msg;
+    container.appendChild(toast);
+    setTimeout(function() { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 2800);
+  }
+
+  // 1c. Preloader dismissal
+  function dismissPreloader() {
+    var p = document.getElementById('gp-preloader');
+    if (p) {
+      p.classList.add('hidden');
+      setTimeout(function() { if (p.parentNode) p.parentNode.removeChild(p); }, 600);
+    }
+  }
+  map.once('rendercomplete', function() { setTimeout(dismissPreloader, 300); });
+  setTimeout(dismissPreloader, 4000); // Fallback
+
   // 2. Class labels mapping
   var classLabels = {
     'RN': 'Route Nationale',
@@ -113,6 +135,29 @@
       var key = this.dataset.opacityLayer;
       if (layerMap[key]) layerMap[key].setOpacity(this.value / 100);
     });
+  });
+
+  // 5b. Feature count badges in sidebar
+  var layerCounts = {
+    'Rseauroutier_6': json_Rseauroutier_6 ? json_Rseauroutier_6.features.length : 0,
+    'Emprise_5': json_Emprise_5 ? json_Emprise_5.features.length : 0,
+    'Canton_4': json_Canton_4 ? json_Canton_4.features.length : 0,
+    'Prfecture_3': json_Prfecture_3 ? json_Prfecture_3.features.length : 0,
+    'Rgion_2': json_Rgion_2 ? json_Rgion_2.features.length : 0
+  };
+  document.querySelectorAll('.layer-toggle').forEach(function(toggle) {
+    var cb = toggle.querySelector('input[data-layer]');
+    if (!cb) return;
+    var key = cb.dataset.layer;
+    var count = layerCounts[key];
+    if (count === undefined) return;
+    var nameSpan = toggle.querySelector('.lt-name');
+    if (nameSpan && !toggle.querySelector('.lt-count')) {
+      var badge = document.createElement('span');
+      badge.className = 'lt-count';
+      badge.textContent = count;
+      toggle.appendChild(badge);
+    }
   });
 
   // 6. Sidebar toggle
@@ -258,7 +303,69 @@
   });
 
   searchInput.addEventListener('blur', function() {
-    setTimeout(function() { searchResults.classList.remove('active'); }, 200);
+    setTimeout(function() {
+      searchResults.classList.remove('active');
+      clearKbFocus();
+    }, 200);
+  });
+
+  // 9b. Keyboard navigation in search results
+  var kbFocusIdx = -1;
+  var currentSearchResults = [];
+
+  function clearKbFocus() {
+    kbFocusIdx = -1;
+    searchResults.querySelectorAll('.kb-focus').forEach(function(el) { el.classList.remove('kb-focus'); });
+  }
+
+  searchInput.addEventListener('keydown', function(e) {
+    var items = searchResults.querySelectorAll('.search-result-item[data-idx]');
+    if (!items.length || !searchResults.classList.contains('active')) return;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      kbFocusIdx = Math.min(kbFocusIdx + 1, items.length - 1);
+      clearKbFocus();
+      items[kbFocusIdx].classList.add('kb-focus');
+      items[kbFocusIdx].scrollIntoView({ block: 'nearest' });
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      kbFocusIdx = Math.max(kbFocusIdx - 1, 0);
+      clearKbFocus();
+      items[kbFocusIdx].classList.add('kb-focus');
+      items[kbFocusIdx].scrollIntoView({ block: 'nearest' });
+    } else if (e.key === 'Enter' && kbFocusIdx >= 0) {
+      e.preventDefault();
+      items[kbFocusIdx].click();
+    } else if (e.key === 'Escape') {
+      searchResults.classList.remove('active');
+      clearKbFocus();
+      searchInput.blur();
+    }
+  });
+
+  // Store current results reference for keyboard nav (patch into the search callback)
+  var _origSearchInputHandler = searchInput.oninput;
+  // We patch the results rendering to store reference
+  var _origBuildResults = null; // We'll hook via the existing setTimeout callback
+
+  // 7b. Click-to-copy coordinates
+  document.getElementById('coord-display').addEventListener('click', function() {
+    var text = this.textContent.replace('Lat: ', '').replace('Lon: ', '').trim();
+    if (text && text !== '— , —') {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function() {
+          showToast('Coordonnées copiées : ' + text, 'copy');
+        });
+      } else {
+        // Fallback
+        var ta = document.createElement('textarea');
+        ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+        document.body.appendChild(ta); ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        showToast('Coordonnées copiées : ' + text, 'copy');
+      }
+    }
   });
 
   // 10. Zoom to feature - FIXED: uses the source features directly
@@ -362,6 +469,12 @@
 
   // 12. Modals
   window.openModal = function(id) {
+    // Close toolbar menu when opening a modal
+    var toolbarMenu = document.getElementById('toolbar-menu');
+    var toolbarFab = document.getElementById('toolbar-fab');
+    if (toolbarMenu) toolbarMenu.classList.remove('open');
+    if (toolbarFab) toolbarFab.classList.remove('active');
+    // Close export modal if opening from there
     document.getElementById(id).classList.add('open');
     if (id === 'attr-table-modal') buildAttrTable();
     if (id === 'stats-modal') buildStats();
@@ -518,6 +631,7 @@
     link.href = URL.createObjectURL(blob);
     link.download = layerKey + '.csv';
     link.click();
+    showToast('Export CSV : ' + (layerNames[layerKey] || layerKey), 'file-csv');
   };
 
   window.exportAttrCSV = function() {
@@ -745,21 +859,88 @@
 
   // 17b. Duplicate coord marquee (handled above in 6.5)
 
-  // 18. Close info panel on Escape
+  // 18. Toolbar expandable menu
+  var toolbarMenu = document.getElementById('toolbar-menu');
+  var toolbarFab = document.getElementById('toolbar-fab');
+  window.toggleToolbarMenu = function() {
+    toolbarMenu.classList.toggle('open');
+    toolbarFab.classList.toggle('active');
+  };
+  // Close toolbar menu on click outside
+  document.addEventListener('click', function(e) {
+    if (!document.getElementById('map-toolbar').contains(e.target)) {
+      toolbarMenu.classList.remove('open');
+      toolbarFab.classList.remove('active');
+    }
+  });
+
+  // 18b. Fullscreen toggle
+  window.toggleFullscreen = function() {
+    var el = document.getElementById('map-container');
+    if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+      if (el.requestFullscreen) el.requestFullscreen();
+      else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+      showToast('Mode plein écran activé', 'expand');
+    } else {
+      if (document.exitFullscreen) document.exitFullscreen();
+      else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+    }
+    // Close toolbar menu
+    toolbarMenu.classList.remove('open');
+    toolbarFab.classList.remove('active');
+  };
+  // Update fullscreen icon on change
+  function onFsChange() {
+    var btn = document.getElementById('btn-fullscreen');
+    if (!btn) return;
+    var isFs = !!(document.fullscreenElement || document.webkitFullscreenElement);
+    btn.innerHTML = isFs ? '<i class="fas fa-compress"></i>' : '<i class="fas fa-maximize"></i>';
+    btn.title = isFs ? 'Quitter le plein écran' : 'Plein écran';
+  }
+  document.addEventListener('fullscreenchange', onFsChange);
+  document.addEventListener('webkitfullscreenchange', onFsChange);
+
+  // 18c. Export map as PNG
+  window.exportMapPNG = function() {
+    showToast('Capture de la carte en cours...', 'camera');
+    // Close toolbar menu and export modal
+    toolbarMenu.classList.remove('open');
+    toolbarFab.classList.remove('active');
+    var exportModal = document.getElementById('export-modal');
+    if (exportModal) exportModal.classList.remove('open');
+
+    map.once('rendercomplete', function() {
+      var canvas = document.querySelector('#map canvas');
+      if (!canvas) { showToast('Erreur lors de la capture', 'exclamation-triangle'); return; }
+      try {
+        var link = document.createElement('a');
+        link.download = 'GeoROAD_TOGO_' + new Date().toISOString().slice(0,10) + '.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+        showToast('Carte exportée en PNG', 'check-circle');
+      } catch(err) {
+        showToast('Erreur : ' + err.message, 'exclamation-triangle');
+      }
+    });
+    map.renderSync();
+  };
+
+  // 19. Close info panel + modals on Escape (unified)
   document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
       closeInfoPanel();
       document.querySelectorAll('.modal-overlay.open').forEach(function(m) { m.classList.remove('open'); });
+      toolbarMenu.classList.remove('open');
+      toolbarFab.classList.remove('active');
     }
   });
 
-  // 19. Close mobile nav on click outside
-  document.addEventListener('click', function(e) {
-    var mobileNav = document.getElementById('gp-nav-mobile');
-    var hamburger = document.getElementById('gp-hamburger');
-    if (mobileNav && mobileNav.style.display === 'flex' && !mobileNav.contains(e.target) && !hamburger.contains(e.target)) {
-      mobileNav.style.display = 'none';
-    }
+  // 20. Double-click zoom with smooth animation
+  map.on('dblclick', function(evt) {
+    evt.preventDefault();
+    var view = map.getView();
+    var currentZoom = view.getZoom();
+    view.animate({ zoom: Math.min(currentZoom + 1, view.getMaxZoom()), duration: 300 });
   });
 
 })();
