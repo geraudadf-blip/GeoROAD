@@ -61,7 +61,7 @@
             setTimeout(initDashboard, 500);
             return;
         }
-        console.log('[Dashboard] Initialisation...');
+        /* console.log removed */;
         collectRoadFeatures();
         buildSearchIndex();
         initLayerPanel();
@@ -73,7 +73,7 @@
         initSidebarToggle();
         initModalEvents();
         repositionOLControls();
-        console.log('[Dashboard] Prêt.');
+        /* console.log removed */;
     }
 
     /* ──────────────────────────────────────────────

@@ -37,29 +37,64 @@
     'CU': 'Route Communautaire'
   };
 
-  // 3. Field aliases (French)
+  // 3. Field aliases (French — full wording, no abbreviations)
   var fieldAliases = {
     'Rgion_2': {
-      'fid': 'ID', 'COUNTRY': 'Pays', 'NAME_1': 'Région',
-      'POP_2022': 'Population (2022)', 'POP_RU_TOT': 'Pop. rurale totale',
-      'POP_RU_IMP': 'Pop. rurale impactée', 'POP_IMAPCT': 'Pop. impactée (2km)',
-      'IAR_%': 'Indice d\'accès rural (IAR) (%)', 'TAUX_HUBN': 'Taux d\'urbanisation (%)'
+      'fid': 'Identifiant', 'COUNTRY': 'Pays', 'NAME_1': 'Région',
+      'POP_2022': 'Population totale (2022)', 'POP_RU_TOT': 'Population rurale totale',
+      'POP_RU_IMP': 'Population rurale impactée', 'POP_IMAPCT': 'Population impactée (dans un rayon de 2 km)',
+      'IAR_%': 'Indice d\'accès rural en %', 'TAUX_HUBN': 'Taux d\'urbanisation en %'
     },
     'Prfecture_3': {
-      'fid': 'ID', 'NAME_1': 'Région', 'NAME_2': 'Préfecture',
-      'POP_2022': 'Population (2022)', 'POP_IMPACT': 'Population impactée (2km)'
+      'fid': 'Identifiant', 'NAME_1': 'Région', 'NAME_2': 'Préfecture',
+      'POP_2022': 'Population de la préfecture (2022)',
+      'POP_IMPACT': 'Population impactée de la préfecture (dans un rayon de 2 km)',
+      'REG_POP_2022': 'Population de la région (2022)',
+      'REG_POP_RU_TOT': 'Population rurale totale de la région',
+      'REG_POP_RU_IMP': 'Population rurale impactée de la région',
+      'REG_POP_IMAPCT': 'Population impactée de la région (dans un rayon de 2 km)',
+      'REG_IAR_%': 'Indice d\'accès rural de la région en %',
+      'REG_TAUX_HUBN': 'Taux d\'urbanisation de la région en %'
     },
     'Canton_4': {
-      'fid': 'ID', 'NAME_1': 'Région', 'NAME_2': 'Préfecture', 'NAME_3': 'Canton'
+      'fid': 'Identifiant', 'NAME_1': 'Région', 'NAME_2': 'Préfecture', 'NAME_3': 'Canton',
+      'PREF_POP_2022': 'Population de la préfecture (2022)',
+      'PREF_POP_IMPACT': 'Population impactée de la préfecture (dans un rayon de 2 km)',
+      'REG_POP_2022': 'Population de la région (2022)',
+      'REG_POP_RU_TOT': 'Population rurale totale de la région',
+      'REG_POP_RU_IMP': 'Population rurale impactée de la région',
+      'REG_POP_IMAPCT': 'Population impactée de la région (dans un rayon de 2 km)',
+      'REG_IAR_%': 'Indice d\'accès rural de la région en %',
+      'REG_TAUX_HUBN': 'Taux d\'urbanisation de la région en %'
     },
     'Emprise_5': {
-      'Name': 'Nom', 'CLASSE': 'Catégorie', 'EMPRISE': 'Emprise (m)'
+      'Name': 'Nom de la route', 'CLASSE': 'Classification routière', 'EMPRISE': 'Largeur d\'emprise en mètres',
+      'REGIONS': 'Région desservie',
+      'RT_LONGEUR': 'Longueur du tronçon en mètres',
+      'RT_PK_DEB_X': 'Point kilométrique de début — Coordonnée X',
+      'RT_PK_DEB_Y': 'Point kilométrique de début — Coordonnée Y',
+      'RT_PK_FIN_X': 'Point kilométrique de fin — Coordonnée X',
+      'RT_PK_FIN_Y': 'Point kilométrique de fin — Coordonnée Y',
+      'REG_POP_2022': 'Population de la région (2022)',
+      'REG_POP_RU_TOT': 'Population rurale totale de la région',
+      'REG_POP_RU_IMP': 'Population rurale impactée de la région',
+      'REG_POP_IMAPCT': 'Population impactée de la région (dans un rayon de 2 km)',
+      'REG_IAR_%': 'Indice d\'accès rural de la région en %',
+      'REG_TAUX_HUBN': 'Taux d\'urbanisation de la région en %'
     },
     'Rseauroutier_6': {
-      'Name': 'Nom', 'REGIONS': 'Région', 'CLASSE': 'Catégorie',
-      'EMPRISE': 'Emprise (m)', 'LONGEUR': 'Longueur (m)',
-      'PK_DEB_X': 'PK Début X', 'PK_DEB_Y': 'PK Début Y',
-      'PK_FIN_X': 'PK Fin X', 'PK_FIN_Y': 'PK Fin Y'
+      'Name': 'Nom de la route', 'REGIONS': 'Région', 'CLASSE': 'Classification routière',
+      'EMPRISE': 'Largeur d\'emprise en mètres', 'LONGEUR': 'Longueur du tronçon en mètres',
+      'PK_DEB_X': 'Point kilométrique de début — Coordonnée X',
+      'PK_DEB_Y': 'Point kilométrique de début — Coordonnée Y',
+      'PK_FIN_X': 'Point kilométrique de fin — Coordonnée X',
+      'PK_FIN_Y': 'Point kilométrique de fin — Coordonnée Y',
+      'REG_POP_2022': 'Population de la région (2022)',
+      'REG_POP_RU_TOT': 'Population rurale totale de la région',
+      'REG_POP_RU_IMP': 'Population rurale impactée de la région',
+      'REG_POP_IMAPCT': 'Population impactée de la région (dans un rayon de 2 km)',
+      'REG_IAR_%': 'Indice d\'accès rural de la région en %',
+      'REG_TAUX_HUBN': 'Taux d\'urbanisation de la région en %'
     }
   };
 
@@ -134,6 +169,30 @@
     slider.addEventListener('input', function() {
       var key = this.dataset.opacityLayer;
       if (layerMap[key]) layerMap[key].setOpacity(this.value / 100);
+    });
+  });
+
+  /* ===== BASEMAP SWITCHER ===== */
+  /* Les radios ont width:0; height:0 en CSS (custom toggle),
+     donc le 'change' event ne se déclenche pas fiablement.
+     On utilise le click sur le parent .layer-toggle à la place. */
+  document.querySelectorAll('.layer-toggle').forEach(function(toggle) {
+    var radio = toggle.querySelector('input[data-base-layer]');
+    if (!radio) return;
+    toggle.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      var layerName = radio.dataset.baseLayer;
+      /* Forcer le radio checked */
+      radio.checked = true;
+      /* Décocher les autres radios de fond de carte */
+      document.querySelectorAll('[data-base-layer]').forEach(function(r) {
+        if (r !== radio) r.checked = false;
+      });
+      /* Changer le fond de carte */
+      if (typeof switchBaseLayer === 'function') {
+        switchBaseLayer(layerName);
+      }
     });
   });
 
@@ -294,7 +353,6 @@
         el.addEventListener('click', function() {
           var r = results[i];
           zoomToFeature(r.layer, r.feature);
-          showInfoPanel(r.layer, r.feature.properties);
           searchResults.classList.remove('active');
           searchInput.value = r.name;
         });
@@ -380,92 +438,7 @@
     }
   }
 
-  // 11. Right info panel — on map click
-  var infoPanel = document.getElementById('info-panel');
-  var infoPanelBody = document.getElementById('info-panel-body');
-  var currentClickedFeature = null;
-  var currentClickedLayerKey = null;
 
-  map.on('singleclick', function(evt) {
-    var found = false;
-    var checkLayers = ['Rseauroutier_6', 'Emprise_5', 'Canton_4', 'Prfecture_3', 'Rgion_2'];
-    for (var i = 0; i < checkLayers.length; i++) {
-      var layerKey = checkLayers[i];
-      var layer = layerMap[layerKey];
-      if (!layer || !layer.getVisible()) continue;
-      var featuresAtPixel = map.getFeaturesAtPixel(evt.pixel, { layerFilter: function(l) { return l === layer; } });
-      if (featuresAtPixel && featuresAtPixel.length > 0) {
-        currentClickedFeature = featuresAtPixel[0];
-        currentClickedLayerKey = layerKey;
-        var props = featuresAtPixel[0].getProperties();
-        delete props.geometry;
-        showInfoPanel(layerKey, props);
-        found = true;
-        break;
-      }
-    }
-    if (!found) {
-      closeInfoPanel();
-      currentClickedFeature = null;
-      currentClickedLayerKey = null;
-    }
-  });
-
-  function showInfoPanel(layerKey, props) {
-    var aliases = fieldAliases[layerKey] || {};
-    var html = '<div class="info-layer-badge">' + (layerNames[layerKey] || layerKey) + '</div>';
-    var keys = Object.keys(props);
-    keys.forEach(function(key) {
-      var label = aliases[key] || key;
-      var value = formatValue(key, props[key], layerKey);
-      html += '<div class="info-attr-row"><span class="info-attr-label">' + label + '</span><span class="info-attr-value">' + value + '</span></div>';
-    });
-    html += '<button class="info-zoom-btn" onclick="zoomToClickedFeature()"><i class="fas fa-search-plus"></i> Zoomer sur l\'entité</button>';
-    infoPanelBody.innerHTML = html;
-    infoPanel.classList.add('open');
-  }
-
-  window.closeInfoPanel = function() {
-    infoPanel.classList.remove('open');
-  };
-
-  // FIXED: Zoom uses the actual OL feature from the click, not matching
-  window.zoomToClickedFeature = function() {
-    if (!currentClickedFeature) return;
-    var geom = currentClickedFeature.getGeometry();
-    if (geom) {
-      var ext = geom.getExtent();
-      map.getView().fit(ext, { size: map.getSize(), maxZoom: 14, padding: [80, 80, 80, 80], duration: 600 });
-    }
-  };
-
-  function formatValue(key, value, layerKey) {
-    if (value === null || value === undefined) return '—';
-    // Category badges for road network and emprise - use full names
-    if ((layerKey === 'Rseauroutier_6' || layerKey === 'Emprise_5') && key === 'CLASSE') {
-      var fullName = classLabels[value] || value;
-      return '<span class="cat-badge cat-' + fullName.replace(/\s/g, '') + '">' + fullName + '</span>';
-    }
-    if (typeof value === 'number') {
-      if (key.indexOf('POP') !== -1 || key === 'fid') {
-        return Number(value).toLocaleString('fr-FR') + ' hab';
-      }
-      if (key === 'IAR_%' || key === 'TAUX_HUBN') {
-        return value.toFixed(2) + '%';
-      }
-      if (key === 'LONGEUR' || key === 'EMPRISE') {
-        if (key === 'LONGEUR') {
-          return (value / 1000).toFixed(1) + ' km';
-        }
-        return Number(value).toLocaleString('fr-FR') + ' m';
-      }
-      if (key.indexOf('PK_') !== -1) {
-        return Number(value).toLocaleString('fr-FR') + ' m';
-      }
-      return Number(value).toLocaleString('fr-FR');
-    }
-    return String(value);
-  }
 
   // 12. Modals
   window.openModal = function(id) {
@@ -587,7 +560,6 @@
         var feature = jsonData[lk].features[fidx];
         if (feature) {
           zoomToFeature(lk, feature);
-          showInfoPanel(lk, feature.properties);
         }
       });
     });
@@ -632,6 +604,19 @@
     link.download = layerKey + '.csv';
     link.click();
     showToast('Export CSV : ' + (layerNames[layerKey] || layerKey), 'file-csv');
+  };
+
+  /* Export GeoJSON */
+  window.exportLayerGeoJSON = function(layerKey) {
+    var data = jsonData[layerKey];
+    if (!data) return;
+    var json = JSON.stringify(data, null, 2);
+    var blob = new Blob([json], { type: 'application/geo+json' });
+    var link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = layerKey + '.geojson';
+    link.click();
+    showToast('Export GeoJSON : ' + (layerNames[layerKey] || layerKey), 'code');
   };
 
   window.exportAttrCSV = function() {
@@ -680,7 +665,7 @@
     summaryHtml += '<div class="stat-card"><div class="sc-value">' + totalKm.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + '</div><div class="sc-label">Longueur totale (km)</div></div>';
     summaryHtml += '<div class="stat-card"><div class="sc-value">' + count + '</div><div class="sc-label">Nombre de tronçons</div></div>';
     summaryHtml += '<div class="stat-card"><div class="sc-value">' + (totalKm / count).toFixed(1) + '</div><div class="sc-label">Longueur moyenne (km)</div></div>';
-    summaryHtml += '<div class="stat-card"><div class="sc-value">' + totalPopRurale.toLocaleString('fr-FR') + '</div><div class="sc-label">Pop. rurale totale</div></div>';
+    summaryHtml += '<div class="stat-card"><div class="sc-value">' + totalPopRurale.toLocaleString('fr-FR') + '</div><div class="sc-label">Population rurale totale</div></div>';
     summaryHtml += '</div>';
 
     // Bar chart by category (full names)
@@ -717,7 +702,7 @@
       var cls = name === 'Centre' ? 'iar-centre' : (name === 'Kara' ? 'iar-kara' : 'iar-savanes');
       var pct = Math.min((iar / iarMax) * 100, 100);
       iarHtml += '<div class="iar-row"><span class="iar-label">' + name + '</span><div class="iar-track"><div class="iar-fill ' + cls + '" style="width:' + pct + '%">IAR ' + iar.toFixed(2) + '%</div></div><span class="iar-value">' + iar.toFixed(2) + '%</span></div>';
-      iarHtml += '<div style="padding-left:100px;font-size:.72rem;color:var(--gray-dark);margin-bottom:10px">Pop. rurale : ' + Number(popRurale).toLocaleString('fr-FR') + ' / ' + Number(pop).toLocaleString('fr-FR') + ' habitants</div>';
+      iarHtml += '<div style="padding-left:100px;font-size:.72rem;color:var(--text-3);margin-bottom:10px">Population rurale : ' + Number(popRurale).toLocaleString('fr-FR') + ' / ' + Number(pop).toLocaleString('fr-FR') + ' habitants</div>';
     });
     iarHtml += '</div></div>';
 
@@ -752,7 +737,7 @@
       var pct = pop / 1200000 * 100;
       var cls = name === 'Centre' ? 'iar-centre' : (name === 'Kara' ? 'iar-kara' : 'iar-savanes');
       popHtml += '<div class="bar-row"><span class="bar-label bar-label-wide">' + name + '</span><div class="bar-track"><div class="iar-fill ' + cls + '" style="width:' + pct + '%">' + Number(pop).toLocaleString('fr-FR') + ' hab</div></div></div>';
-      popHtml += '<div style="padding-left:160px;font-size:.72rem;color:var(--gray-dark);margin-bottom:10px">Taux d\'urbanisation : ' + tauxUrb + '% | Pop. rurale : ' + Number(popRurale).toLocaleString('fr-FR') + '</div>';
+      popHtml += '<div style="padding-left:160px;font-size:.72rem;color:var(--text-3);margin-bottom:10px">Taux d\'urbanisation : ' + tauxUrb + '% | Population rurale : ' + Number(popRurale).toLocaleString('fr-FR') + '</div>';
     });
     popHtml += '</div></div>';
 
@@ -761,6 +746,9 @@
       iarHtml +
       '<div class="charts-row">' + donutHtml + popHtml + '</div>';
   }
+
+  // 15b. Expose buildStats as renderStatsContent for road-sync.js
+  window.renderStatsContent = buildStats;
 
   // 19. Geolocation
   var geoSource = new ol.source.Vector();
@@ -925,22 +913,262 @@
     map.renderSync();
   };
 
-  // 19. Close info panel + modals on Escape (unified)
+  // 19. Close modals on Escape (unified)
   document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
-      closeInfoPanel();
       document.querySelectorAll('.modal-overlay.open').forEach(function(m) { m.classList.remove('open'); });
+      closeInfoPanel();
       toolbarMenu.classList.remove('open');
       toolbarFab.classList.remove('active');
     }
   });
 
-  // 20. Double-click zoom with smooth animation
+  // 20. Double-click zoom with smooth animation (disabled in edit mode)
   map.on('dblclick', function(evt) {
+    /* En mode édition, ne pas intercepter le double-clic */
+    if (typeof SIGModule !== 'undefined') {
+      var sigState = SIGModule.getState();
+      if (sigState && sigState.editMode) return;
+    }
     evt.preventDefault();
     var view = map.getView();
     var currentZoom = view.getZoom();
     view.animate({ zoom: Math.min(currentZoom + 1, view.getMaxZoom()), duration: 300 });
   });
+
+  // 21. Right info panel — on map click (same approach as TOGO_VF reference)
+  var infoPanel = document.getElementById('info-panel');
+  var infoPanelBody = document.getElementById('info-panel-body');
+  var currentClickedFeature = null;
+  var currentClickedLayerKey = null;
+
+  map.on('singleclick', function(evt) {
+    /* Skip if SIGModule is in edit mode */
+    if (typeof SIGModule !== 'undefined') {
+      try {
+        var sigState = SIGModule.getState();
+        if (sigState && sigState.editMode) { closeInfoPanel(); return; }
+      } catch(e) {}
+    }
+
+    var found = false;
+    var checkLayers = ['Rseauroutier_6', 'Emprise_5', 'Canton_4', 'Prfecture_3', 'Rgion_2'];
+    for (var i = 0; i < checkLayers.length; i++) {
+      var layerKey = checkLayers[i];
+      var layer = layerMap[layerKey];
+      if (!layer || !layer.getVisible()) continue;
+      var featuresAtPixel = map.getFeaturesAtPixel(evt.pixel, { layerFilter: function(l) { return l === layer; } });
+      if (featuresAtPixel && featuresAtPixel.length > 0) {
+        currentClickedFeature = featuresAtPixel[0];
+        currentClickedLayerKey = layerKey;
+        var props = featuresAtPixel[0].getProperties();
+        delete props.geometry;
+        showInfoPanel(layerKey, props);
+        found = true;
+        break;
+      }
+    }
+    if (!found) {
+      closeInfoPanel();
+      currentClickedFeature = null;
+      currentClickedLayerKey = null;
+    }
+  });
+
+  function showInfoPanel(layerKey, props) {
+    var aliases = fieldAliases[layerKey] || {};
+    var html = '<div class="info-layer-badge">' + (layerNames[layerKey] || layerKey) + '</div>';
+
+    // Définir l'ordre et le regroupement des champs par couche.
+    // Chaque groupe : { title, keys[] }
+    var groups = [];
+    if (layerKey === 'Rgion_2') {
+      groups = [
+        { title: 'Identification', keys: ['fid', 'COUNTRY', 'NAME_1'] },
+        { title: 'Population', keys: ['POP_2022', 'POP_RU_TOT', 'POP_RU_IMP', 'POP_IMAPCT'] },
+        { title: 'Indicateurs', keys: ['IAR_%', 'TAUX_HUBN'] }
+      ];
+    } else if (layerKey === 'Prfecture_3') {
+      groups = [
+        { title: 'Identification', keys: ['fid', 'NAME_1', 'NAME_2'] },
+        { title: 'Population de la préfecture', keys: ['POP_2022', 'POP_IMPACT'] },
+        { title: 'Population de la région', keys: ['REG_POP_2022', 'REG_POP_RU_TOT', 'REG_POP_RU_IMP', 'REG_POP_IMAPCT'] },
+        { title: 'Indicateurs de la région', keys: ['REG_IAR_%', 'REG_TAUX_HUBN'] }
+      ];
+    } else if (layerKey === 'Canton_4') {
+      groups = [
+        { title: 'Identification', keys: ['fid', 'NAME_1', 'NAME_2', 'NAME_3'] },
+        { title: 'Population de la préfecture', keys: ['PREF_POP_2022', 'PREF_POP_IMPACT'] },
+        { title: 'Population de la région', keys: ['REG_POP_2022', 'REG_POP_RU_TOT', 'REG_POP_RU_IMP', 'REG_POP_IMAPCT'] },
+        { title: 'Indicateurs de la région', keys: ['REG_IAR_%', 'REG_TAUX_HUBN'] }
+      ];
+    } else if (layerKey === 'Emprise_5') {
+      groups = [
+        { title: 'Identification', keys: ['Name', 'CLASSE', 'EMPRISE', 'REGIONS'] },
+        { title: 'Tronçon routier', keys: ['RT_LONGEUR', 'RT_PK_DEB_X', 'RT_PK_DEB_Y', 'RT_PK_FIN_X', 'RT_PK_FIN_Y'] },
+        { title: 'Population de la région', keys: ['REG_POP_2022', 'REG_POP_RU_TOT', 'REG_POP_RU_IMP', 'REG_POP_IMAPCT'] },
+        { title: 'Indicateurs de la région', keys: ['REG_IAR_%', 'REG_TAUX_HUBN'] }
+      ];
+    } else if (layerKey === 'Rseauroutier_6') {
+      groups = [
+        { title: 'Identification', keys: ['Name', 'REGIONS', 'CLASSE', 'EMPRISE'] },
+        { title: 'Tronçon routier', keys: ['LONGEUR', 'PK_DEB_X', 'PK_DEB_Y', 'PK_FIN_X', 'PK_FIN_Y'] },
+        { title: 'Population de la région', keys: ['REG_POP_2022', 'REG_POP_RU_TOT', 'REG_POP_RU_IMP', 'REG_POP_IMAPCT'] },
+        { title: 'Indicateurs de la région', keys: ['REG_IAR_%', 'REG_TAUX_HUBN'] }
+      ];
+    }
+
+    // Si la couche n'a pas de groupes définis, on affiche tout à la suite.
+    if (groups.length === 0) {
+      var allKeys = Object.keys(props);
+      for (var i = 0; i < allKeys.length; i++) {
+        var k = allKeys[i];
+        var lbl = aliases[k] || k;
+        var val = formatInfoValue(k, props[k], layerKey);
+        html += '<div class="info-attr-row"><span class="info-attr-label">' + lbl + '</span><span class="info-attr-value">' + val + '</span></div>';
+      }
+    } else {
+      // Suivre les clés déjà affichées pour ajouter à la fin toute clé non prévue.
+      var displayed = {};
+      groups.forEach(function(g) {
+        // Vérifier qu'au moins une clé du groupe existe dans les props.
+        var hasAny = g.keys.some(function(kk) { return props.hasOwnProperty(kk); });
+        if (!hasAny) return;
+        html += '<div class="info-section-title">' + g.title + '</div>';
+        g.keys.forEach(function(k) {
+          if (!props.hasOwnProperty(k)) return;
+          var label = aliases[k] || k;
+          var value = formatInfoValue(k, props[k], layerKey);
+          html += '<div class="info-attr-row"><span class="info-attr-label">' + label + '</span><span class="info-attr-value">' + value + '</span></div>';
+          displayed[k] = true;
+        });
+      });
+      // Ajouter les clés restantes éventuelles.
+      var remaining = Object.keys(props).filter(function(kk) { return !displayed[kk]; });
+      if (remaining.length > 0) {
+        html += '<div class="info-section-title">Autres informations</div>';
+        remaining.forEach(function(k) {
+          var label = aliases[k] || k;
+          var value = formatInfoValue(k, props[k], layerKey);
+          html += '<div class="info-attr-row"><span class="info-attr-label">' + label + '</span><span class="info-attr-value">' + value + '</span></div>';
+        });
+      }
+    }
+
+    html += '<button class="info-zoom-btn" onclick="zoomToClickedFeature()"><i class="fas fa-search-plus"></i> Zoomer sur l\'entit\u00e9</button>';
+    infoPanelBody.innerHTML = html;
+    infoPanel.classList.add('open');
+  }
+
+  function formatInfoValue(key, value, layerKey) {
+    if (value === null || value === undefined) return '\u2014';
+    if ((layerKey === 'Rseauroutier_6' || layerKey === 'Emprise_5') && key === 'CLASSE') {
+      var fullName = classLabels[value] || value;
+      return '<span class="cat-badge cat-' + fullName.replace(/\s/g, '') + '">' + fullName + '</span>';
+    }
+    if (typeof value === 'number') {
+      // Populations (préfecture / région / canton) — affichées avec le suffixe « hab »
+      if (key === 'fid') {
+        return Number(value).toLocaleString('fr-FR');
+      }
+      if (key.indexOf('POP') !== -1) {
+        return Number(value).toLocaleString('fr-FR') + ' hab';
+      }
+      // Pourcentages IAR / urbanisation (avec ou sans préfixe REG_)
+      if (key === 'IAR_%' || key === 'TAUX_HUBN' || key === 'REG_IAR_%' || key === 'REG_TAUX_HUBN') {
+        return value.toFixed(2) + '%';
+      }
+      // Longueurs des tronçons (LONGEUR ou RT_LONGEUR) — converties en km
+      if (key === 'LONGEUR' || key === 'RT_LONGEUR') {
+        return (value / 1000).toFixed(2) + ' km';
+      }
+      // Emprise en mètres
+      if (key === 'EMPRISE') {
+        return Number(value).toLocaleString('fr-FR') + ' m';
+      }
+      // Points kilométriques (PK_* ou RT_PK_*)
+      if (key.indexOf('PK_') !== -1) {
+        return Number(value).toLocaleString('fr-FR') + ' m';
+      }
+      return Number(value).toLocaleString('fr-FR');
+    }
+    return String(value);
+  }
+
+  window.closeInfoPanel = function() {
+    if (infoPanel) infoPanel.classList.remove('open');
+  };
+
+  window.zoomToClickedFeature = function() {
+    if (!currentClickedFeature) return;
+    var geom = currentClickedFeature.getGeometry();
+    if (geom) {
+      var ext = geom.getExtent();
+      map.getView().fit(ext, { size: map.getSize(), maxZoom: 14, padding: [80, 80, 80, 80], duration: 600 });
+    }
+  };
+
+// 24. SIG Edit Mode Toggle Button (admin only)
+  (function() {
+    var btn = document.createElement('button');
+    btn.id = 'btn-sig-edit-toggle';
+    btn.innerHTML = '<i class="fas fa-pen-to-square"></i> \u00c9dition';
+    btn.title = 'Basculer le mode \u00c9dition (E)';
+
+    /* Insert before the zoom-display in the bottom coord-bar */
+    var coordBar = document.getElementById('coord-bar');
+    var zoomDisplay = document.getElementById('zoom-display');
+    if (coordBar && zoomDisplay) {
+      coordBar.insertBefore(btn, zoomDisplay);
+    }
+
+    /* Show button only for authenticated admin users */
+    function checkAdminAndShow() {
+      var session = null;
+      if (typeof AdminAuth !== 'undefined') session = AdminAuth.getSession();
+      if (session && session.authenticated) {
+        var role = (session.role || '').toLowerCase();
+        if (role === 'administrateur') {
+          btn.style.display = 'inline-flex';
+          return;
+        }
+      }
+      btn.style.display = 'none';
+    }
+
+    /* Initial check + retry after a short delay (AdminAuth may init later) */
+    checkAdminAndShow();
+    setTimeout(checkAdminAndShow, 1000);
+
+    /* Also listen for login/logout events if AdminAuth broadcasts them */
+    if (typeof AdminAuth !== 'undefined' && AdminAuth.on) {
+      AdminAuth.on('login', checkAdminAndShow);
+      AdminAuth.on('logout', checkAdminAndShow);
+    }
+
+    /* Sync button state with document.body.sig-edit-active class */
+    var observer = new MutationObserver(function() {
+      var active = document.body.classList.contains('sig-edit-active');
+      btn.classList.toggle('active', active);
+      btn.innerHTML = active
+        ? '<i class="fas fa-eye"></i> Consulter'
+        : '<i class="fas fa-pen-to-square"></i> \u00c9dition';
+    });
+    observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+
+    /* Click handler: toggle edit mode via SIGModule */
+    btn.addEventListener('click', function() {
+      if (typeof SIGModule === 'undefined') {
+        showToast('Module SIG non charg\u00e9', 'exclamation-triangle');
+        return;
+      }
+      var sigState = SIGModule.getState();
+      if (sigState && sigState.editMode) {
+        SIGModule.exitEditMode();
+      } else {
+        SIGModule.enterEditMode();
+      }
+    });
+  })();
 
 })();

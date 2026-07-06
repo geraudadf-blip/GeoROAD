@@ -35,6 +35,7 @@
     <a href="index.html#network">Réseau</a>
     <a href="index.html#regions">Régions</a>
     <a href="#" class="active">Géoportail</a>
+    <a href="admin-login.html" title="Administration" style="opacity:.5"><i class="fas fa-lock" style="font-size:.72rem"></i></a>
   </div>
 </nav>
 
@@ -61,16 +62,24 @@
       <div class="layer-group">
         <div class="layer-group-title"><i class="fas fa-globe"></i> Fonds de carte</div>
         <div class="layer-toggle">
-          <label class="lt-switch"><input type="checkbox" checked data-layer="satellite"><span class="lt-slider"></span></label>
+          <label class="lt-switch"><input type="radio" name="basemap" checked data-base-layer="Google Satellite"><span class="lt-slider"></span></label>
           <span class="lt-name">Google Satellite</span>
         </div>
         <div class="layer-toggle">
-          <label class="lt-switch"><input type="checkbox" data-layer="osm"><span class="lt-slider"></span></label>
+          <label class="lt-switch"><input type="radio" name="basemap" data-base-layer="OpenStreetMap"><span class="lt-slider"></span></label>
           <span class="lt-name">OpenStreetMap</span>
         </div>
         <div class="layer-toggle">
-          <label class="lt-switch"><input type="checkbox" data-layer="hybrid"><span class="lt-slider"></span></label>
+          <label class="lt-switch"><input type="radio" name="basemap" data-base-layer="Google Hybrid"><span class="lt-slider"></span></label>
           <span class="lt-name">Google Hybrid</span>
+        </div>
+        <div class="layer-toggle">
+          <label class="lt-switch"><input type="radio" name="basemap" data-base-layer="Fond clair"><span class="lt-slider"></span></label>
+          <span class="lt-name">Fond clair</span>
+        </div>
+        <div class="layer-toggle">
+          <label class="lt-switch"><input type="radio" name="basemap" data-base-layer="Topographique"><span class="lt-slider"></span></label>
+          <span class="lt-name">Topographique</span>
         </div>
       </div>
 
@@ -137,11 +146,51 @@
     </div>
   </div>
 
+  <!-- SIG Toolbar -->
+  <div id="sig-toolbar">
+    <button class="sig-tool-btn active" data-tool="select" title="Sélection"><i class="fas fa-mouse-pointer"></i><span class="sig-tool-tip">Sélection</span></button>
+    <button class="sig-tool-btn" data-tool="move" title="Déplacement"><i class="fas fa-hand"></i><span class="sig-tool-tip">Déplacement</span></button>
+    <button class="sig-tool-btn" data-tool="vertex-edit" title="Édition sommet"><i class="fas fa-draw-polygon"></i><span class="sig-tool-tip">Éditer sommets</span></button>
+    <button class="sig-tool-btn" data-tool="add-vertex" title="Ajouter sommet"><i class="fas fa-plus-circle"></i><span class="sig-tool-tip">Ajouter sommet</span></button>
+    <button class="sig-tool-btn" data-tool="delete-vertex" title="Supprimer sommet"><i class="fas fa-minus-circle"></i><span class="sig-tool-tip">Suppr. sommet</span></button>
+    <button class="sig-tool-btn" data-tool="delete" title="Supprimer"><i class="fas fa-trash"></i><span class="sig-tool-tip">Supprimer</span></button>
+    <div class="sig-tool-divider"></div>
+    <button class="sig-tool-btn" data-tool="measure" title="Mesure"><i class="fas fa-ruler"></i><span class="sig-tool-tip">Mesure</span></button>
+    <div class="sig-tool-divider"></div>
+    <button class="sig-tool-btn" data-tool="zoom-in" title="Zoom avant"><i class="fas fa-plus"></i><span class="sig-tool-tip">Zoom +</span></button>
+    <button class="sig-tool-btn" data-tool="zoom-out" title="Zoom arrière"><i class="fas fa-minus"></i><span class="sig-tool-tip">Zoom -</span></button>
+    <button class="sig-tool-btn" data-tool="zoom-selected" title="Zoom sur sélection"><i class="fas fa-search-plus"></i><span class="sig-tool-tip">Zoom s\u00e9lection</span></button>
+    <button class="sig-tool-btn" data-tool="locate" title="Ma position"><i class="fas fa-location-arrow"></i><span class="sig-tool-tip">Localiser</span></button>
+    <div class="sig-tool-divider"></div>
+    <button class="sig-tool-btn" data-tool="reset-view" title="Réinitialiser la vue"><i class="fas fa-expand"></i><span class="sig-tool-tip">Réinitialiser</span></button>
+  </div>
+
   <!-- Map -->
   <div id="map"></div>
 
   <!-- Popup (required by qgis2web) -->
-  <div id="popup" class="ol-popup"></div>
+  <div id="popup" class="ol-popup">
+    <a href="#" id="popup-closer" class="ol-popup-closer"></a>
+    <div id="popup-content"></div>
+  </div>
+
+  <!-- Right Info Panel -->
+  <div id="info-panel">
+    <div class="info-panel-header">
+      <h3><i class="fas fa-info-circle"></i> Informations</h3>
+      <button class="info-panel-close" onclick="closeInfoPanel()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="info-panel-body" id="info-panel-body">
+    </div>
+  </div>
+
+  <!-- SIG Drawer Overlay -->
+  <div id="sig-drawer-overlay"></div>
+
+  <!-- SIG Drawer (Route Fiche latérale) -->
+  <div id="sig-drawer">
+    <div id="sig-drawer-body"></div>
+  </div>
 
   <!-- Map Toolbar (expandable FAB) -->
   <div id="map-toolbar">
@@ -192,15 +241,7 @@
     </div>
   </div>
 
-  <!-- Right Info Panel -->
-  <div id="info-panel">
-    <div class="info-panel-header">
-      <h3><i class="fas fa-info-circle"></i> Informations</h3>
-      <button class="info-panel-close" onclick="closeInfoPanel()"><i class="fas fa-times"></i></button>
-    </div>
-    <div class="info-panel-body" id="info-panel-body">
-    </div>
-  </div>
+  
 </div>
 
 <!-- Modal: Attribute Table -->
@@ -259,30 +300,40 @@
           <h4>Capturer la carte</h4>
           <p>Image PNG de la vue actuelle</p>
         </div>
+        <div class="export-card" onclick="exportLayerGeoJSON('Rseauroutier_6')">
+          <i class="fas fa-code"></i>
+          <h4>Réseau routier — GeoJSON</h4>
+          <p>48 tronçons — Format SIG standard</p>
+        </div>
         <div class="export-card" onclick="exportLayerCSV('Rseauroutier_6')">
           <i class="fas fa-road"></i>
-          <h4>Réseau routier</h4>
-          <p>48 tronçons — CSV</p>
+          <h4>Réseau routier — CSV</h4>
+          <p>48 tronçons — Tableur</p>
         </div>
         <div class="export-card" onclick="exportLayerCSV('Rgion_2')">
           <i class="fas fa-map"></i>
-          <h4>Région</h4>
+          <h4>Régions</h4>
           <p>3 régions — CSV</p>
         </div>
         <div class="export-card" onclick="exportLayerCSV('Prfecture_3')">
           <i class="fas fa-map-marker-alt"></i>
-          <h4>Préfecture</h4>
+          <h4>Préfectures</h4>
           <p>19 préfectures — CSV</p>
         </div>
         <div class="export-card" onclick="exportLayerCSV('Canton_4')">
           <i class="fas fa-location-dot"></i>
-          <h4>Canton</h4>
+          <h4>Cantons</h4>
           <p>202 cantons — CSV</p>
         </div>
         <div class="export-card" onclick="exportLayerCSV('Emprise_5')">
           <i class="fas fa-vector-square"></i>
-          <h4>Emprise</h4>
+          <h4>Emprises</h4>
           <p>48 zones tampon — CSV</p>
+        </div>
+        <div class="export-card" onclick="exportLayerGeoJSON('Emprise_5')">
+          <i class="fas fa-vector-square"></i>
+          <h4>Emprises — GeoJSON</h4>
+          <p>48 zones — Format SIG standard</p>
         </div>
       </div>
 
@@ -293,7 +344,10 @@
 <!-- ===== SCRIPTS (critical order) ===== -->
 <script src="resources/qgis2web_expressions.js"></script>
 <script src="resources/proj4.js"></script>
-<script>proj4.defs('EPSG:4326','+proj=longlat +datum=WGS84 +no_defs');</script>
+<script>proj4.defs('EPSG:4326','+proj=longlat +datum=WGS84 +no_defs');
+proj4.defs('EPSG:32630','+proj=utm +zone=30 +datum=WGS84 +units=m +no_defs');
+proj4.defs('EPSG:32631','+proj=utm +zone=31 +datum=WGS84 +units=m +no_defs');
+proj4.defs('EPSG:32632','+proj=utm +zone=32 +datum=WGS84 +units=m +no_defs');</script>
 <script src="resources/functions.js"></script>
 <script src="resources/ol.js"></script>
 <script src="resources/ol-layerswitcher.js"></script>
@@ -323,6 +377,15 @@
 
 <!-- Our dashboard -->
 <script src="geoportail.js"></script>
+
+<!-- UI Layout Manager (must load before SIG modules) -->
+<script src="bundle/utils.js"></script>
+
+<!-- SIG Core bundle (event-bus + spatial-calculator + persistence + audit-trail + data-engine) -->
+<script src="bundle/sig-core.js"></script>
+
+<!-- SIG Editor bundle (map-layers + hierarchy + validator + attributes + sync + drawing + pro-editor + geoportail-sig) -->
+<script src="bundle/sig-editor.js"></script>
 
 </body>
 </html>

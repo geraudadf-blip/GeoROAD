@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Éditeur de Route — GeoROAD TOGO</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="resources/ol.css">
+<style>
+/* ===== DESIGN SYSTEM (same as geoportail.css / admin.css) ===== */
+:root {
+  --gold: #C8A64B;
+  --gold-dark: #A68A3A;
+  --gold-light: #D4B96A;
+  --gold-pale: rgba(200,166,75,.10);
+  --cream: #F8F6F0;
+  --cream-2: #F0EDE4;
+  --cream-3: #E8E4D9;
+  --cream-border: #DDD8CA;
+  --text: #2C2A24;
+  --text-2: #5C5850;
+  --text-3: #8B8578;
+  --text-4: #A9A49A;
+  --white: #FFFFFF;
+  --red: #B85C38;
+  --green-muted: #7A8B6F;
+  --shadow: rgba(44,42,36,.08);
+  --shadow-md: rgba(44,42,36,.12);
+  --shadow-lg: rgba(44,42,36,.18);
+}
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { height: 100%; overflow: hidden; }
+body {
+  font-family: 'Outfit', sans-serif;
+  background: var(--cream);
+  color: var(--text);
+  line-height: 1.5;
+}
+
+/* ===== 3-PANEL LAYOUT ===== */
+.re-layout {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+}
+
+/* ===== TOPBAR ===== */
+.re-topbar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 52px;
+  background: var(--white);
+  border-bottom: 1px solid var(--cream-border);
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  gap: 12px;
+  z-index: 100;
+  box-shadow: 0 1px 4px var(--shadow);
+}
+.re-topbar-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  color: var(--text);
+  flex-shrink: 0;
+}
+.re-topbar-logo img { height: 28px; }
+.re-topbar-logo span { font-weight: 700; font-size: .85rem; letter-spacing: .3px; }
+.re-topbar-logo small { font-size: .65rem; color: var(--text-3); font-weight: 400; display: block; line-height: 1.1; }
+.re-topbar-sep { width: 1px; height: 24px; background: var(--cream-border); flex-shrink: 0; }
+.re-topbar-title { font-size: .88rem; font-weight: 600; color: var(--text-2); }
+.re-topbar-spacer { flex: 1; }
+.re-topbar-user { display: flex; align-items: center; gap: 8px; font-size: .78rem; color: var(--text-3); }
+.re-topbar-avatar {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: var(--gold-pale); color: var(--gold-dark);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: .75rem;
+}
+.re-topbar-back {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 12px; border-radius: 6px;
+  font-size: .78rem; font-weight: 500;
+  color: var(--text-3); cursor: pointer;
+  transition: all .2s;
+  text-decoration: none;
+  border: 1px solid var(--cream-border);
+  background: var(--white);
+}
+.re-topbar-back:hover { background: var(--cream-2); color: var(--text); }
+.re-topbar-back i { font-size: .7rem; }
+
+/* ===== LEFT TOOL PALETTE ===== */
+.re-tools {
+  width: 250px;
+  min-width: 250px;
+  background: var(--white);
+  border-right: 1px solid var(--cream-border);
+  display: flex;
+  flex-direction: column;
+  padding-top: 52px;
+  z-index: 50;
+}
+.re-tools-header {
+  padding: 16px 16px 12px;
+  border-bottom: 1px solid var(--cream-border);
+}
+.re-tools-header h2 {
+  font-size: .82rem;
+  font-weight: 700;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.re-tools-header h2 i { color: var(--gold); font-size: .78rem; }
+.re-tools-header p { font-size: .7rem; color: var(--text-4); margin-top: 2px; }
+.re-tools-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+}
+.re-tools-section { margin-bottom: 4px; }
+.re-tools-section-title {
+  font-size: .65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-4);
+  padding: 8px 10px 4px;
+}
+.re-tool-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 12px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-2);
+  font-family: 'Outfit', sans-serif;
+  font-size: .78rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all .15s ease;
+  text-align: left;
+}
+.re-tool-btn i { width: 16px; text-align: center; font-size: .82rem; color: var(--text-3); transition: color .15s; }
+.re-tool-btn:hover { background: var(--cream-2); color: var(--text); }
+.re-tool-btn:hover i { color: var(--gold-dark); }
+.re-tool-btn.active {
+  background: var(--gold-pale);
+  color: var(--gold-dark);
+  font-weight: 600;
+}
+.re-tool-btn.active i { color: var(--gold-dark); }
+.re-tool-btn.danger:hover { background: rgba(184,92,56,.08); color: var(--red); }
+.re-tool-btn.danger:hover i { color: var(--red); }
+
+/* Tools footer */
+.re-tools-footer {
+  padding: 10px 12px;
+  border-top: 1px solid var(--cream-border);
+  font-size: .68rem;
+  color: var(--text-4);
+  text-align: center;
+}
+.re-tools-footer kbd {
+  display: inline-block;
+  padding: 1px 5px;
+  background: var(--cream-2);
+  border: 1px solid var(--cream-border);
+  border-radius: 3px;
+  font-family: 'Outfit', monospace;
+  font-size: .62rem;
+}
+
+/* ===== CENTER MAP ===== */
+.re-map-container {
+  flex: 1;
+  position: relative;
+  padding-top: 52px;
+  min-width: 0;
+}
+#re-map {
+  width: 100%;
+  height: 100%;
+}
+.ol-control button {
+  background: var(--white) !important;
+  color: var(--text-2) !important;
+  border-radius: 6px !important;
+  font-size: 16px !important;
+  width: 32px !important;
+  height: 32px !important;
+}
+.ol-control button:hover { background: var(--cream-2) !important; }
+.ol-attribution { font-size: .6rem !important; }
+
+/* Draw status bar */
+#re-draw-status {
+  display: none;
+  position: absolute;
+  top: 60px; left: 50%;
+  transform: translateX(-50%);
+  z-index: 50;
+  background: var(--gold);
+  color: #fff;
+  padding: 8px 20px;
+  border-radius: 8px;
+  font-size: .76rem;
+  font-weight: 500;
+  box-shadow: 0 4px 16px rgba(200,166,75,.4);
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  max-width: 90%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#re-draw-status i { font-size: .82rem; }
+
+/* Bottom coordinate bar */
+.re-coord-bar {
+  position: absolute;
+  bottom: 8px; left: 8px; right: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 30;
+  background: rgba(255,255,255,.92);
+  backdrop-filter: blur(6px);
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: .68rem;
+  color: var(--text-3);
+  border: 1px solid var(--cream-border);
+}
+.re-coord-bar i { margin-right: 4px; color: var(--text-4); }
+
+/* ===== RIGHT PROPERTIES PANEL ===== */
+.re-props-panel {
+  width: 0;
+  min-width: 0;
+  background: var(--white);
+  border-left: 1px solid var(--cream-border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: width .3s ease, min-width .3s ease, padding-top .3s ease;
+  padding-top: 52px;
+}
+.re-props-panel.open {
+  width: 380px;
+  min-width: 380px;
+}
+
+/* Props header */
+.re-props-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--cream-border);
+  flex-shrink: 0;
+}
+.re-props-header h3 {
+  font-size: .88rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.re-props-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-4);
+  font-size: .9rem;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all .15s;
+}
+.re-props-close:hover { background: var(--cream-2); color: var(--text); }
+
+/* Props sections */
+.re-props-section {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--cream-border);
+  flex-shrink: 0;
+}
+.re-props-section.re-props-scroll {
+  flex: 1;
+  overflow-y: auto;
+  border-bottom: none;
+}
+.re-props-section-title {
+  font-size: .7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  color: var(--text-4);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.re-props-section-title i { font-size: .72rem; }
+
+/* Geometry info grid */
+.re-geo-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.re-geo-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+  font-size: .76rem;
+}
+.re-geo-row span:first-child { color: var(--text-3); }
+.re-geo-row span:last-child { font-weight: 500; color: var(--text); }
+
+/* Props footer */
+.re-props-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-top: 1px solid var(--cream-border);
+  flex-shrink: 0;
+  gap: 8px;
+}
+.re-props-btn-group { display: flex; gap: 8px; }
+
+.re-props-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: none;
+  border-radius: 6px;
+  font-family: 'Outfit', sans-serif;
+  font-size: .76rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .15s;
+}
+.re-props-btn i { font-size: .72rem; }
+.re-props-btn.primary { background: var(--gold); color: #fff; }
+.re-props-btn.primary:hover { background: var(--gold-dark); }
+.re-props-btn.ghost { background: var(--cream-2); color: var(--text-2); }
+.re-props-btn.ghost:hover { background: var(--cream-3); }
+.re-props-btn.danger { background: rgba(184,92,56,.08); color: var(--red); }
+.re-props-btn.danger:hover { background: rgba(184,92,56,.15); }
+
+/* ===== FORM STYLES (matching geoportail form) ===== */
+#re-props-body {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+#re-props-body .sig-form-section-title {
+  font-size: .68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  color: var(--text-4);
+  padding: 8px 0 4px;
+  margin-top: 6px;
+  border-bottom: 1px solid var(--cream-border);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+#re-props-body .sig-form-section-title i { font-size: .65rem; color: var(--gold); }
+#re-props-body .sig-form-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+#re-props-body .sig-form-row-single { margin-bottom: 8px; }
+#re-props-body .sig-fm-group {
+  flex: 1;
+}
+#re-props-body .sig-fm-group label {
+  display: block;
+  font-size: .68rem;
+  font-weight: 500;
+  color: var(--text-3);
+  margin-bottom: 3px;
+}
+#re-props-body .sig-fm-group input,
+#re-props-body .sig-fm-group select,
+#re-props-body .sig-fm-group textarea {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid var(--cream-border);
+  border-radius: 5px;
+  font-family: 'Outfit', sans-serif;
+  font-size: .76rem;
+  color: var(--text);
+  background: var(--white);
+  transition: border-color .15s;
+}
+#re-props-body .sig-fm-group input:focus,
+#re-props-body .sig-fm-group select:focus,
+#re-props-body .sig-fm-group textarea:focus {
+  outline: none;
+  border-color: var(--gold);
+  box-shadow: 0 0 0 2px var(--gold-pale);
+}
+#re-props-body .sig-fm-group textarea { resize: vertical; min-height: 56px; }
+
+/* ===== VALIDATION ===== */
+.re-validation-error,
+.re-validation-warning {
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: .74rem;
+  margin: 0 16px 8px;
+}
+.re-validation-error {
+  background: rgba(184,92,56,.08);
+  border: 1px solid rgba(184,92,56,.2);
+  color: var(--red);
+}
+.re-validation-warning {
+  background: rgba(200,166,75,.08);
+  border: 1px solid rgba(200,166,75,.2);
+  color: var(--gold-dark);
+}
+.re-validation-error ul,
+.re-validation-warning ul { margin: 4px 0 0 16px; }
+.re-validation-error li,
+.re-validation-warning li { margin-bottom: 2px; }
+
+/* ===== TOAST ===== */
+#re-toast-container {
+  position: fixed;
+  bottom: 48px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.re-toast {
+  background: var(--text);
+  color: var(--cream);
+  padding: 8px 18px;
+  border-radius: 8px;
+  font-size: .78rem;
+  font-weight: 500;
+  box-shadow: 0 4px 20px var(--shadow-lg);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  animation: reToastIn .3s ease;
+}
+.re-toast.fade-out { animation: reToastOut .3s ease forwards; }
+.re-toast i { color: var(--gold); }
+@keyframes reToastIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes reToastOut { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-10px); } }
+
+/* ===== SAVE CONFIRMATION OVERLAY ===== */
+#re-confirm-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(44,42,36,.4);
+  backdrop-filter: blur(4px);
+  z-index: 500;
+  align-items: center;
+  justify-content: center;
+}
+#re-confirm-dialog {
+  background: var(--white);
+  border-radius: 12px;
+  padding: 32px;
+  text-align: center;
+  max-width: 380px;
+  box-shadow: 0 12px 40px var(--shadow-lg);
+}
+.re-confirm-icon {
+  font-size: 2.2rem;
+  color: var(--green-muted);
+  margin-bottom: 12px;
+}
+#re-confirm-dialog h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+#re-confirm-dialog p {
+  font-size: .82rem;
+  color: var(--text-2);
+  margin-bottom: 20px;
+}
+.re-confirm-actions { display: flex; gap: 10px; justify-content: center; }
+
+/* ===== DRAW TOOLTIP (on map) ===== */
+.re-draw-tooltip {
+  background: rgba(44,42,36,.88);
+  color: #fff;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: .72rem;
+  font-family: 'Outfit', sans-serif;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 900px) {
+  .re-tools { width: 56px; min-width: 56px; }
+  .re-tools-header { display: none; }
+  .re-tools-section-title { display: none; }
+  .re-tool-btn span { display: none; }
+  .re-tool-btn { justify-content: center; padding: 10px 8px; }
+  .re-tool-btn i { margin: 0; }
+  .re-tools-footer { display: none; }
+  .re-props-panel.open { width: 300px; min-width: 300px; }
+}
+@media (max-width: 640px) {
+  .re-props-panel.open { width: 100%; min-width: 100%; position: absolute; right: 0; top: 0; bottom: 0; z-index: 80; }
+}
+</style>
+</head>
+<body>
+
+<!-- Toast container -->
+<div id="re-toast-container"></div>
+
+<!-- Topbar -->
+<div class="re-topbar">
+  <a href="admin.html" class="re-topbar-back"><i class="fas fa-arrow-left"></i> Administration</a>
+  <div class="re-topbar-sep"></div>
+  <a href="index.html" class="re-topbar-logo">
+    <img src="resources/logo.png" alt="Logo">
+    <div>GeoROAD TOGO <small>Éditeur de Route</small></div>
+  </a>
+  <div class="re-topbar-sep"></div>
+  <div class="re-topbar-title"><i class="fas fa-circle-plus" style="color:var(--gold);margin-right:6px"></i> AJOUT — Route</div>
+  <div class="re-topbar-spacer"></div>
+  <div class="re-topbar-user">
+    <div class="re-topbar-avatar" id="re-user-avatar">A</div>
+    <span id="re-user-name">Administrateur</span>
+  </div>
+</div>
+
+<!-- 3-Panel Layout -->
+<div class="re-layout">
+
+  <!-- LEFT: Tool Palette -->
+  <div class="re-tools">
+    <div class="re-tools-header">
+      <h2><i class="fas fa-toolbox"></i> Outils</h2>
+      <p>Palette d'outils d'édition SIG</p>
+    </div>
+    <div class="re-tools-body">
+
+      <!-- Navigation -->
+      <div class="re-tools-section">
+        <div class="re-tools-section-title">Navigation</div>
+        <button class="re-tool-btn active" data-tool="select" title="Sélection"><i class="fas fa-mouse-pointer"></i><span>Sélection</span></button>
+        <button class="re-tool-btn" data-tool="draw" title="Dessiner une route"><i class="fas fa-road"></i><span>Dessiner une route</span></button>
+        <button class="re-tool-btn" data-tool="modify" title="Modifier la géométrie"><i class="fas fa-draw-polygon"></i><span>Modifier la géométrie</span></button>
+        <button class="re-tool-btn" data-tool="move" title="Déplacer"><i class="fas fa-hand"></i><span>Déplacer</span></button>
+        <button class="re-tool-btn danger" data-tool="delete" title="Supprimer"><i class="fas fa-trash"></i><span>Supprimer</span></button>
+      </div>
+
+      <!-- Analyse -->
+      <div class="re-tools-section">
+        <div class="re-tools-section-title">Analyse</div>
+        <button class="re-tool-btn" data-tool="measure" title="Mesure"><i class="fas fa-ruler"></i><span>Mesure</span></button>
+      </div>
+
+      <!-- Données -->
+      <div class="re-tools-section">
+        <div class="re-tools-section-title">Données</div>
+        <button class="re-tool-btn" data-tool="import" title="Importer GeoJSON"><i class="fas fa-file-import"></i><span>Importer</span></button>
+        <button class="re-tool-btn" data-tool="export" title="Exporter GeoJSON"><i class="fas fa-file-export"></i><span>Exporter</span></button>
+      </div>
+
+      <!-- Vue -->
+      <div class="re-tools-section">
+        <div class="re-tools-section-title">Vue</div>
+        <button class="re-tool-btn" data-tool="zoom-in" title="Zoom avant"><i class="fas fa-plus"></i><span>Zoom avant</span></button>
+        <button class="re-tool-btn" data-tool="zoom-out" title="Zoom arrière"><i class="fas fa-minus"></i><span>Zoom arrière</span></button>
+        <button class="re-tool-btn" data-tool="fullscreen" title="Plein écran"><i class="fas fa-maximize"></i><span>Plein écran</span></button>
+        <button class="re-tool-btn" data-tool="reset" title="Réinitialiser la vue"><i class="fas fa-expand"></i><span>Réinitialiser</span></button>
+      </div>
+
+    </div>
+    <div class="re-tools-footer">
+      <kbd>Échap</kbd> Annuler &nbsp; <kbd>Ctrl+Z</kbd> Undo &nbsp; <kbd>Entrée</kbd> Terminer
+    </div>
+  </div>
+
+  <!-- CENTER: Map -->
+  <div class="re-map-container">
+    <div id="re-map"></div>
+    <div id="re-draw-status"></div>
+    <div class="re-coord-bar">
+      <span><i class="fas fa-crosshairs"></i> <span id="re-coords">Lat: — , Lon: —</span></span>
+      <span style="display:flex;align-items:center;gap:6px">
+        <i class="fas fa-globe" style="color:var(--text-4)"></i>
+        <select id="re-basemap-select" onchange="RouteEditor.switchBaseLayer(this.value)" style="font-family:Outfit,sans-serif;font-size:.68rem;padding:2px 6px;border:1px solid var(--cream-border);border-radius:4px;background:var(--white);color:var(--text-2);cursor:pointer">
+          <option value="OpenStreetMap" selected>OpenStreetMap</option>
+          <option value="Google Hybrid">Google Hybrid</option>
+        </select>
+      </span>
+      <span id="re-zoom">Zoom: —</span>
+    </div>
+  </div>
+
+  <!-- RIGHT: Properties Panel (hidden initially) -->
+  <div class="re-props-panel" id="re-props-panel">
+    <div id="re-props-body">
+      <!-- Content injected dynamically by RouteEditor -->
+    </div>
+  </div>
+
+</div>
+
+<!-- Save Confirmation Overlay -->
+<div id="re-confirm-overlay">
+  <div id="re-confirm-dialog"></div>
+</div>
+
+<!-- ===== SCRIPTS ===== -->
+<!-- Core -->
+<script src="resources/proj4.js"></script>
+<script>proj4.defs('EPSG:4326','+proj=longlat +datum=WGS84 +no_defs');
+proj4.defs('EPSG:32630','+proj=utm +zone=30 +datum=WGS84 +units=m +no_defs');
+proj4.defs('EPSG:32631','+proj=utm +zone=31 +datum=WGS84 +units=m +no_defs');
+proj4.defs('EPSG:32632','+proj=utm +zone=32 +datum=WGS84 +units=m +no_defs');</script>
+<script src="resources/functions.js"></script>
+<script src="resources/ol.js"></script>
+
+<!-- GeoJSON Data Layers -->
+<script src="layers/Rgion_2.js"></script>
+<script src="layers/Prfecture_3.js"></script>
+<script src="layers/Canton_4.js"></script>
+<script src="layers/Emprise_5.js"></script>
+<script src="layers/Rseauroutier_6.js"></script>
+
+<!-- Styles -->
+<script src="styles/Rgion_2_style.js"></script>
+<script src="styles/Prfecture_3_style.js"></script>
+<script src="styles/Canton_4_style.js"></script>
+<script src="styles/Emprise_5_style.js"></script>
+<script src="styles/Rseauroutier_6_style.js"></script>
+
+<!-- Layers init (base layers) -->
+<script src="layers/layers.js"></script>
+
+<!-- SIG Core bundle (event-bus + spatial-calculator + persistence + audit-trail + data-engine) -->
+<script src="bundle/sig-core.js"></script>
+
+<!-- SIG Editor bundle (sans geoportail-sig et sig-map-layers qui ne sont pas nécessaires ici, mais inclus pour cohérence) -->
+<script src="bundle/sig-editor.js"></script>
+
+<!-- Route Editor (this page) -->
+<script src="admin-route-editor.js"></script>
+
+</body>
+</html>

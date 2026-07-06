@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Administration — GeoROAD TOGO</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="admin.css">
+</head>
+<body>
+
+<!-- Mobile sidebar overlay -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="AdminUI.closeMobileSidebar()"></div>
+
+<div class="admin-layout">
+
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="admin-sidebar" id="adminSidebar">
+    <div class="sidebar-header">
+      <img src="resources/logo.png" alt="Logo">
+      <div class="sidebar-brand">
+        GeoROAD <small>Administration</small>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <!-- Navigation principale -->
+      <div class="nav-section-title">Principal</div>
+
+      <div class="nav-item active" data-page="dashboard" data-tooltip="Tableau de bord" onclick="AdminUI.navigate('dashboard')">
+        <i class="fas fa-chart-pie"></i>
+        <span>Tableau de bord</span>
+      </div>
+
+      <!-- Gestion du réseau -->
+      <div class="nav-section-title">Gestion du réseau</div>
+
+      <div class="nav-item" data-page="ajout" data-tooltip="Ajouter des données" onclick="AdminUI.navigate('ajout')">
+        <i class="fas fa-circle-plus"></i>
+        <span>AJOUT</span>
+      </div>
+
+      <div class="nav-item" data-page="routes" data-tooltip="Gestion des routes" onclick="AdminUI.navigate('routes')">
+        <i class="fas fa-road"></i>
+        <span>Gestion des routes</span>
+      </div>
+
+      <div class="nav-item" data-page="emprises" data-tooltip="Gestion des emprises" onclick="AdminUI.navigate('emprises')">
+        <i class="fas fa-vector-square"></i>
+        <span>Gestion des emprises</span>
+      </div>
+
+      <div class="nav-item" data-page="pk" data-tooltip="Points kilométriques" onclick="AdminUI.navigate('pk')">
+        <i class="fas fa-map-pin"></i>
+        <span>Gestion des points kilométriques</span>
+      </div>
+
+      <!-- Données & Administration -->
+      <div class="nav-section-title">Données & Admin</div>
+
+      <div class="nav-item" data-page="spatial" data-tooltip="Données spatiales" onclick="AdminUI.navigate('spatial')">
+        <i class="fas fa-database"></i>
+        <span>Gestion des données spatiales</span>
+      </div>
+
+      <div class="nav-item" data-page="audit" data-tooltip="Journal d'audit" onclick="AdminUI.navigate('audit')">
+        <i class="fas fa-clipboard-list"></i>
+        <span>Journal d'audit</span>
+      </div>
+
+      <div class="nav-item" data-page="users" data-tooltip="Gestion des utilisateurs" onclick="AdminUI.navigate('users')">
+        <i class="fas fa-users-gear"></i>
+        <span>Gestion des utilisateurs</span>
+      </div>
+
+      <div class="nav-item" data-page="tableau" data-tooltip="Tableau de bord carto" onclick="AdminUI.navigate('tableau')">
+        <i class="fas fa-map-location-dot"></i>
+        <span>Tableau de bord</span>
+      </div>
+
+      <div class="nav-item" data-page="settings" data-tooltip="Paramètres" onclick="AdminUI.navigate('settings')">
+        <i class="fas fa-gear"></i>
+        <span>Paramètres</span>
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="nav-item logout" onclick="AdminAuth.logout()">
+        <i class="fas fa-right-from-bracket"></i>
+        <span>Déconnexion</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ===== MAIN ===== -->
+  <div class="admin-main">
+
+    <!-- Topbar -->
+    <header class="admin-topbar">
+      <button class="topbar-toggle" onclick="AdminUI.toggleSidebar()" title="Basculer le menu">
+        <i class="fas fa-bars"></i>
+      </button>
+      <div class="topbar-breadcrumb">
+        <span>Administration</span>
+        <i class="fas fa-chevron-right bc-sep"></i>
+        <span class="bc-current" id="breadcrumb-current">Tableau de bord</span>
+      </div>
+      <div class="topbar-spacer"></div>
+      <div class="topbar-actions">
+        <button class="topbar-btn" title="Site public" onclick="window.open('index.html','_blank')">
+          <i class="fas fa-external-link-alt"></i>
+        </button>
+        <button class="topbar-btn" title="Notifications" onclick="NotificationCenter.togglePanel()" style="position:relative"><i class="fas fa-bell"></i><span id="notif-badge-count" style="position:absolute;top:-4px;right:-4px;min-width:16px;height:16px;background:var(--red,#B85C38);color:#fff;font-size:.6rem;font-weight:700;border-radius:8px;display:none;align-items:center;justify-content:center;padding:0 4px"></span></button>
+        <button class="topbar-btn" title="Aide" onclick="AdminUI.showHelp()">
+          <i class="fas fa-circle-question"></i>
+        </button>
+      </div>
+      <div class="topbar-user" id="topbarUser">
+        <div class="topbar-avatar" id="userAvatar">A</div>
+        <div class="topbar-user-info">
+          <div class="topbar-user-name" id="userName">Administrateur</div>
+          <div class="topbar-user-role" id="userRole">administrateur</div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Content -->
+    <main class="admin-content" id="adminContent">
+      <!-- Injected dynamically by admin.js -->
+    </main>
+
+  </div>
+</div>
+
+<!-- ===== SCRIPTS ===== -->
+<!-- OpenLayers (needed by AdminData for GeoJSON parsing) -->
+<script src="resources/ol.js"></script>
+<!-- GeoJSON Data Layers (needed by AdminData/SIGDataEngine for dashboard stats) -->
+<script src="layers/Rgion_2.js"></script>
+<script src="layers/Prfecture_3.js"></script>
+<script src="layers/Canton_4.js"></script>
+<script src="layers/Emprise_5.js"></script>
+<script src="layers/Rseauroutier_6.js"></script>
+<!-- SIG Core bundle (event-bus + spatial-calculator + persistence + audit-trail + data-engine) -->
+<script src="bundle/sig-core.js"></script>
+<!-- External libraries for export only — deferred (lazy loaded when needed) -->
+<script defer src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<!-- Admin bundle (notifications + ajout + admin + routes + emprises + pk + spatial) -->
+<script src="bundle/admin-bundle.js"></script>
+
+<script>
+/* Initialize Notification Center after all modules loaded */
+if (typeof NotificationCenter !== 'undefined') {
+  NotificationCenter.init();
+}
+</script>
+
+</body>
+</html>
