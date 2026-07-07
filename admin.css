@@ -52,7 +52,8 @@ body {
   background: var(--cream);
   color: var(--text);
   overflow: hidden;
-  height: 100vh;
+  height: 100dvh;
+  min-height: 100dvh;
   line-height: 1.6;
 }
 a { text-decoration: none; color: inherit; }
@@ -62,7 +63,8 @@ button { font-family: 'Outfit', sans-serif; cursor: pointer; border: none; backg
 /* ===== LAYOUT PRINCIPAL ===== */
 .admin-layout {
   display: flex;
-  height: 100vh;
+  height: 100dvh;
+  min-height: 100dvh;
   width: 100vw;
   overflow: hidden;
 }
@@ -734,8 +736,8 @@ button { font-family: 'Outfit', sans-serif; cursor: pointer; border: none; backg
     left: -100%;
     top: 0;
     z-index: 200;
-    width: var(--sidebar-w) !important;
-    min-width: var(--sidebar-w) !important;
+    width: min(88vw, 300px) !important;
+    min-width: min(88vw, 300px) !important;
     transition: left .3s cubic-bezier(.4, 0, .2, 1);
     box-shadow: 4px 0 24px rgba(0,0,0,.2);
   }
@@ -763,10 +765,56 @@ button { font-family: 'Outfit', sans-serif; cursor: pointer; border: none; backg
   .collapsed .sidebar-brand { opacity: 1; }
   .collapsed .nav-section-title { opacity: 1; height: auto; padding: 16px 12px 8px; }
 
+  .admin-topbar {
+    padding: 0 12px;
+    gap: 8px;
+    flex-wrap: wrap;
+    min-height: var(--topbar-h);
+    height: auto;
+  }
+  .topbar-breadcrumb { display: none; }
+  .topbar-actions { gap: 6px; }
+  .topbar-btn { width: 34px; height: 34px; border-radius: 9px; }
+  .topbar-user {
+    margin-left: auto;
+    padding: 4px 8px 4px 4px;
+    border-radius: 10px;
+  }
+  .topbar-avatar { width: 30px; height: 30px; border-radius: 9px; font-size: .76rem; }
+
   .stats-row { grid-template-columns: 1fr; gap: 12px; }
-  .admin-content { padding: 16px; }
+  .admin-content { padding: 14px; }
+  .page-header { margin-bottom: 18px; }
+  .page-header h1 { font-size: 1.25rem; line-height: 1.2; }
+  .page-header p { font-size: .82rem; }
+  .stat-card-admin { padding: 18px 18px; }
+  .stat-card-admin .sc-value { font-size: 1.5rem; }
   .topbar-user-info { display: none; }
   .chart-bar-label { width: 90px; font-size: .72rem; }
+  .admin-panel { padding: 16px; }
+  .admin-table-wrap { margin: 0 -14px; padding: 0 14px; }
+  .admin-table { min-width: 760px; }
+  .routes-toolbar,
+  .routes-filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .routes-search,
+  .filter-group {
+    width: 100%;
+    min-width: 0;
+  }
+  .routes-actions {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+  .routes-actions > * {
+    flex: 1 1 140px;
+  }
+  .routes-filters {
+    padding: 12px;
+    gap: 10px;
+  }
 }
 
 /* ===================================================================

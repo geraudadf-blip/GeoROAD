@@ -134,6 +134,63 @@ var UILayoutManager = (function() {
     dr.style.zIndex = Z.SIG_DRAWER;
   }
 
+  function applyCompactAdjustments() {
+    var sb = panels.sidebar.el;
+    var tb = panels.sigToolbar.el;
+    var dr = panels.sigDrawer.el;
+    var mb = panels.mapToolbar.el;
+    var db = panels.drawBar.el;
+
+    /* Les règles CSS gèrent déjà la majorité du responsive.
+       Ici on ne fait que neutraliser les offsets inline du desktop
+       quand on bascule en compact pour éviter les panneaux hors écran. */
+    if (_compactMode) {
+      if (tb) {
+        tb.style.left = '8px';
+        tb.style.right = 'auto';
+        tb.style.top = 'auto';
+        tb.style.bottom = '42px';
+      }
+      if (dr) {
+        dr.style.left = '0';
+        dr.style.right = '0';
+      }
+      if (mb) {
+        mb.style.left = 'auto';
+        mb.style.right = '8px';
+        mb.style.top = 'auto';
+        mb.style.bottom = '42px';
+      }
+      if (db) {
+        db.style.left = '0';
+        db.style.right = '0';
+        db.style.bottom = '0';
+      }
+      return;
+    }
+
+    if (tb) {
+      tb.style.left = (sb && !sb.classList.contains('collapsed') && panels.sigToolbar.open ? (sb.offsetWidth + 10) : 10) + 'px';
+      tb.style.right = '';
+      tb.style.top = '60px';
+      tb.style.bottom = '';
+    }
+    if (mb) {
+      mb.style.left = '';
+      mb.style.right = '';
+      mb.style.top = '12px';
+      mb.style.bottom = '';
+    }
+    if (dr) {
+      dr.style.left = '';
+      dr.style.right = '';
+    }
+    if (db) {
+      db.style.left = '';
+      db.style.right = '';
+    }
+  }
+
   /* ===== MODE COMPACT ===== */
   function checkCompactMode() {
     _compactMode = window.innerWidth <= COMPACT_BREAKPOINT;
@@ -196,5 +253,185 @@ var UILayoutManager = (function() {
     isCompact: isCompact,
     on: on, off: off, emit: emit,
     Z: Z
+  };
+})();
+
+/* ===================================================================
+ * GeoROADTextNormalizer
+ *
+ * Corrige le mojibake issu d'un encodage HTML/JS incohérent.
+ * S'applique sur les textes déjà rendus et sur les nouveaux noeuds
+ * injectés dynamiquement par les modules admin / geoportail.
+ * =================================================================== */
+var GeoROADTextNormalizer = (function() {
+  'use strict';
+
+  var CP1252_REVERSE = {
+    8364: 128, 8218: 130, 402: 131, 8222: 132, 8230: 133, 8224: 134, 8225: 135,
+    710: 136, 8240: 137, 352: 138, 8249: 139, 338: 140, 381: 142,
+    8216: 145, 8217: 146, 8220: 147, 8221: 148, 8226: 149, 8211: 150, 8212: 151,
+    732: 152, 8482: 153, 353: 154, 8250: 155, 339: 156, 382: 158, 376: 159
+  };
+
+  var NORMALIZABLE_ATTRIBUTES = ['title', 'placeholder', 'aria-label', 'value', 'data-tooltip', 'alt'];
+  var observer = null;
+
+  function shouldNormalize(text) {
+    return typeof text === 'string' && /[ÃÂâ]/.test(text);
+  }
+
+  function decodeOnce(text) {
+    var bytes = new Uint8Array(text.length);
+    for (var i = 0; i < text.length; i++) {
+      var code = text.charCodeAt(i);
+      if (code <= 255) {
+        bytes[i] = code;
+      } else if (CP1252_REVERSE[code] !== undefined) {
+        bytes[i] = CP1252_REVERSE[code];
+      } else {
+        return text;
+      }
+    }
+    try {
+      var decoded = new TextDecoder('utf-8').decode(bytes);
+      return decoded.indexOf('�') !== -1 ? text : decoded;
+    } catch(e) {
+      return text;
+    }
+  }
+
+  function decodeText(text) {
+    if (!shouldNormalize(text)) return text;
+    var current = text;
+    for (var pass = 0; pass < 4; pass++) {
+      var next = decodeOnce(current);
+      if (!next || next === current) break;
+      current = next;
+      if (!shouldNormalize(current)) break;
+    }
+    return current;
+  }
+
+  function normalizeAttributes(el) {
+    if (!el || el.nodeType !== 1 || !el.getAttribute) return;
+    for (var i = 0; i < NORMALIZABLE_ATTRIBUTES.length; i++) {
+      var name = NORMALIZABLE_ATTRIBUTES[i];
+      var value = el.getAttribute(name);
+      if (value && shouldNormalize(value)) {
+        var fixed = decodeText(value);
+        if (fixed !== value) {
+          el.setAttribute(name, fixed);
+          if (name === 'value' && typeof el.value !== 'undefined') {
+            el.value = fixed;
+          }
+        }
+      }
+    }
+  }
+
+  function normalizeNode(root) {
+    if (!root || typeof document === 'undefined') return;
+
+    var walk = function(node) {
+      if (!node) return;
+      if (node.nodeType === 3) {
+        var fixedText = decodeText(node.nodeValue || '');
+        if (fixedText !== node.nodeValue) {
+          node.nodeValue = fixedText;
+        }
+        return;
+      }
+      if (node.nodeType === 1) {
+        normalizeAttributes(node);
+      }
+      if (node.childNodes && node.childNodes.length) {
+        for (var i = 0; i < node.childNodes.length; i++) {
+          walk(node.childNodes[i]);
+        }
+      }
+    };
+
+    walk(root);
+  }
+
+  function startObserver() {
+    if (observer || typeof MutationObserver === 'undefined' || typeof document === 'undefined') return;
+    var target = document.body || document.documentElement;
+    if (!target) return;
+    observer = new MutationObserver(function(records) {
+      for (var i = 0; i < records.length; i++) {
+        var record = records[i];
+        if (!record.addedNodes) continue;
+        for (var j = 0; j < record.addedNodes.length; j++) {
+          normalizeNode(record.addedNodes[j]);
+        }
+      }
+    });
+    observer.observe(target, { childList: true, subtree: true });
+  }
+
+  function init() {
+    if (typeof document === 'undefined') return;
+    normalizeNode(document.body || document.documentElement);
+    startObserver();
+  }
+
+  if (typeof document !== 'undefined') {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init, { once: true });
+    } else {
+      setTimeout(init, 0);
+    }
+  }
+
+  return {
+    decodeText: decodeText,
+    normalizeNode: normalizeNode,
+    init: init
+  };
+})();
+
+/* ===================================================================
+ * GeoROADDownload
+ *
+ * Démarre les téléchargements de blobs de manière fiable.
+ * Attache temporairement le lien au DOM avant le clic, puis le retire.
+ * =================================================================== */
+var GeoROADDownload = (function() {
+  'use strict';
+
+  function downloadBlob(blob, filename, options) {
+    options = options || {};
+    var revokeDelay = typeof options.revokeDelayMs === 'number' ? options.revokeDelayMs : 400;
+
+    if (typeof navigator !== 'undefined' && navigator.msSaveOrOpenBlob) {
+      navigator.msSaveOrOpenBlob(blob, filename);
+      return true;
+    }
+
+    if (typeof document === 'undefined' || typeof URL === 'undefined' || typeof URL.createObjectURL !== 'function') {
+      return false;
+    }
+
+    var url = URL.createObjectURL(blob);
+    var link = document.createElement('a');
+    link.href = url;
+    link.download = filename || 'download';
+    link.rel = 'noopener';
+    link.style.display = 'none';
+
+    (document.body || document.documentElement).appendChild(link);
+    link.click();
+
+    setTimeout(function() {
+      if (link.parentNode) link.parentNode.removeChild(link);
+      URL.revokeObjectURL(url);
+    }, revokeDelay);
+
+    return true;
+  }
+
+  return {
+    downloadBlob: downloadBlob
   };
 })();

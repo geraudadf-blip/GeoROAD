@@ -27,11 +27,15 @@ var AdminAuth = (function() {
 
   var SESSION_KEY = 'georoad_auth';
 
+  function isAdminRole(role) {
+    return String(role || '').toLowerCase() === 'administrateur';
+  }
+
   /** Vérifie si l'utilisateur est authentifié. */
   function isAuthenticated() {
     try {
       var s = JSON.parse(sessionStorage.getItem(SESSION_KEY));
-      return s && s.authenticated === true;
+      return s && s.authenticated === true && isAdminRole(s.role);
     } catch(e) { return false; }
   }
 
@@ -43,6 +47,22 @@ var AdminAuth = (function() {
 
   /** Détruit la session et redirige vers la page de connexion. */
   function logout() {
+    var session = getSession();
+    if (session && typeof SIGAuditTrail !== 'undefined') {
+      try {
+        SIGAuditTrail.log(SIGAuditTrail.ACTIONS.LOGOUT, {
+          user: session.name || session.user || 'Administrateur',
+          featureId: session.userId ? String(session.userId) : null,
+          featureName: session.user || session.name || 'Administrateur',
+          details: 'Déconnexion de l\'administration',
+          result: 'SUCCESS',
+          entityType: 'user'
+        });
+      } catch(e) {}
+    }
+    if (session && session.userId && typeof UserAdmin !== 'undefined' && typeof UserAdmin.recordActivity === 'function') {
+      try { UserAdmin.recordActivity(session.userId); } catch(e) {}
+    }
     sessionStorage.removeItem(SESSION_KEY);
     window.location.href = 'admin-login.html';
   }
@@ -50,6 +70,7 @@ var AdminAuth = (function() {
   /** Middleware de garde — redirige si non authentifié. */
   function requireAuth() {
     if (!isAuthenticated()) {
+      sessionStorage.removeItem(SESSION_KEY);
       window.location.href = 'admin-login.html';
       return false;
     }
@@ -166,11 +187,11 @@ var AdminData = (function() {
    */
   function getLayerData(layerName) {
     var map = {
-      'Rseauroutier_6': json_Rseauroutier_6,
-      'Emprise_5': json_Emprise_5,
-      'Rgion_2': json_Rgion_2,
-      'Prfecture_3': json_Prfecture_3,
-      'Canton_4': json_Canton_4
+      'Rseauroutier_6': (typeof window.json_Rseauroutier_6 !== 'undefined') ? window.json_Rseauroutier_6 : null,
+      'Emprise_5': (typeof window.json_Emprise_5 !== 'undefined') ? window.json_Emprise_5 : null,
+      'Rgion_2': (typeof window.json_Rgion_2 !== 'undefined') ? window.json_Rgion_2 : null,
+      'Prfecture_3': (typeof window.json_Prfecture_3 !== 'undefined') ? window.json_Prfecture_3 : null,
+      'Canton_4': (typeof window.json_Canton_4 !== 'undefined') ? window.json_Canton_4 : null
     };
     return map[layerName] || null;
   }
@@ -191,10 +212,15 @@ var UserAdmin = (function() {
 
   var STORAGE_KEY = 'georoad_users';
   var LOGIN_HISTORY_KEY = 'georoad_login_history';
+  var ADMIN_USERNAME = 'GeoROAD';
+  var ADMIN_NAME = 'GeoROAD';
+  var ADMIN_EMAIL = 'admin@georoad.tg';
+  var DEFAULT_ADMIN_PASSWORD = 'georoad@2026';
+  var LEGACY_ADMIN_PASSWORD = 'georoad2025';
   /* PHASE 8 : uniquement 2 profils autorisés */
   var ALLOWED_ROLES = ['administrateur', 'utilisateur_public'];
   var DEFAULT_USERS = [
-    { id: 1, username: 'admin', name: 'Administrateur', role: 'administrateur', email: 'admin@georoad.tg', status: 'actif', lastLogin: null, lastActivity: null, createdAt: '2025-01-01' }
+    { id: 1, username: ADMIN_USERNAME, name: ADMIN_NAME, role: 'administrateur', email: ADMIN_EMAIL, password: DEFAULT_ADMIN_PASSWORD, status: 'actif', mustChangePassword: false, lastLogin: null, lastActivity: null, createdAt: '2025-01-01' }
   ];
 
   function esc(s) {
@@ -202,18 +228,113 @@ var UserAdmin = (function() {
     return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
+  function cloneUsers(users) {
+    try {
+      return JSON.parse(JSON.stringify(users || []));
+    } catch(e) {
+      return users || [];
+    }
+  }
+
+  function normalizeUsers(users) {
+    var list = Array.isArray(users) ? cloneUsers(users) : [];
+    var foundAdmin = false;
+
+    list = list.filter(function(user) {
+      return user && typeof user === 'object';
+    }).map(function(user, idx) {
+      if (!user.id) user.id = idx + 1;
+      if (!user.username) user.username = 'utilisateur_' + user.id;
+      user.username = String(user.username).trim();
+      if (!user.name) user.name = user.username;
+      if (!user.email) user.email = user.username + '@georoad.tg';
+      if (ALLOWED_ROLES.indexOf(user.role) === -1) {
+        user.role = 'utilisateur_public';
+      }
+      if (!user.status) user.status = 'actif';
+      if (!user.createdAt) user.createdAt = new Date().toISOString().split('T')[0];
+      if (typeof user.mustChangePassword === 'undefined') user.mustChangePassword = false;
+      if (typeof user.password === 'undefined') user.password = '';
+
+      /* Migration automatique de l'ancien compte admin */
+      if (user.username.toLowerCase() === 'admin') {
+        user.username = ADMIN_USERNAME;
+      }
+
+      if (user.username.toLowerCase() === ADMIN_USERNAME.toLowerCase()) {
+        foundAdmin = true;
+        user.name = ADMIN_NAME;
+        user.role = 'administrateur';
+        user.status = 'actif';
+        user.email = ADMIN_EMAIL;
+        if (!user.password || user.password === LEGACY_ADMIN_PASSWORD) {
+          user.password = DEFAULT_ADMIN_PASSWORD;
+        }
+      }
+
+      return user;
+    });
+
+    var seenUsernames = {};
+    list = list.filter(function(user) {
+      var key = String(user.username || '').toLowerCase();
+      if (!key) return false;
+      if (seenUsernames[key]) return false;
+      seenUsernames[key] = true;
+      return true;
+    });
+
+    if (!foundAdmin) {
+      list.unshift(cloneUsers(DEFAULT_USERS)[0]);
+    }
+
+    list.sort(function(a, b) { return (a.id || 0) - (b.id || 0); });
+    return list;
+  }
+
   function loadUsers() {
+    var users = null;
     try {
       var data = localStorage.getItem(STORAGE_KEY);
-      if (data) return JSON.parse(data);
+      if (data) users = JSON.parse(data);
     } catch(e) {}
-    /* Initialiser avec les utilisateurs par défaut */
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_USERS));
-    return DEFAULT_USERS.slice();
+
+    users = normalizeUsers(users || DEFAULT_USERS);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
+    return cloneUsers(users);
   }
 
   function saveUsers(users) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(normalizeUsers(users)));
+  }
+
+  function findByUsername(username) {
+    var uname = String(username || '').trim().toLowerCase();
+    if (!uname) return null;
+    var users = loadUsers();
+    for (var i = 0; i < users.length; i++) {
+      if (String(users[i].username || '').toLowerCase() === uname) {
+        return users[i];
+      }
+    }
+    return null;
+  }
+
+  function authenticate(username, password) {
+    var user = findByUsername(username);
+    if (!user) {
+      return { ok: false, reason: 'not_found', message: 'Identifiants incorrects.' };
+    }
+    if (user.status !== 'actif') {
+      return { ok: false, reason: 'inactive', user: user, message: 'Ce compte est désactivé.' };
+    }
+    if (user.role !== 'administrateur') {
+      return { ok: false, reason: 'forbidden', user: user, message: 'Ce compte n\'a pas accès à l\'administration.' };
+    }
+    if (String(user.password || '') !== String(password || '')) {
+      return { ok: false, reason: 'invalid_password', user: user, message: 'Identifiants incorrects.' };
+    }
+    return { ok: true, user: user };
   }
 
   /** Charge l'historique des connexions (max 200 entrées). */
@@ -248,6 +369,18 @@ var UserAdmin = (function() {
         saveUsers(users);
       }
     }
+    if (typeof SIGAuditTrail !== 'undefined') {
+      try {
+        SIGAuditTrail.log(success ? SIGAuditTrail.ACTIONS.LOGIN : SIGAuditTrail.ACTIONS.LOGIN_FAILED, {
+          user: username || 'Inconnu',
+          featureId: userId ? String(userId) : null,
+          featureName: username || null,
+          details: success ? 'Connexion réussie à l\'administration' : 'Tentative de connexion refusée',
+          result: success ? 'SUCCESS' : 'FAILURE',
+          entityType: 'user'
+        });
+      } catch(e) {}
+    }
   }
 
   /** Met à jour la dernière activité d'un utilisateur (à appeler sur chaque action). */
@@ -272,6 +405,17 @@ var UserAdmin = (function() {
     u.password = tmp;
     u.mustChangePassword = true;
     saveUsers(users);
+    if (typeof SIGAuditTrail !== 'undefined') {
+      try {
+        SIGAuditTrail.log(SIGAuditTrail.ACTIONS.USER_UPDATED, {
+          featureId: String(u.id),
+          featureName: u.username,
+          details: 'Mot de passe réinitialisé pour ' + (u.name || u.username),
+          result: 'SUCCESS',
+          entityType: 'user'
+        });
+      } catch(e) {}
+    }
     /* Afficher le mot de passe temporaire */
     alert("Mot de passe réinitialisé pour \"" + u.name + "\".\n\nMot de passe temporaire : " + tmp + "\n\nL'utilisateur devra le changer à la prochaine connexion.");
     if (typeof AdminUI !== 'undefined') AdminUI.navigate('users');
@@ -462,14 +606,17 @@ var UserAdmin = (function() {
     document.body.appendChild(modalEl);
   }
 
-  function closeModal() {
-    var modal = document.getElementById('modal-user-form');
-    if (modal) modal.parentNode.removeChild(modal);
+  function closeModal(id) {
+    var ids = id ? [id] : ['modal-user-form', 'modal-user-history'];
+    ids.forEach(function(modalId) {
+      var modal = document.getElementById(modalId);
+      if (modal) modal.parentNode.removeChild(modal);
+    });
   }
 
   function closeModalOnOverlay(event) {
     if (event.target.classList.contains('modal-admin-overlay')) {
-      closeModal();
+      closeModal(event.target.id);
     }
   }
 
@@ -499,8 +646,15 @@ var UserAdmin = (function() {
       errorEl.style.display = 'block';
       return;
     }
+    if (ALLOWED_ROLES.indexOf(role) === -1) {
+      errorEl.textContent = 'Le rôle sélectionné n\'est pas autorisé.';
+      errorEl.style.display = 'block';
+      return;
+    }
 
     var users = loadUsers();
+    var currentSession = (typeof AdminAuth !== 'undefined') ? AdminAuth.getSession() : null;
+    var currentUser = currentSession ? (currentSession.name || currentSession.user || 'Administrateur') : 'Administrateur';
 
     /* Vérifier l'unicité du username */
     var dup = users.find(function(u) { return u.username.toLowerCase() === username.toLowerCase() && u.id !== editId; });
@@ -513,14 +667,29 @@ var UserAdmin = (function() {
     if (editId) {
       var user = users.find(function(u) { return u.id === editId; });
       if (user) {
+        var beforeState = cloneUsers([user])[0];
         user.name = name;
         user.username = username;
         user.email = email;
         user.role = role;
         if (password) user.password = password;
+        if (typeof SIGAuditTrail !== 'undefined') {
+          try {
+            SIGAuditTrail.log(SIGAuditTrail.ACTIONS.USER_UPDATED, {
+              user: currentUser,
+              featureId: String(user.id),
+              featureName: user.username,
+              before: beforeState,
+              after: cloneUsers([user])[0],
+              details: 'Utilisateur modifié : ' + user.username,
+              result: 'SUCCESS',
+              entityType: 'user'
+            });
+          } catch(e) {}
+        }
       }
     } else {
-      users.push({
+      var createdUser = {
         id: getNextId(users),
         username: username,
         name: name,
@@ -530,7 +699,21 @@ var UserAdmin = (function() {
         status: 'actif',
         lastLogin: null,
         createdAt: new Date().toISOString().split('T')[0]
-      });
+      };
+      users.push(createdUser);
+      if (typeof SIGAuditTrail !== 'undefined') {
+        try {
+          SIGAuditTrail.log(SIGAuditTrail.ACTIONS.USER_CREATED, {
+            user: currentUser,
+            featureId: String(createdUser.id),
+            featureName: createdUser.username,
+            after: cloneUsers([createdUser])[0],
+            details: 'Utilisateur créé : ' + createdUser.username,
+            result: 'SUCCESS',
+            entityType: 'user'
+          });
+        } catch(e) {}
+      }
     }
 
     saveUsers(users);
@@ -544,8 +727,22 @@ var UserAdmin = (function() {
     var users = loadUsers();
     var user = users.find(function(u) { return u.id === id; });
     if (!user || user.id === 1) return;
+    var beforeState = cloneUsers([user])[0];
     user.status = user.status === 'actif' ? 'inactif' : 'actif';
     saveUsers(users);
+    if (typeof SIGAuditTrail !== 'undefined') {
+      try {
+        SIGAuditTrail.log(SIGAuditTrail.ACTIONS.USER_UPDATED, {
+          featureId: String(user.id),
+          featureName: user.username,
+          before: beforeState,
+          after: cloneUsers([user])[0],
+          details: 'Statut utilisateur mis à jour : ' + user.username + ' (' + user.status + ')',
+          result: 'SUCCESS',
+          entityType: 'user'
+        });
+      } catch(e) {}
+    }
     if (typeof AdminUI !== 'undefined') AdminUI.navigate('users');
   }
 
@@ -560,6 +757,18 @@ var UserAdmin = (function() {
 
     users = users.filter(function(u) { return u.id !== id; });
     saveUsers(users);
+    if (typeof SIGAuditTrail !== 'undefined') {
+      try {
+        SIGAuditTrail.log(SIGAuditTrail.ACTIONS.USER_DELETED, {
+          featureId: String(id),
+          featureName: user.username,
+          before: cloneUsers([user])[0],
+          details: 'Utilisateur supprimé : ' + user.username,
+          result: 'SUCCESS',
+          entityType: 'user'
+        });
+      } catch(e) {}
+    }
     if (typeof AdminUI !== 'undefined') AdminUI.navigate('users');
   }
 
@@ -578,7 +787,9 @@ var UserAdmin = (function() {
     recordLogin: recordLogin,
     recordActivity: recordActivity,
     loadLoginHistory: loadLoginHistory,
-    ALLOWED_ROLES: ALLOWED_ROLES
+    ALLOWED_ROLES: ALLOWED_ROLES,
+    findByUsername: findByUsername,
+    authenticate: authenticate
   };
 })();
 
@@ -603,13 +814,6 @@ var SettingsAdmin = (function() {
     /* PHASE 9 : nouveaux paramètres */
     logo: '', /* base64 data URL du logo */
     defaultBaseMap: 'satellite', /* satellite | osm | hybrid | light | topographic */
-    ministryName: 'Ministère des Travaux Publics du Togo',
-    ministryAddress: 'Avenue de la Marina, Lomé, Togo',
-    ministryPhone: '+228 22 21 30 00',
-    ministryEmail: 'contact@travauxpublics.tg',
-    supportName: 'Support technique GeoROAD',
-    supportEmail: 'support@georoad.tg',
-    supportPhone: '+228 90 00 00 00',
     backupFrequency: 'manual' /* manual | daily | weekly */
   };
 
@@ -700,24 +904,6 @@ var SettingsAdmin = (function() {
       + '</div>'
       + '</div></div></div>';
 
-    /* Section 1c : Coordonnées du ministère (PHASE 9) */
-    html += '<div class="admin-panel" style="margin-top:16px"><div class="panel-header"><h3><i class="fas fa-building-columns"></i> Coordonnées du ministère</h3></div>'
-      + '<div class="panel-body">'
-      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">'
-      + '<div><label style="font-size:.82rem;font-weight:600;color:var(--text-2);display:block;margin-bottom:6px">Nom du ministère</label>'
-      + inputHtml('ministryName', s.ministryName)
-      + '</div>'
-      + '<div><label style="font-size:.82rem;font-weight:600;color:var(--text-2);display:block;margin-bottom:6px">Adresse</label>'
-      + inputHtml('ministryAddress', s.ministryAddress)
-      + '</div>'
-      + '<div><label style="font-size:.82rem;font-weight:600;color:var(--text-2);display:block;margin-bottom:6px">Téléphone</label>'
-      + inputHtml('ministryPhone', s.ministryPhone)
-      + '</div>'
-      + '<div><label style="font-size:.82rem;font-weight:600;color:var(--text-2);display:block;margin-bottom:6px">Email</label>'
-      + inputHtml('ministryEmail', s.ministryEmail)
-      + '</div>'
-      + '</div></div></div>';
-
     /* Section 2 : Cartographie + fond de carte par défaut (PHASE 9) */
     html += '<div class="admin-panel" style="margin-top:16px"><div class="panel-header"><h3><i class="fas fa-map"></i> Cartographie</h3></div>'
       + '<div class="panel-body">'
@@ -732,7 +918,7 @@ var SettingsAdmin = (function() {
       + selectHtml('coordFormat', [{value:'DMS',label:'DMS (degrés, minutes, secondes)'},{value:'DD',label:'DD (degrés décimaux)'}], s.coordFormat)
       + '</div>'
       + '<div><label style="font-size:.82rem;font-weight:600;color:var(--text-2);display:block;margin-bottom:6px">Fond de carte par défaut</label>'
-      + selectHtml('defaultBaseMap', [{value:'satellite',label:'Google Satellite'},{value:'osm',label:'OpenStreetMap'},{value:'hybrid',label:'Google Hybrid'},{value:'light',label:'Fond clair (CartoDB)'},{value:'topographic',label:'Topographique (OpenTopoMap)'}], s.defaultBaseMap)
+      + selectHtml('defaultBaseMap', [{value:'satellite',label:'Google Satellite'},{value:'osm',label:'OpenStreetMap'},{value:'hybrid',label:'Google Hybrid'}], s.defaultBaseMap)
       + '</div>'
       + '</div></div></div>';
 
@@ -763,21 +949,6 @@ var SettingsAdmin = (function() {
       + '</div>'
       + '<div><label style="font-size:.82rem;font-weight:600;color:var(--text-2);display:block;margin-bottom:6px">Taille du stockage</label>'
       + '<div style="padding:9px 12px;background:var(--bg);border-radius:8px;font-size:.88rem;color:var(--text-2)">' + storageStr + '</div>'
-      + '</div>'
-      + '</div></div></div>';
-
-    /* Section 3b : Coordonnées du support (PHASE 9) */
-    html += '<div class="admin-panel" style="margin-top:16px"><div class="panel-header"><h3><i class="fas fa-headset"></i> Coordonnées du support technique</h3></div>'
-      + '<div class="panel-body">'
-      + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px">'
-      + '<div><label style="font-size:.82rem;font-weight:600;color:var(--text-2);display:block;margin-bottom:6px">Nom du support</label>'
-      + inputHtml('supportName', s.supportName)
-      + '</div>'
-      + '<div><label style="font-size:.82rem;font-weight:600;color:var(--text-2);display:block;margin-bottom:6px">Email</label>'
-      + inputHtml('supportEmail', s.supportEmail)
-      + '</div>'
-      + '<div><label style="font-size:.82rem;font-weight:600;color:var(--text-2);display:block;margin-bottom:6px">Téléphone</label>'
-      + inputHtml('supportPhone', s.supportPhone)
       + '</div>'
       + '</div></div></div>';
 
@@ -827,6 +998,23 @@ var SettingsAdmin = (function() {
   }
 
   function saveAll() {
+    var settingsSnapshot = loadSettings();
+    if (typeof SIGAuditTrail !== 'undefined') {
+      try {
+        SIGAuditTrail.log(SIGAuditTrail.ACTIONS.SETTINGS_UPDATED, {
+          featureName: 'Configuration GeoROAD TOGO',
+          details: 'Paramètres de la plateforme enregistrés',
+          after: settingsSnapshot,
+          result: 'SUCCESS',
+          entityType: 'settings'
+        });
+      } catch(e) {}
+    }
+    if (typeof NotificationCenter !== 'undefined') {
+      try {
+        NotificationCenter.add('update', 'Paramètres enregistrés', 'La configuration de la plateforme a été mise à jour.');
+      } catch(e) {}
+    }
     /* Tous les champs sont déjà sauvegardés en temps réel via onchange/oninput. */
     /* Ce bouton sert de confirmation visuelle. */
     var toast = document.getElementById('settings-toast');
@@ -1087,14 +1275,21 @@ var AuditAdmin = (function() {
     });
 
     var blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
-    var url = URL.createObjectURL(blob);
-    var a = document.createElement('a');
-    a.href = url;
-    a.download = 'audit_georoad_' + new Date().toISOString().split('T')[0] + '.csv';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    var filename = 'audit_georoad_' + new Date().toISOString().split('T')[0] + '.csv';
+    if (typeof GeoROADDownload !== 'undefined' && typeof GeoROADDownload.downloadBlob === 'function') {
+      GeoROADDownload.downloadBlob(blob, filename);
+    } else {
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      (document.body || document.documentElement).appendChild(a);
+      a.click();
+      setTimeout(function() {
+        if (a.parentNode) a.parentNode.removeChild(a);
+        URL.revokeObjectURL(url);
+      }, 400);
+    }
   }
 
   /** Export PDF du journal d'audit filtré (utilise jsPDF + autoTable déjà chargés sur admin.html). */
@@ -1419,25 +1614,6 @@ var AdminPages = (function() {
       + '</tbody></table></div></div></div>';
   }
 
-  function pageUsers() {
-    return pageHeader('Gestion des utilisateurs', 'Administration des comptes et des rôles d\'accès à la plateforme GeoROAD. Cette section est réservée aux administrateurs système du Ministère des Travaux Publics pour gérer les permissions des agents.')
-      + emptyState('fa-users-gear', 'Gestion des utilisateurs',
-        'Cette section permettra de créer et gérer les comptes utilisateurs avec des rôles et permissions différenciés.',
-        'Créer un utilisateur');
-  }
-
-  function pageTableau() {
-    return pageHeader('Tableau de bord cartographique', 'Visualisation cartographique avancée avec outils d\'analyse')
-      + emptyState('fa-map-location-dot', 'Tableau de bord cartographique',
-        'Cette section intégrera une carte interactive avec des couches analytiques, des filtres avancés et des outils de mesure.',
-        'Ouvrir la carte')
-      + '<div class="admin-panel" style="margin-top:20px"><div class="panel-header"><h3><i class="fas fa-globe"></i> Accès rapide</h3></div>'
-      + '<div class="panel-body" style="display:flex;gap:12px;flex-wrap:wrap">'
-      + '<a href="geoportail.html" target="_blank" class="btn-sm primary"><i class="fas fa-external-link-alt"></i> Ouvrir le géoportail public</a>'
-      + '<button class="btn-sm ghost" disabled><i class="fas fa-map"></i> Carte d\'édition (à venir)</button>'
-      + '</div></div>';
-  }
-
   function pageSettings() {
     return pageHeader('Paramètres', 'Configuration générale de la plateforme GeoROAD : système de projection cartographique, base de données, authentification et sécurité. Ces paramètres sont utilisés par l\'ensemble des modules de l\'application.')
       + '<div class="grid-2">'
@@ -1577,7 +1753,7 @@ var AdminPages = (function() {
     'spatial': pageSpatial,
     'audit': function() { return AuditAdmin.render(); },
     'users': function() { return UserAdmin.render(); },
-    'tableau': pageTableau,
+    'tableau': pageDashboard,
     'settings': function() { return SettingsAdmin.render(); }
   };
 
@@ -1628,6 +1804,34 @@ var AdminPages = (function() {
   };
 })();
 
+/* -------------------------------------------------------------------
+ * UTIL : Normalisation d'encodage (correction mojibake)
+ * ------------------------------------------------------------------- */
+function decodeMojibakeText(text) {
+  if (typeof text !== 'string') return text;
+  if (text.indexOf('Ã') === -1 && text.indexOf('â') === -1 && text.indexOf('Â') === -1) {
+    return text;
+  }
+  try {
+    return decodeURIComponent(escape(text));
+  } catch(e) {
+    return text;
+  }
+}
+
+function normalizeMojibakeInNode(root) {
+  if (!root || typeof document === 'undefined' || typeof document.createTreeWalker !== 'function') return;
+  var showText = (typeof NodeFilter !== 'undefined' && NodeFilter.SHOW_TEXT) ? NodeFilter.SHOW_TEXT : 4;
+  var walker = document.createTreeWalker(root, showText, null, false);
+  var node = null;
+  while ((node = walker.nextNode())) {
+    var fixed = decodeMojibakeText(node.nodeValue || '');
+    if (fixed !== node.nodeValue) {
+      node.nodeValue = fixed;
+    }
+  }
+}
+
 
 /* -------------------------------------------------------------------
  * MODULE : AdminUI
@@ -1640,7 +1844,29 @@ var AdminUI = (function() {
   var sidebarCollapsed = false;
 
   /* Labels pour le fil d'Ariane et l'aide — partagés avec AdminPages */
-    var _labelsRef = function() { return (typeof AdminPages !== 'undefined' && AdminPages.PAGE_LABELS_HELP) ? AdminPages.PAGE_LABELS_HELP : null; };
+  var _labelsRef = function() { return (typeof AdminPages !== 'undefined' && AdminPages.PAGE_LABELS_HELP) ? AdminPages.PAGE_LABELS_HELP : null; };
+
+  function syncCurrentUserActivity() {
+    if (typeof UserAdmin === 'undefined' || typeof UserAdmin.recordActivity !== 'function') return;
+    var session = AdminAuth.getSession();
+    if (!session) return;
+
+    var userId = session.userId;
+    if (!userId && typeof UserAdmin.findByUsername === 'function') {
+      var matchedUser = UserAdmin.findByUsername(session.user || session.username || session.name);
+      if (matchedUser) {
+        userId = matchedUser.id;
+        session.userId = matchedUser.id;
+        session.name = session.name || matchedUser.name;
+        session.role = session.role || matchedUser.role;
+        sessionStorage.setItem('georoad_auth', JSON.stringify(session));
+      }
+    }
+
+    if (userId) {
+      try { UserAdmin.recordActivity(userId); } catch(e) {}
+    }
+  }
 
   /**
    * Initialise l'interface d'administration.
@@ -1669,8 +1895,16 @@ var AdminUI = (function() {
       if (avatarEl) avatarEl.textContent = (session.name || 'U').charAt(0).toUpperCase();
     }
 
-    /* Naviguer vers la page par défaut */
-    navigate('dashboard');
+    syncCurrentUserActivity();
+
+    /* Naviguer vers la page demandée */
+    var initialPage = 'dashboard';
+    var hash = window.location.hash.replace('#', '');
+    if (hash && AdminPages.exists(hash)) {
+      initialPage = hash;
+    }
+    navigate(initialPage);
+    normalizeMojibakeInNode(document.body);
   }
 
   /**
@@ -1692,7 +1926,7 @@ var AdminUI = (function() {
     var toLoad = [];
 
     requiredScripts.forEach(function(src) {
-      var varName = src.split('/')[1].replace('.js', '');
+      var varName = 'json_' + src.split('/').pop().replace('.js', '');
       if (typeof window[varName] === 'undefined') {
         toLoad.push(src);
       }
@@ -1733,11 +1967,21 @@ var AdminUI = (function() {
     if (!AdminPages.exists(pageKey)) return;
     currentPage = pageKey;
 
+    /* Garder le hash synchronisé pour les modules qui se rafraîchissent sur la page courante */
+    try {
+      if (window.history && typeof window.history.replaceState === 'function') {
+        window.history.replaceState(null, '', '#' + pageKey);
+      } else {
+        window.location.hash = pageKey;
+      }
+    } catch(e) {}
+
     /* Mettre à jour le contenu */
     var contentEl = document.getElementById('adminContent');
     if (contentEl) {
       contentEl.innerHTML = AdminPages.render(pageKey);
       contentEl.scrollTop = 0;
+      normalizeMojibakeInNode(contentEl);
     }
 
     /* Mettre à jour le menu actif */
@@ -1759,6 +2003,7 @@ var AdminUI = (function() {
 
     /* Fermer le sidebar mobile si ouvert */
     closeMobileSidebar();
+    syncCurrentUserActivity();
   }
 
   /** Met à jour dynamiquement les compteurs de la sidebar depuis les données réelles. */
@@ -1837,7 +2082,8 @@ var AdminUI = (function() {
     toggleSidebar: toggleSidebar,
     closeMobileSidebar: closeMobileSidebar,
     showHelp: showHelp,
-    refreshNavBadges: refreshNavBadges
+    refreshNavBadges: refreshNavBadges,
+    getCurrentPage: function() { return currentPage; }
   };
 })();
 
@@ -1847,12 +2093,6 @@ var AdminUI = (function() {
  * ------------------------------------------------------------------- */
 document.addEventListener('DOMContentLoaded', function() {
   AdminUI.init();
-
-  /* Handle hash-based navigation (e.g. admin.html#routes) */
-  var hash = window.location.hash.replace('#', '');
-  if (hash && AdminPages.exists(hash)) {
-    AdminUI.navigate(hash);
-  }
 
   /* Abonnement au SIGEventBus pour rafraîchir dynamiquement les compteurs
      et la page courante quand une feature est créée/modifiée/supprimée. */
@@ -1866,10 +2106,12 @@ document.addEventListener('DOMContentLoaded', function() {
         /* Re-render la page courante pour refléter les changements */
         var contentEl = document.getElementById('adminContent');
         if (contentEl && typeof AdminPages !== 'undefined') {
-          var currentHash = window.location.hash.replace('#', '');
-          var pageKey = currentHash || 'dashboard';
+          var pageKey = (typeof AdminUI !== 'undefined' && typeof AdminUI.getCurrentPage === 'function')
+            ? AdminUI.getCurrentPage()
+            : (window.location.hash.replace('#', '') || 'dashboard');
           if (AdminPages.exists(pageKey)) {
             contentEl.innerHTML = AdminPages.render(pageKey);
+            normalizeMojibakeInNode(contentEl);
           }
         }
       }, 200);

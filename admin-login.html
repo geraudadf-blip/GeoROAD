@@ -12,7 +12,7 @@
 :root{--gold:#C8A64B;--gold-dark:#A68A3A;--gold-light:#D4B96A;--gold-pale:rgba(200,166,75,.10);--cream:#F8F6F0;--cream-2:#F0EDE4;--cream-3:#E8E4D9;--cream-border:#DDD8CA;--text:#2C2A24;--text-2:#5C5850;--text-3:#8B8578;--text-4:#A9A49A;--white:#FFF;--shadow:rgba(44,42,36,.06);--shadow-md:rgba(44,42,36,.1);--shadow-lg:rgba(44,42,36,.16);--red:#B85C38;--green:#5E6E54}
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 html{scroll-behavior:smooth}
-body{font-family:'Outfit',sans-serif;background:var(--cream);color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden;line-height:1.6}
+body{font-family:'Outfit',sans-serif;background:var(--cream);color:var(--text);min-height:100dvh;display:flex;align-items:center;justify-content:center;overflow:hidden;line-height:1.6}
 a{text-decoration:none;color:inherit}
 .login-wrapper{width:100%;max-width:420px;padding:20px}
 .login-card{background:var(--white);border-radius:20px;border:1px solid var(--cream-border);box-shadow:0 4px 40px var(--shadow-md);padding:48px 36px 40px;text-align:center}
@@ -47,7 +47,8 @@ a{text-decoration:none;color:inherit}
 .login-footer a i{font-size:.72rem}
 .login-bg-pattern{position:fixed;inset:0;z-index:-1;background-image:linear-gradient(rgba(200,166,75,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(200,166,75,.03) 1px,transparent 1px);background-size:50px 50px}
 .login-bg-glow{position:fixed;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(200,166,75,.06) 0%,transparent 70%);z-index:-1;top:50%;left:50%;transform:translate(-50%,-50%)}
-@media(max-width:480px){.login-card{padding:36px 24px 32px;border-radius:16px}.login-title{font-size:1.35rem}.login-wrapper{padding:16px}}
+@media(max-width:768px){body{align-items:flex-start;overflow-y:auto;padding:18px 0}.login-card{padding:34px 22px 30px;border-radius:18px}.form-options{flex-direction:column;align-items:flex-start;gap:12px;margin-bottom:20px}.login-footer{margin-top:22px}}
+@media(max-width:480px){.login-card{padding:32px 20px 28px;border-radius:16px}.login-title{font-size:1.3rem}.login-subtitle{font-size:.84rem;margin-bottom:24px}.login-wrapper{padding:14px}}
 </style>
 </head>
 <body>
@@ -98,6 +99,8 @@ a{text-decoration:none;color:inherit}
   </div>
 </div>
 
+<script src="bundle/utils.js?v=2"></script>
+<script src="bundle/sig-core.js?v=5"></script>
 <script>
 /**
  * GeoROAD TOGO — Authentification Admin
@@ -113,15 +116,158 @@ a{text-decoration:none;color:inherit}
  */
 (function() {
   'use strict';
+  var SESSION_KEY = 'georoad_auth';
+  var USERS_KEY = 'georoad_users';
+  var LOGIN_HISTORY_KEY = 'georoad_login_history';
+  var ADMIN_USERNAME = 'GeoROAD';
+  var ADMIN_PASSWORD = 'georoad@2026';
+  var ADMIN_NAME = 'GeoROAD';
+  var ADMIN_EMAIL = 'admin@georoad.tg';
+  var LEGACY_ADMIN_PASSWORD = 'georoad2025';
+  var DEFAULT_ADMIN = {
+    id: 1,
+    username: ADMIN_USERNAME,
+    password: ADMIN_PASSWORD,
+    role: 'administrateur',
+    name: ADMIN_NAME,
+    email: ADMIN_EMAIL,
+    status: 'actif',
+    mustChangePassword: false,
+    lastLogin: null,
+    lastActivity: null,
+    createdAt: '2025-01-01'
+  };
 
-  /*
-   * Configuration des identifiants (à remplacer par une API backend)
-   * En production, ces données proviendront d'une base PostgreSQL
-   * via une API REST sécurisée.
-   */
-  var ADMIN_USERS = [
-    { username: 'admin', password: 'georoad2025', role: 'administrateur', name: 'Administrateur' }
-  ];
+  function clone(data) {
+    try { return JSON.parse(JSON.stringify(data)); }
+    catch(e) { return data; }
+  }
+
+  function normalizeUsers(users) {
+    var list = Array.isArray(users) ? clone(users) : [];
+    var hasAdmin = false;
+
+    list = list.filter(function(user) {
+      return user && typeof user === 'object';
+    }).map(function(user, idx) {
+      if (!user.id) user.id = idx + 1;
+      user.username = String(user.username || ('utilisateur_' + user.id)).trim();
+      user.name = user.name || user.username;
+      user.email = user.email || (user.username + '@georoad.tg');
+      user.role = user.role || 'utilisateur_public';
+      user.status = user.status || 'actif';
+      if (typeof user.password === 'undefined') user.password = '';
+      if (typeof user.mustChangePassword === 'undefined') user.mustChangePassword = false;
+
+      if (user.username.toLowerCase() === 'admin') {
+        user.username = ADMIN_USERNAME;
+      }
+
+      if (user.username.toLowerCase() === ADMIN_USERNAME.toLowerCase()) {
+        hasAdmin = true;
+        user.name = ADMIN_NAME;
+        user.role = 'administrateur';
+        user.status = 'actif';
+        user.email = ADMIN_EMAIL;
+        if (!user.password || user.password === LEGACY_ADMIN_PASSWORD) {
+          user.password = DEFAULT_ADMIN.password;
+        }
+      }
+      return user;
+    });
+
+    var seenUsernames = {};
+    list = list.filter(function(user) {
+      var key = String(user.username || '').toLowerCase();
+      if (!key) return false;
+      if (seenUsernames[key]) return false;
+      seenUsernames[key] = true;
+      return true;
+    });
+
+    if (!hasAdmin) list.unshift(clone(DEFAULT_ADMIN));
+    return list;
+  }
+
+  function loadUsers() {
+    var users = null;
+    try {
+      var data = localStorage.getItem(USERS_KEY);
+      if (data) users = JSON.parse(data);
+    } catch(e) {}
+    users = normalizeUsers(users || [DEFAULT_ADMIN]);
+    localStorage.setItem(USERS_KEY, JSON.stringify(users));
+    return users;
+  }
+
+  function saveUsers(users) {
+    localStorage.setItem(USERS_KEY, JSON.stringify(normalizeUsers(users)));
+  }
+
+  function findUser(username) {
+    var uname = String(username || '').trim().toLowerCase();
+    return loadUsers().find(function(user) {
+      return String(user.username || '').toLowerCase() === uname;
+    }) || null;
+  }
+
+  function recordLogin(user, success, message) {
+    var history = [];
+    try {
+      history = JSON.parse(localStorage.getItem(LOGIN_HISTORY_KEY)) || [];
+    } catch(e) {}
+
+    history.unshift({
+      userId: user && user.id ? user.id : null,
+      username: user && user.username ? user.username : document.getElementById('login-user').value.trim(),
+      timestamp: new Date().toISOString(),
+      success: !!success,
+      ip: 'local'
+    });
+    if (history.length > 200) history = history.slice(0, 200);
+    localStorage.setItem(LOGIN_HISTORY_KEY, JSON.stringify(history));
+
+    if (success && user) {
+      var users = loadUsers();
+      users.forEach(function(item) {
+        if (item.id === user.id) {
+          item.lastLogin = new Date().toISOString();
+          item.lastActivity = new Date().toISOString();
+        }
+      });
+      saveUsers(users);
+    }
+
+    if (typeof SIGAuditTrail !== 'undefined') {
+      try {
+        SIGAuditTrail.log(success ? SIGAuditTrail.ACTIONS.LOGIN : SIGAuditTrail.ACTIONS.LOGIN_FAILED, {
+          user: (user && user.username) || document.getElementById('login-user').value.trim() || 'Inconnu',
+          featureId: user && user.id ? String(user.id) : null,
+          featureName: (user && user.username) || null,
+          details: message,
+          result: success ? 'SUCCESS' : 'FAILURE',
+          entityType: 'user'
+        });
+      } catch(e) {}
+    }
+  }
+
+  function authenticate(username, password) {
+    var user = findUser(username);
+    if (!user) {
+      return { ok: false, message: 'Identifiants incorrects.' };
+    }
+    if (user.status !== 'actif') {
+      return { ok: false, user: user, message: 'Ce compte est désactivé.' };
+    }
+    if (String(user.role || '').toLowerCase() !== 'administrateur') {
+      return { ok: false, user: user, message: 'Ce compte n’a pas accès à l’administration.' };
+    }
+    if (String(user.password || '') !== String(password || '')) {
+      return { ok: false, user: user, message: 'Identifiants incorrects.' };
+    }
+    return { ok: true, user: user };
+  }
 
   /**
    * Tente une connexion avec les identifiants fournis.
@@ -134,25 +280,23 @@ a{text-decoration:none;color:inherit}
     var pass = document.getElementById('login-pass').value;
     var errorEl = document.getElementById('login-error');
 
-    var found = null;
-    for (var i = 0; i < ADMIN_USERS.length; i++) {
-      if (ADMIN_USERS[i].username === user && ADMIN_USERS[i].password === pass) {
-        found = ADMIN_USERS[i];
-        break;
-      }
-    }
-
-    if (found) {
-      /* Stockage de la session (sessionStorage = fermé à la fermeture du navigateur) */
-      sessionStorage.setItem('georoad_auth', JSON.stringify({
+    var result = authenticate(user, pass);
+    if (result.ok) {
+      var found = result.user;
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify({
         authenticated: true,
         user: found.username,
+        userId: found.id,
         role: found.role,
         name: found.name,
+        mustChangePassword: !!found.mustChangePassword,
         loginTime: new Date().toISOString()
       }));
+      recordLogin(found, true, 'Connexion réussie à l’administration');
       window.location.href = 'admin.html';
     } else {
+      recordLogin(result.user || { username: user }, false, result.message);
+      errorEl.querySelector('span').textContent = result.message;
       errorEl.classList.add('show');
       document.getElementById('login-pass').value = '';
       setTimeout(function() { errorEl.classList.remove('show'); }, 4000);
@@ -162,8 +306,8 @@ a{text-decoration:none;color:inherit}
 
   /* Si déjà connecté, rediriger vers le dashboard */
   try {
-    var existing = JSON.parse(sessionStorage.getItem('georoad_auth'));
-    if (existing && existing.authenticated) {
+    var existing = JSON.parse(sessionStorage.getItem(SESSION_KEY));
+    if (existing && existing.authenticated && String(existing.role || '').toLowerCase() === 'administrateur') {
       window.location.href = 'admin.html';
     }
   } catch(e) {}

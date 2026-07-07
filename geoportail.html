@@ -8,9 +8,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<link rel="stylesheet" href="geoportail.css">
+<link rel="stylesheet" href="geoportail.css?v=3">
 </head>
-<body>
+<body data-georoad-mode="public">
 
 <!-- Preloader -->
 <div id="gp-preloader">
@@ -35,7 +35,10 @@
     <a href="index.html#network">Réseau</a>
     <a href="index.html#regions">Régions</a>
     <a href="#" class="active">Géoportail</a>
-    <a href="admin-login.html" title="Administration" style="opacity:.5"><i class="fas fa-lock" style="font-size:.72rem"></i></a>
+    <a href="admin-login.html" class="gp-admin-link" title="Administration">
+      <i class="fas fa-lock"></i>
+      <span>Admin</span>
+    </a>
   </div>
 </nav>
 
@@ -150,10 +153,6 @@
   <div id="sig-toolbar">
     <button class="sig-tool-btn active" data-tool="select" title="Sélection"><i class="fas fa-mouse-pointer"></i><span class="sig-tool-tip">Sélection</span></button>
     <button class="sig-tool-btn" data-tool="move" title="Déplacement"><i class="fas fa-hand"></i><span class="sig-tool-tip">Déplacement</span></button>
-    <button class="sig-tool-btn" data-tool="vertex-edit" title="Édition sommet"><i class="fas fa-draw-polygon"></i><span class="sig-tool-tip">Éditer sommets</span></button>
-    <button class="sig-tool-btn" data-tool="add-vertex" title="Ajouter sommet"><i class="fas fa-plus-circle"></i><span class="sig-tool-tip">Ajouter sommet</span></button>
-    <button class="sig-tool-btn" data-tool="delete-vertex" title="Supprimer sommet"><i class="fas fa-minus-circle"></i><span class="sig-tool-tip">Suppr. sommet</span></button>
-    <button class="sig-tool-btn" data-tool="delete" title="Supprimer"><i class="fas fa-trash"></i><span class="sig-tool-tip">Supprimer</span></button>
     <div class="sig-tool-divider"></div>
     <button class="sig-tool-btn" data-tool="measure" title="Mesure"><i class="fas fa-ruler"></i><span class="sig-tool-tip">Mesure</span></button>
     <div class="sig-tool-divider"></div>
@@ -379,10 +378,10 @@ proj4.defs('EPSG:32632','+proj=utm +zone=32 +datum=WGS84 +units=m +no_defs');</s
 <script src="geoportail.js"></script>
 
 <!-- UI Layout Manager (must load before SIG modules) -->
-<script src="bundle/utils.js"></script>
+<script src="bundle/utils.js?v=2"></script>
 
 <!-- SIG Core bundle (event-bus + spatial-calculator + persistence + audit-trail + data-engine) -->
-<script src="bundle/sig-core.js"></script>
+<script src="bundle/sig-core.js?v=5"></script>
 
 <!-- SIG Editor bundle (map-layers + hierarchy + validator + attributes + sync + drawing + pro-editor + geoportail-sig) -->
 <script src="bundle/sig-editor.js"></script>

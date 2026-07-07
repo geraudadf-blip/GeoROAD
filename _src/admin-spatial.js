@@ -2,7 +2,7 @@
  * GeoROAD TOGO — Module Gestion des Données Spatiales
  *
  * Import : GeoJSON, CSV (avec détection automatique des colonnes de coordonnées)
- * Export : GeoJSON, CSV, PDF (fiche), Excel, Shapefile
+ * Export : GeoJSON, CSV, PDF (fiche), Excel
  *
  * L'import affiche un aperçu complet avant validation :
  *   - Nombre d'entités
@@ -127,7 +127,7 @@ var SpatialModule = (function() {
     html += '<div class="admin-panel"><div class="panel-body" style="text-align:center;padding:40px 24px">'
       + '<div class="sc-icon blue" style="margin:0 auto 14px"><i class="fas fa-file-export"></i></div>'
       + '<h3 style="font-size:1rem;font-weight:600;margin-bottom:4px">Exporter des données</h3>'
-      + '<p style="font-size:.82rem;color:var(--text-3);margin-bottom:16px">GeoJSON, Shapefile, CSV, PDF, Excel</p>'
+      + '<p style="font-size:.82rem;color:var(--text-3);margin-bottom:16px">GeoJSON, CSV, PDF, Excel</p>'
       + '<button class="btn-sm primary" onclick="SpatialModule.openExportDialog()"><i class="fas fa-download"></i> Exporter</button>'
       + '</div></div>';
     html += '</div>';
@@ -384,14 +384,7 @@ var SpatialModule = (function() {
     if (!data) { alert('Couche introuvable'); return; }
     var json = JSON.stringify(data, null, 2);
     var blob = new Blob([json], { type: 'application/geo+json' });
-    var url = URL.createObjectURL(blob);
-    var a = document.createElement('a');
-    a.href = url;
-    a.download = l.name.replace(/\s/g, '_') + '.geojson';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    downloadBlob(blob, l.name.replace(/\s/g, '_') + '.geojson');
   }
 
   /* ===================================================================
@@ -756,6 +749,39 @@ var SpatialModule = (function() {
     }
   }
 
+  function normalizePKImportFeature(feature, idx, timestamp) {
+    var geom = feature.geometry || {};
+    var start = [0, 0];
+    var end = [0, 0];
+
+    if (geom.type === 'Point' && Array.isArray(geom.coordinates)) {
+      start = [parseFloat(geom.coordinates[0]) || 0, parseFloat(geom.coordinates[1]) || 0];
+      end = start.slice();
+    } else if (geom.type === 'LineString' && Array.isArray(geom.coordinates) && geom.coordinates.length > 0) {
+      start = [parseFloat(geom.coordinates[0][0]) || 0, parseFloat(geom.coordinates[0][1]) || 0];
+      end = [parseFloat(geom.coordinates[geom.coordinates.length - 1][0]) || 0, parseFloat(geom.coordinates[geom.coordinates.length - 1][1]) || 0];
+    }
+
+    var props = Object.assign({}, feature.properties || {});
+    return {
+      type: 'Feature',
+      id: feature.id || ('pk_import_' + Date.now() + '_' + idx),
+      geometry: { type: 'LineString', coordinates: [start, end] },
+      properties: Object.assign({}, props, {
+        numero: props.numero || props.Numero || props.Name || ('PK import ' + (idx + 1)),
+        route: props.route || props.Route || props.Name || 'Non associée',
+        PK_DEB_X: start[0],
+        PK_DEB_Y: start[1],
+        PK_FIN_X: end[0],
+        PK_FIN_Y: end[1],
+        source: 'import',
+        createdAt: timestamp,
+        lastModified: timestamp,
+        modifiedBy: 'Import spatial'
+      })
+    };
+  }
+
   function confirmImport() {
     if (!_pendingImport || !_pendingImport.features.length) return;
 
@@ -763,23 +789,35 @@ var SpatialModule = (function() {
     if (!destKey) return;
     var destination = destKey.value;
 
-    /* Import features into the target data store */
     var imported = 0;
     var now = new Date().toISOString();
+    var pkCollection = null;
 
     _pendingImport.features.forEach(function(f, idx) {
-      /* Enrich with metadata */
       if (!f.properties) f.properties = {};
       f.properties.importedAt = now;
       f.properties.importSource = _pendingImport.fileName;
       f.id = f.id || ('import_' + Date.now() + '_' + idx);
 
-      /* Add to the appropriate store */
-      if (destination === 'routes' && typeof json_Rseauroutier_6 !== 'undefined') {
+      if (destination === 'routes' && typeof SIGDataEngine !== 'undefined') {
+        try {
+          SIGDataEngine.addFeature({
+            geometry: f.geometry,
+            properties: f.properties
+          });
+          imported++;
+        } catch (err) {}
+      } else if (destination === 'routes' && typeof json_Rseauroutier_6 !== 'undefined') {
         json_Rseauroutier_6.features.push(f);
         imported++;
       } else if (destination === 'emprises' && typeof json_Emprise_5 !== 'undefined') {
         json_Emprise_5.features.push(f);
+        imported++;
+      } else if (destination === 'pk' && typeof SIGPersistence !== 'undefined') {
+        if (!pkCollection) {
+          pkCollection = SIGPersistence.loadLayer(SIGPersistence.LAYERS.PK) || { type: 'FeatureCollection', features: [] };
+        }
+        pkCollection.features.push(normalizePKImportFeature(f, idx, now));
         imported++;
       } else if (typeof SIGPersistence !== 'undefined') {
         var existing = SIGPersistence.loadLayer('layers.' + destination);
@@ -789,6 +827,11 @@ var SpatialModule = (function() {
         imported++;
       }
     });
+
+    if (pkCollection && typeof SIGPersistence !== 'undefined') {
+      SIGPersistence.saveLayer(SIGPersistence.LAYERS.PK, pkCollection);
+      window.json_PK = pkCollection;
+    }
 
     /* Refresh OL layer on map */
     if (destination === 'routes' && typeof lyr_Rseauroutier_6 !== 'undefined') {
@@ -813,12 +856,16 @@ var SpatialModule = (function() {
     if (destination === 'pk' && typeof SIGMapLayers !== 'undefined' && typeof SIGMapLayers.reloadPK === 'function') {
       SIGMapLayers.reloadPK();
     }
+    if (destination === 'routes' && typeof RoadSync !== 'undefined') {
+      RoadSync.propagate('created', { fullReload: true, featureId: null });
+    }
 
     /* Audit */
     if (typeof SIGAuditTrail !== 'undefined') {
       SIGAuditTrail.log(SIGAuditTrail.ACTIONS.IMPORT, {
         details: 'Import de ' + imported + ' entités depuis ' + _pendingImport.fileName + ' vers ' + destination,
-        after: { format: _pendingImport.format, destination: destination, count: imported }
+        after: { format: _pendingImport.format, destination: destination, count: imported },
+        result: imported > 0 ? 'SUCCESS' : 'FAILURE'
       });
     }
 
@@ -828,6 +875,7 @@ var SpatialModule = (function() {
         source: 'import',
         fileName: _pendingImport.fileName,
         destination: destination,
+        layer: destination,
         count: imported
       });
       SIGEventBus.emit(SIGEventBus.EVENTS.DASHBOARD_REFRESH, {});
@@ -839,6 +887,9 @@ var SpatialModule = (function() {
     }
 
     closeModal('spatial-import-modal');
+    if (typeof NotificationCenter !== 'undefined') {
+      NotificationCenter.add('import', 'Import terminÃ©', imported + ' entitÃ©(s) importÃ©e(s) vers ' + destination);
+    }
     _pendingImport = null;
 
     /* Refresh the spatial page */
@@ -875,7 +926,6 @@ var SpatialModule = (function() {
 
     html += exportFormatCard('geojson', 'fa-code', 'GeoJSON', 'Format standard SIG');
     html += exportFormatCard('csv', 'fa-table', 'CSV', 'Tableur');
-    html += exportFormatCard('shapefile', 'fa-map', 'Shapefile', 'Archive .zip');
     html += exportFormatCard('pdf', 'fa-file-pdf', 'PDF', 'Fiche récapitulative');
     html += exportFormatCard('excel', 'fa-file-excel', 'Excel', 'Classeur .xlsx');
 
@@ -897,7 +947,7 @@ var SpatialModule = (function() {
     var val = select.value;
 
     if (val === 'pk_persistence' && typeof SIGPersistence !== 'undefined') {
-      return { data: SIGPersistence.loadLayer('layers.pk'), name: 'points_kilometriques' };
+      return { data: SIGPersistence.loadLayer(SIGPersistence.LAYERS.PK), name: 'points_kilometriques' };
     }
     var varMap = {
       'Rseauroutier_6': { varName: 'json_Rseauroutier_6', name: 'reseau_routier' },
@@ -921,7 +971,6 @@ var SpatialModule = (function() {
     switch (format) {
       case 'geojson': exportGeoJSON(exportInfo); break;
       case 'csv': exportCSV(exportInfo); break;
-      case 'shapefile': exportShapefile(exportInfo); break;
       case 'pdf': exportPDF(exportInfo); break;
       case 'excel': exportExcel(exportInfo); break;
     }
@@ -936,14 +985,20 @@ var SpatialModule = (function() {
   }
 
   function downloadBlob(blob, filename) {
+    if (typeof GeoROADDownload !== 'undefined' && typeof GeoROADDownload.downloadBlob === 'function') {
+      GeoROADDownload.downloadBlob(blob, filename);
+      return;
+    }
     var url = URL.createObjectURL(blob);
     var a = document.createElement('a');
     a.href = url;
     a.download = filename;
-    document.body.appendChild(a);
+    (document.body || document.documentElement).appendChild(a);
     a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    setTimeout(function() {
+      if (a.parentNode) a.parentNode.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 400);
   }
 
   function exportGeoJSON(info) {

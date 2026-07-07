@@ -98,6 +98,14 @@
     }
   };
 
+  // Clés héritées à masquer dans la table attributaire et l'info panel
+  var hiddenKeys = {
+    'Canton_4': ['PREF_POP_2022','PREF_POP_IMPACT','REG_POP_2022','REG_POP_RU_TOT','REG_POP_RU_IMP','REG_POP_IMAPCT','REG_IAR_%','REG_TAUX_HUBN'],
+    'Prfecture_3': ['REG_POP_2022','REG_POP_RU_TOT','REG_POP_RU_IMP','REG_POP_IMAPCT','REG_IAR_%','REG_TAUX_HUBN'],
+    'Emprise_5': ['REG_POP_2022','REG_POP_RU_TOT','REG_POP_RU_IMP','REG_POP_IMAPCT','REG_IAR_%','REG_TAUX_HUBN'],
+    'Rseauroutier_6': ['REG_POP_2022','REG_POP_RU_TOT','REG_POP_RU_IMP','REG_POP_IMAPCT','REG_IAR_%','REG_TAUX_HUBN']
+  };
+
   // Layer references
   var layerMap = {
     'satellite': lyr_GoogleSatellite_0,
@@ -508,8 +516,13 @@
     var pageFeatures = features.slice(start, start + attrState.perPage);
 
     var allKeys = [];
+    var layerHidden = hiddenKeys[layerKey] || [];
     if (data.features.length > 0) {
-      allKeys = Object.keys(data.features[0].properties);
+      allKeys = Object.keys(data.features[0].properties).filter(function(kk) { return layerHidden.indexOf(kk) === -1; });
+    }
+    // Réinitialiser le tri si la clé triée est masquée
+    if (attrState.sortKey && layerHidden.indexOf(attrState.sortKey) !== -1) {
+      attrState.sortKey = null;
     }
 
     var thead = document.getElementById('attr-thead');
@@ -583,12 +596,46 @@
 
   window.attrGoPage = function(p) { attrState.page = p; buildAttrTable(); };
 
+  function downloadBlob(blob, filename) {
+    if (typeof GeoROADDownload !== 'undefined' && typeof GeoROADDownload.downloadBlob === 'function') {
+      GeoROADDownload.downloadBlob(blob, filename);
+      return;
+    }
+    var url = URL.createObjectURL(blob);
+    var link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.rel = 'noopener';
+    (document.body || document.documentElement).appendChild(link);
+    link.click();
+    setTimeout(function() {
+      if (link.parentNode) link.parentNode.removeChild(link);
+      URL.revokeObjectURL(url);
+    }, 400);
+  }
+
+  function dataURLToBlob(dataUrl) {
+    var parts = dataUrl.split(',');
+    var meta = parts[0] || '';
+    var base64 = parts[1] || '';
+    var mimeMatch = meta.match(/data:([^;]+);base64/);
+    var mime = mimeMatch ? mimeMatch[1] : 'image/png';
+    var binary = atob(base64);
+    var len = binary.length;
+    var bytes = new Uint8Array(len);
+    for (var i = 0; i < len; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    return new Blob([bytes], { type: mime });
+  }
+
   // 14. Export CSV
   window.exportLayerCSV = function(layerKey) {
     var data = jsonData[layerKey];
     if (!data) return;
     var aliases = fieldAliases[layerKey] || {};
-    var allKeys = data.features.length > 0 ? Object.keys(data.features[0].properties) : [];
+    var csvHidden = hiddenKeys[layerKey] || [];
+    var allKeys = data.features.length > 0 ? Object.keys(data.features[0].properties).filter(function(kk) { return csvHidden.indexOf(kk) === -1; }) : [];
     var csvContent = '\uFEFF';
     csvContent += allKeys.map(function(k) { return '"' + (aliases[k] || k) + '"'; }).join(';') + '\n';
     data.features.forEach(function(f) {
@@ -599,10 +646,7 @@
       }).join(';') + '\n';
     });
     var blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    var link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = layerKey + '.csv';
-    link.click();
+    downloadBlob(blob, layerKey + '.csv');
     showToast('Export CSV : ' + (layerNames[layerKey] || layerKey), 'file-csv');
   };
 
@@ -612,10 +656,7 @@
     if (!data) return;
     var json = JSON.stringify(data, null, 2);
     var blob = new Blob([json], { type: 'application/geo+json' });
-    var link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = layerKey + '.geojson';
-    link.click();
+    downloadBlob(blob, layerKey + '.geojson');
     showToast('Export GeoJSON : ' + (layerNames[layerKey] || layerKey), 'code');
   };
 
@@ -901,11 +942,20 @@
       var canvas = document.querySelector('#map canvas');
       if (!canvas) { showToast('Erreur lors de la capture', 'exclamation-triangle'); return; }
       try {
-        var link = document.createElement('a');
-        link.download = 'GeoROAD_TOGO_' + new Date().toISOString().slice(0,10) + '.png';
-        link.href = canvas.toDataURL('image/png');
-        link.click();
-        showToast('Carte exportée en PNG', 'check-circle');
+        if (typeof canvas.toBlob === 'function') {
+          canvas.toBlob(function(blob) {
+            if (!blob) {
+              showToast('Erreur lors de la capture', 'exclamation-triangle');
+              return;
+            }
+            downloadBlob(blob, 'GeoROAD_TOGO_' + new Date().toISOString().slice(0,10) + '.png');
+            showToast('Carte exportée en PNG', 'check-circle');
+          }, 'image/png');
+        } else {
+          var pngBlob = dataURLToBlob(canvas.toDataURL('image/png'));
+          downloadBlob(pngBlob, 'GeoROAD_TOGO_' + new Date().toISOString().slice(0,10) + '.png');
+          showToast('Carte exportée en PNG', 'check-circle');
+        }
       } catch(err) {
         showToast('Erreur : ' + err.message, 'exclamation-triangle');
       }
@@ -991,36 +1041,29 @@
     } else if (layerKey === 'Prfecture_3') {
       groups = [
         { title: 'Identification', keys: ['fid', 'NAME_1', 'NAME_2'] },
-        { title: 'Population de la préfecture', keys: ['POP_2022', 'POP_IMPACT'] },
-        { title: 'Population de la région', keys: ['REG_POP_2022', 'REG_POP_RU_TOT', 'REG_POP_RU_IMP', 'REG_POP_IMAPCT'] },
-        { title: 'Indicateurs de la région', keys: ['REG_IAR_%', 'REG_TAUX_HUBN'] }
+        { title: 'Population', keys: ['POP_2022', 'POP_IMPACT'] }
       ];
     } else if (layerKey === 'Canton_4') {
       groups = [
-        { title: 'Identification', keys: ['fid', 'NAME_1', 'NAME_2', 'NAME_3'] },
-        { title: 'Population de la préfecture', keys: ['PREF_POP_2022', 'PREF_POP_IMPACT'] },
-        { title: 'Population de la région', keys: ['REG_POP_2022', 'REG_POP_RU_TOT', 'REG_POP_RU_IMP', 'REG_POP_IMAPCT'] },
-        { title: 'Indicateurs de la région', keys: ['REG_IAR_%', 'REG_TAUX_HUBN'] }
+        { title: 'Identification', keys: ['fid', 'NAME_1', 'NAME_2', 'NAME_3'] }
       ];
     } else if (layerKey === 'Emprise_5') {
       groups = [
         { title: 'Identification', keys: ['Name', 'CLASSE', 'EMPRISE', 'REGIONS'] },
-        { title: 'Tronçon routier', keys: ['RT_LONGEUR', 'RT_PK_DEB_X', 'RT_PK_DEB_Y', 'RT_PK_FIN_X', 'RT_PK_FIN_Y'] },
-        { title: 'Population de la région', keys: ['REG_POP_2022', 'REG_POP_RU_TOT', 'REG_POP_RU_IMP', 'REG_POP_IMAPCT'] },
-        { title: 'Indicateurs de la région', keys: ['REG_IAR_%', 'REG_TAUX_HUBN'] }
+        { title: 'Tronçon routier', keys: ['RT_LONGEUR', 'RT_PK_DEB_X', 'RT_PK_DEB_Y', 'RT_PK_FIN_X', 'RT_PK_FIN_Y'] }
       ];
     } else if (layerKey === 'Rseauroutier_6') {
       groups = [
         { title: 'Identification', keys: ['Name', 'REGIONS', 'CLASSE', 'EMPRISE'] },
-        { title: 'Tronçon routier', keys: ['LONGEUR', 'PK_DEB_X', 'PK_DEB_Y', 'PK_FIN_X', 'PK_FIN_Y'] },
-        { title: 'Population de la région', keys: ['REG_POP_2022', 'REG_POP_RU_TOT', 'REG_POP_RU_IMP', 'REG_POP_IMAPCT'] },
-        { title: 'Indicateurs de la région', keys: ['REG_IAR_%', 'REG_TAUX_HUBN'] }
+        { title: 'Tronçon routier', keys: ['LONGEUR', 'PK_DEB_X', 'PK_DEB_Y', 'PK_FIN_X', 'PK_FIN_Y'] }
       ];
     }
 
-    // Si la couche n'a pas de groupes définis, on affiche tout à la suite.
+    var layerHidden = hiddenKeys[layerKey] || [];
+
+    // Si la couche n'a pas de groupes définis, on affiche tout à la suite (sauf hiddenKeys).
     if (groups.length === 0) {
-      var allKeys = Object.keys(props);
+      var allKeys = Object.keys(props).filter(function(kk) { return layerHidden.indexOf(kk) === -1; });
       for (var i = 0; i < allKeys.length; i++) {
         var k = allKeys[i];
         var lbl = aliases[k] || k;
@@ -1043,8 +1086,8 @@
           displayed[k] = true;
         });
       });
-      // Ajouter les clés restantes éventuelles.
-      var remaining = Object.keys(props).filter(function(kk) { return !displayed[kk]; });
+      // Ajouter les clés restantes éventuelles (en excluant les hiddenKeys).
+      var remaining = Object.keys(props).filter(function(kk) { return !displayed[kk] && layerHidden.indexOf(kk) === -1; });
       if (remaining.length > 0) {
         html += '<div class="info-section-title">Autres informations</div>';
         remaining.forEach(function(k) {
@@ -1107,68 +1150,5 @@
       map.getView().fit(ext, { size: map.getSize(), maxZoom: 14, padding: [80, 80, 80, 80], duration: 600 });
     }
   };
-
-// 24. SIG Edit Mode Toggle Button (admin only)
-  (function() {
-    var btn = document.createElement('button');
-    btn.id = 'btn-sig-edit-toggle';
-    btn.innerHTML = '<i class="fas fa-pen-to-square"></i> \u00c9dition';
-    btn.title = 'Basculer le mode \u00c9dition (E)';
-
-    /* Insert before the zoom-display in the bottom coord-bar */
-    var coordBar = document.getElementById('coord-bar');
-    var zoomDisplay = document.getElementById('zoom-display');
-    if (coordBar && zoomDisplay) {
-      coordBar.insertBefore(btn, zoomDisplay);
-    }
-
-    /* Show button only for authenticated admin users */
-    function checkAdminAndShow() {
-      var session = null;
-      if (typeof AdminAuth !== 'undefined') session = AdminAuth.getSession();
-      if (session && session.authenticated) {
-        var role = (session.role || '').toLowerCase();
-        if (role === 'administrateur') {
-          btn.style.display = 'inline-flex';
-          return;
-        }
-      }
-      btn.style.display = 'none';
-    }
-
-    /* Initial check + retry after a short delay (AdminAuth may init later) */
-    checkAdminAndShow();
-    setTimeout(checkAdminAndShow, 1000);
-
-    /* Also listen for login/logout events if AdminAuth broadcasts them */
-    if (typeof AdminAuth !== 'undefined' && AdminAuth.on) {
-      AdminAuth.on('login', checkAdminAndShow);
-      AdminAuth.on('logout', checkAdminAndShow);
-    }
-
-    /* Sync button state with document.body.sig-edit-active class */
-    var observer = new MutationObserver(function() {
-      var active = document.body.classList.contains('sig-edit-active');
-      btn.classList.toggle('active', active);
-      btn.innerHTML = active
-        ? '<i class="fas fa-eye"></i> Consulter'
-        : '<i class="fas fa-pen-to-square"></i> \u00c9dition';
-    });
-    observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
-
-    /* Click handler: toggle edit mode via SIGModule */
-    btn.addEventListener('click', function() {
-      if (typeof SIGModule === 'undefined') {
-        showToast('Module SIG non charg\u00e9', 'exclamation-triangle');
-        return;
-      }
-      var sigState = SIGModule.getState();
-      if (sigState && sigState.editMode) {
-        SIGModule.exitEditMode();
-      } else {
-        SIGModule.enterEditMode();
-      }
-    });
-  })();
 
 })();

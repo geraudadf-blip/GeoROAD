@@ -123,6 +123,22 @@ ul { list-style: none; }
 }
 .gp-nav-links a:hover { color: var(--gold-dark); }
 .gp-nav-links a.active { color: var(--gold-dark); font-weight: 600; }
+.gp-admin-link {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 12px; border-radius: 8px;
+  border: 1px solid var(--cream-border);
+  background: rgba(200,166,75,.08);
+  color: var(--gold-dark) !important;
+  font-size: .78rem; font-weight: 600;
+  transition: all .25s;
+  white-space: nowrap;
+}
+.gp-admin-link:hover {
+  background: var(--gold-pale);
+  border-color: var(--gold);
+  transform: translateY(-1px);
+}
+.gp-admin-link i { font-size: .72rem; }
 /* ===== MAP CONTAINER ===== */
 #map-container {
   position: fixed;
@@ -750,11 +766,22 @@ ul { list-style: none; }
 /* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
   /* Navbar: hide links, show compact logo */
-  .gp-nav-links { display: none !important; }
+  .gp-nav-links {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    right: 12px;
+  }
+  .gp-nav-links a:not(.gp-admin-link) { display: none !important; }
   .gp-hamburger { display: none !important; }
   #gp-navbar { height: 48px; padding: 0 12px; }
   .gp-logo { font-size: .95rem; gap: 8px; }
   .gp-logo .icon { width: 28px; height: 28px; }
+  .gp-admin-link {
+    padding: 6px 10px;
+    font-size: .7rem;
+  }
+  .gp-admin-link span { display: none; }
   #map-container { top: 48px; }
 
   /* Sidebar: full-screen overlay */

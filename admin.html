@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<link rel="stylesheet" href="admin.css">
+<link rel="stylesheet" href="admin.css?v=4">
 </head>
 <body>
 
@@ -76,11 +76,6 @@
         <span>Gestion des utilisateurs</span>
       </div>
 
-      <div class="nav-item" data-page="tableau" data-tooltip="Tableau de bord carto" onclick="AdminUI.navigate('tableau')">
-        <i class="fas fa-map-location-dot"></i>
-        <span>Tableau de bord</span>
-      </div>
-
       <div class="nav-item" data-page="settings" data-tooltip="Paramètres" onclick="AdminUI.navigate('settings')">
         <i class="fas fa-gear"></i>
         <span>Paramètres</span>
@@ -144,14 +139,16 @@
 <script src="layers/Canton_4.js"></script>
 <script src="layers/Emprise_5.js"></script>
 <script src="layers/Rseauroutier_6.js"></script>
+<!-- Shared UI utilities (layout + text normalization) -->
+<script src="bundle/utils.js?v=2"></script>
 <!-- SIG Core bundle (event-bus + spatial-calculator + persistence + audit-trail + data-engine) -->
-<script src="bundle/sig-core.js"></script>
+<script src="bundle/sig-core.js?v=5"></script>
 <!-- External libraries for export only — deferred (lazy loaded when needed) -->
 <script defer src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <!-- Admin bundle (notifications + ajout + admin + routes + emprises + pk + spatial) -->
-<script src="bundle/admin-bundle.js"></script>
+<script src="bundle/admin-bundle.js?v=11"></script>
 
 <script>
 /* Initialize Notification Center after all modules loaded */

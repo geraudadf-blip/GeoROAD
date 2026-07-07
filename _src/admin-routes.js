@@ -43,9 +43,9 @@ var RouteModule = (function() {
     if (typeof json_Rseauroutier_6 !== 'undefined' && json_Rseauroutier_6.features) {
       state.allRoutes = json_Rseauroutier_6.features.map(function(f, idx) {
         return {
-          id: idx,
+          id: (f.id !== undefined && f.id !== null) ? String(f.id) : ('route_' + idx),
           properties: Object.assign({}, f.properties),
-          geometry: f.geometry ? Object.assign({}, f.geometry) : null
+          geometry: f.geometry ? JSON.parse(JSON.stringify(f.geometry)) : null
         };
       });
     }
@@ -76,7 +76,7 @@ var RouteModule = (function() {
   function saveRoute(routeData) {
     var idx = -1;
     for (var i = 0; i < state.allRoutes.length; i++) {
-      if (state.allRoutes[i].id === routeData.id) { idx = i; break; }
+      if (String(state.allRoutes[i].id) === String(routeData.id)) { idx = i; break; }
     }
     if (idx >= 0) {
       state.allRoutes[idx].properties = Object.assign(state.allRoutes[idx].properties, routeData.properties);
@@ -87,9 +87,7 @@ var RouteModule = (function() {
 
   /** Ajoute une nouvelle route (futur : POST /api/routes). */
   function addRoute(routeData) {
-    var newId = state.allRoutes.length > 0
-      ? Math.max.apply(null, state.allRoutes.map(function(r) { return r.id; })) + 1
-      : 0;
+    var newId = routeData.id || ('route_' + Date.now());
     var newRoute = {
       id: newId,
       properties: Object.assign({}, routeData.properties),
@@ -102,7 +100,7 @@ var RouteModule = (function() {
 
   /** Supprime une route (futur : DELETE /api/routes/:id). */
   function removeRoute(id) {
-    state.allRoutes = state.allRoutes.filter(function(r) { return r.id !== id; });
+    state.allRoutes = state.allRoutes.filter(function(r) { return String(r.id) !== String(id); });
     syncToGlobal();
   }
 
@@ -110,8 +108,11 @@ var RouteModule = (function() {
   function syncToGlobal() {
     if (typeof json_Rseauroutier_6 !== 'undefined') {
       json_Rseauroutier_6.features = state.allRoutes.map(function(r) {
-        return { type: 'Feature', properties: r.properties, geometry: r.geometry };
+        return { type: 'Feature', id: r.id, properties: r.properties, geometry: r.geometry };
       });
+      if (typeof SIGPersistence !== 'undefined') {
+        try { SIGPersistence.saveLayer(SIGPersistence.LAYERS.ROUTES, json_Rseauroutier_6); } catch(e) {}
+      }
       /* Mettre à jour le badge dans la sidebar */
       var badge = document.querySelector('.nav-item[data-page="routes"] .nav-badge');
       if (badge) badge.textContent = state.allRoutes.length;
@@ -265,9 +266,10 @@ var RouteModule = (function() {
     var km = ((p.LONGEUR || 0) / 1000).toFixed(1);
     var catLabel = CAT_LABELS[p.CLASSE] || p.CLASSE || '—';
     var etatClass = !p.Etat ? '' : (p.Etat === 'Bon' ? 'active' : (p.Etat === 'Mauvais' ? 'inactive' : 'pending'));
+    var routeId = jsArg(r.id);
 
     var html = '<tr>';
-    html += '<td><strong style="cursor:pointer;color:var(--gold-dark)" onclick="RouteModule.viewRoute(' + r.id + ')" title="Voir la fiche">' + escapeHtml(p.Name || '—') + '</strong></td>';
+    html += '<td><strong style="cursor:pointer;color:var(--gold-dark)" onclick="RouteModule.viewRoute(' + routeId + ')" title="Voir la fiche">' + escapeHtml(p.Name || '—') + '</strong></td>';
     html += '<td>' + escapeHtml(p.Code || '—') + '</td>';
     html += '<td><span class="cat-dot cat-' + (CAT_CSS[p.CLASSE] || '') + '"></span> ' + escapeHtml(catLabel) + '</td>';
     html += '<td>' + escapeHtml(p.REGIONS || '—') + '</td>';
@@ -275,9 +277,9 @@ var RouteModule = (function() {
     html += '<td>' + (p.EMPRISE || '—') + ' m</td>';
     html += '<td>' + (p.Etat ? '<span class="status-badge ' + etatClass + '">' + escapeHtml(p.Etat) + '</span>' : '<span style="color:var(--text-4)">—</span>') + '</td>';
     html += '<td style="text-align:right;white-space:nowrap">';
-    html += '<button class="btn-icon" title="Voir" onclick="RouteModule.viewRoute(' + r.id + ')"><i class="fas fa-eye"></i></button>';
-    html += '<button class="btn-icon" title="Modifier" onclick="RouteModule.openEditForm(' + r.id + ')"><i class="fas fa-pen"></i></button>';
-    html += '<button class="btn-icon danger" title="Supprimer" onclick="RouteModule.confirmDelete(' + r.id + ')"><i class="fas fa-trash"></i></button>';
+    html += '<button class="btn-icon" title="Voir" onclick="RouteModule.viewRoute(' + routeId + ')"><i class="fas fa-eye"></i></button>';
+    html += '<button class="btn-icon" title="Modifier" onclick="RouteModule.openEditForm(' + routeId + ')"><i class="fas fa-pen"></i></button>';
+    html += '<button class="btn-icon danger" title="Supprimer" onclick="RouteModule.confirmDelete(' + routeId + ')"><i class="fas fa-trash"></i></button>';
     html += '</td></tr>';
     return html;
   }
@@ -321,6 +323,7 @@ var RouteModule = (function() {
   function viewRoute(id) {
     var route = findRoute(id);
     if (!route) return;
+    closeModal('modal-route-view');
     var p = route.properties;
     var km = ((p.LONGEUR || 0) / 1000).toFixed(2);
 
@@ -349,7 +352,7 @@ var RouteModule = (function() {
     html += detailField('Observations', p.Observations || '—', true);
     html += '</div>';
     html += '<div class="modal-admin-footer"><button class="btn-sm ghost" onclick="RouteModule.closeModal(\'modal-route-view\')">Fermer</button>';
-    html += '<button class="btn-sm primary" onclick="RouteModule.closeModal(\'modal-route-view\');RouteModule.openEditForm(' + id + ')"><i class="fas fa-pen"></i> Modifier</button></div>';
+    html += '<button class="btn-sm primary" onclick="RouteModule.closeModal(\'modal-route-view\');RouteModule.openEditForm(' + jsArg(id) + ')"><i class="fas fa-pen"></i> Modifier</button></div>';
     html += '</div></div>';
     document.body.insertAdjacentHTML('beforeend', html);
   }
@@ -370,11 +373,14 @@ var RouteModule = (function() {
     var isEdit = !!route;
     var p = route ? route.properties : {};
     var title = isEdit ? 'Modifier la route' : 'Ajouter une route';
+    var formId = 'route-form-' + safeDomId(isEdit ? route.id : 'new');
+
+    closeModal('modal-route-form');
 
     var html = '<div class="modal-admin-overlay" id="modal-route-form" onclick="RouteModule.closeModalOnOverlay(event, \'modal-route-form\')">';
     html += '<div class="modal-admin" style="max-width:720px">';
     html += '<div class="modal-admin-header"><h2><i class="fas fa-' + (isEdit ? 'pen' : 'plus') + '" style="color:var(--gold);margin-right:8px"></i> ' + title + '</h2><button class="modal-admin-close" onclick="RouteModule.closeModal(\'modal-route-form\')"><i class="fas fa-times"></i></button></div>';
-    html += '<div class="modal-admin-body"><form id="route-form" onsubmit="return RouteModule.saveForm(event, ' + (isEdit ? route.id : 'null') + ')">';
+    html += '<div class="modal-admin-body"><form id="' + formId + '" onsubmit="return RouteModule.saveForm(event, ' + (isEdit ? jsArg(route.id) : 'null') + ')">';
 
     /* Ligne 1 */
     html += formRow(
@@ -396,13 +402,13 @@ var RouteModule = (function() {
 
     /* Ligne 4 */
     html += formRow(
-      formGroup('Longueur (m) *', '<input type="number" name="LONGEUR" step="0.01" required value="' + (p.LONGEUR || '') + '" placeholder="Ex: 52197">'),
-      formGroup('Largeur (m)', '<input type="number" name="Largeur" step="0.1" value="' + escapeAttr(p.Largeur || '') + '" placeholder="Ex: 7">')
+      formGroup('Longueur (m) *', '<input type="number" name="LONGEUR" step="any" required value="' + escapeAttr(formatNumericInputValue(p.LONGEUR)) + '" placeholder="Ex: 52197">'),
+      formGroup('Largeur (m)', '<input type="number" name="Largeur" step="any" value="' + escapeAttr(formatNumericInputValue(p.Largeur)) + '" placeholder="Ex: 7">')
     );
 
     /* Ligne 5 */
     html += formRow(
-      formGroup('Emprise (m)', '<input type="number" name="EMPRISE" step="1" value="' + (p.EMPRISE || '') + '" placeholder="Ex: 70">'),
+      formGroup('Emprise (m)', '<input type="number" name="EMPRISE" step="any" value="' + escapeAttr(formatNumericInputValue(p.EMPRISE)) + '" placeholder="Ex: 70">'),
       formGroup('Type de revêtement', formSelect('Revetement', REVET_OPTIONS.map(function(e) { return [e, e]; }).concat([['','Non défini']]), p.Revetement || ''))
     );
 
@@ -437,7 +443,7 @@ var RouteModule = (function() {
     html += '</form></div>';
     html += '<div class="modal-admin-footer">';
     html += '<button class="btn-sm ghost" onclick="RouteModule.closeModal(\'modal-route-form\')">Annuler</button>';
-    html += '<button class="btn-sm primary" onclick="document.getElementById(\'route-form\').dispatchEvent(new Event(\'submit\',{cancelable:true}))"><i class="fas fa-save"></i> ' + (isEdit ? 'Enregistrer' : 'Ajouter') + '</button>';
+    html += '<button class="btn-sm primary" type="submit" form="' + formId + '"><i class="fas fa-save"></i> ' + (isEdit ? 'Enregistrer' : 'Ajouter') + '</button>';
     html += '</div></div></div>';
     document.body.insertAdjacentHTML('beforeend', html);
   }
@@ -446,6 +452,7 @@ var RouteModule = (function() {
   function confirmDelete(id) {
     var route = findRoute(id);
     if (!route) return;
+    closeModal('modal-route-delete');
     var name = route.properties.Name || 'cette route';
 
     var html = '<div class="modal-admin-overlay" id="modal-route-delete">';
@@ -458,7 +465,7 @@ var RouteModule = (function() {
     html += '</div>';
     html += '<div class="modal-admin-footer">';
     html += '<button class="btn-sm ghost" onclick="RouteModule.closeModal(\'modal-route-delete\')">Annuler</button>';
-    html += '<button class="btn-sm" style="background:var(--red);color:#fff" onclick="RouteModule.doDelete(' + id + ')"><i class="fas fa-trash"></i> Supprimer définitivement</button>';
+    html += '<button class="btn-sm" style="background:var(--red);color:#fff" onclick="RouteModule.doDelete(' + jsArg(id) + ')"><i class="fas fa-trash"></i> Supprimer définitivement</button>';
     html += '</div></div></div>';
     document.body.insertAdjacentHTML('beforeend', html);
   }
@@ -469,36 +476,76 @@ var RouteModule = (function() {
     var route = findRoute(id);
     var name = route ? (route.properties.Name || 'Route') : 'Route';
     var beforeState = route ? JSON.parse(JSON.stringify(route.properties)) : null;
-    removeRoute(id);
-    /* EventBus + Audit (signature correcte : log(action, options) ) */
-    if (typeof SIGEventBus !== 'undefined') {
-      SIGEventBus.emit(SIGEventBus.EVENTS.FEATURE_DELETED, { featureId: id, layer: 'routes' });
+    var deleted = false;
+
+    if (route && typeof SIGDataEngine !== 'undefined') {
+      deleted = !!SIGDataEngine.deleteFeature(route.id);
+      if (deleted) {
+        removeRoute(route.id);
+      }
+      if (deleted && typeof RoadSync !== 'undefined') {
+        RoadSync.propagate('deleted', { fullReload: true, featureId: null });
+      }
+    } else {
+      removeRoute(id);
+      deleted = true;
+      if (typeof SIGEventBus !== 'undefined') {
+        SIGEventBus.emit(SIGEventBus.EVENTS.FEATURE_DELETED, { featureId: id, layer: 'routes' });
+      }
+      if (typeof SIGAuditTrail !== 'undefined') {
+        try {
+          SIGAuditTrail.log(SIGAuditTrail.ACTIONS.DELETE_ROUTE, {
+            featureId: String(id),
+            featureName: name,
+            user: (typeof AdminAuth !== 'undefined' && AdminAuth.getSession()) ? (AdminAuth.getSession().name || 'admin') : 'admin',
+            details: 'Route supprimée : ' + name,
+            before: beforeState,
+            after: null,
+            result: 'SUCCESS'
+          });
+        } catch(e) {}
+      }
     }
-    if (typeof SIGAuditTrail !== 'undefined') {
-      try {
-        SIGAuditTrail.log(SIGAuditTrail.ACTIONS.DELETE_ROUTE, {
-          featureId: String(id),
-          featureName: name,
-          user: (typeof AdminAuth !== 'undefined' && AdminAuth.getSession()) ? (AdminAuth.getSession().name || 'admin') : 'admin',
-          details: 'Route supprimée : ' + name,
-          before: beforeState,
-          after: null
-        });
-      } catch(e) {}
+
+    if (!deleted) {
+      notify('Impossible de supprimer cette route.', 'error');
+      return;
     }
+
     closeModal('modal-route-delete');
+    if (typeof NotificationCenter !== 'undefined') {
+      NotificationCenter.add('delete', 'Route supprimée', name);
+    }
     notify('"' + name + '" supprimée avec succès.', 'success');
     refresh();
   }
 
   function saveForm(event, id) {
     if (event) event.preventDefault();
-    var form = document.getElementById('route-form');
+    var form = event && event.target && event.target.tagName && event.target.tagName.toUpperCase() === 'FORM'
+      ? event.target
+      : document.querySelector('#modal-route-form form');
     if (!form) return false;
+    if (typeof form.reportValidity === 'function' && !form.reportValidity()) return false;
 
     var data = getFormData(form);
+    if (typeof data.Observations === 'string') {
+      data.Observations = data.Observations.trim();
+    }
     if (!data.Name || !data.Name.trim()) {
       notify('Le nom de la route est obligatoire.', 'error');
+      return false;
+    }
+    if (!data.CLASSE) {
+      notify('La catégorie de la route est obligatoire.', 'error');
+      return false;
+    }
+    if (!data.REGIONS) {
+      notify('La région de la route est obligatoire.', 'error');
+      return false;
+    }
+    if (!data.LONGEUR || parseFloat(data.LONGEUR) <= 0) {
+      notify('La longueur de la route doit être supérieure à 0.', 'error');
       return false;
     }
 
@@ -508,24 +555,54 @@ var RouteModule = (function() {
       /* Modification */
       var route = findRoute(id);
       if (route) {
-        var beforeState = JSON.parse(JSON.stringify(route.properties));
-        saveRoute({ id: id, properties: data });
-        notify('"' + data.Name + '" modifiée avec succès.', 'success');
-        /* EventBus + Audit */
-        if (typeof SIGEventBus !== 'undefined') {
-          SIGEventBus.emit(SIGEventBus.EVENTS.FEATURE_UPDATED, { featureId: id, layer: 'routes' });
-        }
-        if (typeof SIGAuditTrail !== 'undefined') {
-          try {
-            SIGAuditTrail.log(SIGAuditTrail.ACTIONS.UPDATE_ROUTE, {
-              featureId: String(id),
-              featureName: data.Name,
-              user: currentUser,
-              details: 'Route modifiée : ' + (data.Name || 'Sans nom'),
-              before: beforeState,
-              after: data
+        var updated = null;
+        if (typeof SIGDataEngine !== 'undefined' && route.geometry) {
+          updated = SIGDataEngine.updateFeature(route.id, {
+            properties: data
+          });
+          if (updated) {
+            saveRoute({
+              id: route.id,
+              properties: Object.assign({}, updated.properties),
+              geometry: updated.geometry || route.geometry
             });
-          } catch(e) {}
+            updated = findRoute(route.id);
+          }
+          if (updated && typeof RoadSync !== 'undefined') {
+            RoadSync.propagate('updated', {
+              fullReload: true,
+              featureId: (typeof SIGDataEngine.getFeatureIndex === 'function') ? SIGDataEngine.getFeatureIndex(route.id) : null
+            });
+          }
+        } else {
+          var beforeState = JSON.parse(JSON.stringify(route.properties));
+          saveRoute({ id: id, properties: data });
+          updated = findRoute(id);
+          /* EventBus + Audit */
+          if (typeof SIGEventBus !== 'undefined') {
+            SIGEventBus.emit(SIGEventBus.EVENTS.FEATURE_UPDATED, { featureId: id, layer: 'routes' });
+          }
+          if (typeof SIGAuditTrail !== 'undefined') {
+            try {
+              SIGAuditTrail.log(SIGAuditTrail.ACTIONS.UPDATE_ROUTE, {
+                featureId: String(id),
+                featureName: data.Name,
+                user: currentUser,
+                details: 'Route modifiée : ' + (data.Name || 'Sans nom'),
+                before: beforeState,
+                after: data,
+                result: 'SUCCESS'
+              });
+            } catch(e) {}
+          }
+        }
+        if (!updated) {
+          notify('La mise à jour de la route a échoué.', 'error');
+          return false;
+        }
+        notify('"' + data.Name + '" modifiée avec succès.', 'success');
+        if (typeof NotificationCenter !== 'undefined') {
+          NotificationCenter.add('update', 'Route modifiée', data.Name);
         }
       }
     } else {
@@ -544,9 +621,13 @@ var RouteModule = (function() {
             user: currentUser,
             details: 'Route créée : ' + (data.Name || 'Sans nom'),
             before: null,
-            after: data
+            after: data,
+            result: 'SUCCESS'
           });
         } catch(e) {}
+      }
+      if (typeof NotificationCenter !== 'undefined') {
+        NotificationCenter.add('create', 'Route ajoutée', data.Name);
       }
     }
 
@@ -568,11 +649,33 @@ var RouteModule = (function() {
     });
 
     var blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
-    var link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = 'routes_georoad_' + new Date().toISOString().slice(0, 10) + '.csv';
-    link.click();
-    URL.revokeObjectURL(link.href);
+    var filename = 'routes_georoad_' + new Date().toISOString().slice(0, 10) + '.csv';
+    if (typeof GeoROADDownload !== 'undefined' && typeof GeoROADDownload.downloadBlob === 'function') {
+      GeoROADDownload.downloadBlob(blob, filename);
+    } else {
+      var link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = filename;
+      (document.body || document.documentElement).appendChild(link);
+      link.click();
+      setTimeout(function() {
+        if (link.parentNode) link.parentNode.removeChild(link);
+        URL.revokeObjectURL(link.href);
+      }, 400);
+    }
+    if (typeof SIGAuditTrail !== 'undefined') {
+      try {
+        SIGAuditTrail.log(SIGAuditTrail.ACTIONS.EXPORT, {
+          details: 'Export CSV du module routes (' + state.filtered.length + ' route(s))',
+          after: { format: 'csv', count: state.filtered.length, source: 'routes' },
+          result: 'SUCCESS',
+          entityType: 'routes'
+        });
+      } catch(e) {}
+    }
+    if (typeof NotificationCenter !== 'undefined') {
+      NotificationCenter.add('export', 'Routes exportées', state.filtered.length + ' route(s) exportée(s) en CSV');
+    }
     notify('Export CSV téléchargé (' + state.filtered.length + ' routes).', 'success');
   }
 
@@ -606,8 +709,9 @@ var RouteModule = (function() {
   }
 
   function closeModal(id) {
-    var el = document.getElementById(id);
-    if (el) el.remove();
+    document.querySelectorAll('[id="' + id + '"]').forEach(function(el) {
+      el.remove();
+    });
   }
 
   function closeModalOnOverlay(event, id) {
@@ -628,7 +732,7 @@ var RouteModule = (function() {
 
   function findRoute(id) {
     for (var i = 0; i < state.allRoutes.length; i++) {
-      if (state.allRoutes[i].id === id) return state.allRoutes[i];
+      if (String(state.allRoutes[i].id) === String(id)) return state.allRoutes[i];
     }
     return null;
   }
@@ -658,6 +762,21 @@ var RouteModule = (function() {
   function escapeAttr(str) {
     if (!str) return '';
     return String(str).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  function jsArg(str) {
+    return '\'' + String(str).replace(/\\/g, '\\\\').replace(/'/g, '\\\'') + '\'';
+  }
+
+  function safeDomId(value) {
+    return String(value || '').replace(/[^a-zA-Z0-9_-]/g, '_') || 'item';
+  }
+
+  function formatNumericInputValue(value) {
+    if (value === null || value === undefined || value === '') return '';
+    if (typeof value === 'number') return isFinite(value) ? String(value) : '';
+    var normalized = String(value).trim().replace(',', '.');
+    return normalized !== '' && !isNaN(Number(normalized)) ? normalized : '';
   }
 
   function formGroup(label, inputHtml) {

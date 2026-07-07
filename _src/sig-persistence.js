@@ -36,6 +36,15 @@ var SIGPersistence = (function() {
     PK: 'layers.pk',
   };
 
+  function cloneFeatureCollection(featureCollection) {
+    if (!featureCollection) return null;
+    try {
+      return JSON.parse(JSON.stringify(featureCollection));
+    } catch (e) {
+      return featureCollection;
+    }
+  }
+
   /* ===================================================================
    * SAUVEGARDE
    * =================================================================== */
@@ -165,6 +174,24 @@ var SIGPersistence = (function() {
     };
   }
 
+  function restoreLayerToMemory(layerKey, globalName, fallbackData) {
+    var persisted = loadLayer(layerKey);
+    if (persisted && typeof window !== 'undefined') {
+      window[globalName] = cloneFeatureCollection(persisted);
+      return persisted;
+    }
+
+    if (!persisted && fallbackData) {
+      saveLayer(layerKey, fallbackData);
+      if (typeof window !== 'undefined') {
+        window[globalName] = cloneFeatureCollection(fallbackData);
+      }
+      return fallbackData;
+    }
+
+    return persisted;
+  }
+
   /**
    * Supprime une couche complète.
    * @param {string} layerKey
@@ -231,7 +258,28 @@ var SIGPersistence = (function() {
   function initialize() {
     /* Vérifier si le schéma est déjà initialisé */
     var version = getMeta('version');
-    if (version === SCHEMA_VERSION) return;
+    if (version === SCHEMA_VERSION) {
+      restoreLayerToMemory(
+        LAYERS.ROUTES,
+        'json_Rseauroutier_6',
+        (typeof json_Rseauroutier_6 !== 'undefined') ? json_Rseauroutier_6 : null
+      );
+      restoreLayerToMemory(
+        LAYERS.EMPRISES,
+        'json_Emprise_5',
+        (typeof json_Emprise_5 !== 'undefined') ? json_Emprise_5 : null
+      );
+
+      var persistedPK = loadLayer(LAYERS.PK);
+      if (!persistedPK) {
+        persistedPK = { type: 'FeatureCollection', features: [] };
+        saveLayer(LAYERS.PK, persistedPK);
+      }
+      if (typeof window !== 'undefined') {
+        window.json_PK = cloneFeatureCollection(persistedPK);
+      }
+      return;
+    }
 
     /* Sauvegarder le schéma */
     setMeta('version', SCHEMA_VERSION);
@@ -247,6 +295,9 @@ var SIGPersistence = (function() {
     /* Initialiser PK vide si non existant */
     if (!loadLayer(LAYERS.PK)) {
       saveLayer(LAYERS.PK, { type: 'FeatureCollection', features: [] });
+    }
+    if (typeof window !== 'undefined') {
+      window.json_PK = cloneFeatureCollection(loadLayer(LAYERS.PK));
     }
 
     setMeta('lastSync', new Date().toISOString());
@@ -297,6 +348,12 @@ var SIGPersistence = (function() {
   function syncFromMemory() {
     if (typeof json_Rseauroutier_6 !== 'undefined') {
       saveLayer(LAYERS.ROUTES, json_Rseauroutier_6);
+    }
+    if (typeof json_Emprise_5 !== 'undefined') {
+      saveLayer(LAYERS.EMPRISES, json_Emprise_5);
+    }
+    if (typeof window !== 'undefined' && typeof window.json_PK !== 'undefined') {
+      saveLayer(LAYERS.PK, window.json_PK);
     }
     setMeta('lastSync', new Date().toISOString());
   }

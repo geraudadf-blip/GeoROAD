@@ -3736,12 +3736,15 @@ var SIGModule = (function() {
     }
   }
 
+  function isPublicConsultationMode() {
+    return !!(document.body && document.body.getAttribute('data-georoad-mode') === 'public');
+  }
+
   function hasEditPermission() {
-    /* Pour le géoportail public, on autorise toujours le mode édition
-       pour permettre le test des fonctionnalités SIG */
+    if (isPublicConsultationMode()) return false;
     var session = null;
     if (typeof AdminAuth !== 'undefined') session = AdminAuth.getSession();
-    if (!session || !session.authenticated) return true; /* Autorisé en mode démo */
+    if (!session || !session.authenticated) return false;
     var role = (session.role || '').toLowerCase();
     return role === 'administrateur';
   }
@@ -3763,6 +3766,7 @@ var SIGModule = (function() {
   function init() {
     cacheDom();
     initEditHover();
+    applyRBACVisibility();
 
     if (typeof SIGDataEngine !== 'undefined') {
       SIGDataEngine.initialize();
@@ -3819,6 +3823,7 @@ var SIGModule = (function() {
     /* Raccourci clavier */
     document.addEventListener('keydown', function(e) {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
+      if (!hasEditPermission() && !state.editMode) return;
       if (e.key === 'e' || e.key === 'E') {
         if (!dom.drawer.classList.contains('open')) {
           if (state.editMode) { exitEditMode(); } else { enterEditMode(); }

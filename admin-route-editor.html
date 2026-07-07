@@ -668,14 +668,17 @@ proj4.defs('EPSG:32632','+proj=utm +zone=32 +datum=WGS84 +units=m +no_defs');</s
 <!-- Layers init (base layers) -->
 <script src="layers/layers.js"></script>
 
+<!-- Shared UI utilities (layout + text normalization) -->
+<script src="bundle/utils.js?v=2"></script>
+
 <!-- SIG Core bundle (event-bus + spatial-calculator + persistence + audit-trail + data-engine) -->
-<script src="bundle/sig-core.js"></script>
+<script src="bundle/sig-core.js?v=5"></script>
 
 <!-- SIG Editor bundle (sans geoportail-sig et sig-map-layers qui ne sont pas nécessaires ici, mais inclus pour cohérence) -->
 <script src="bundle/sig-editor.js"></script>
 
 <!-- Route Editor (this page) -->
-<script src="admin-route-editor.js"></script>
+<script src="admin-route-editor.js?v=5"></script>
 
 </body>
 </html>

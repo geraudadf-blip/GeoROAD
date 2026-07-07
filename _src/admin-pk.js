@@ -143,16 +143,18 @@ var PKModule = (function() {
       try {
         var action = (detail && detail.action) ? detail.action : "UPDATE";
         var actionConst;
-        if (action === "CREATE") actionConst = SIGAuditTrail.ACTIONS.CREATE_ROUTE;
-        else if (action === "DELETE") actionConst = SIGAuditTrail.ACTIONS.DELETE_ROUTE;
-        else actionConst = SIGAuditTrail.ACTIONS.UPDATE_ROUTE;
+        if (action === "CREATE") actionConst = SIGAuditTrail.ACTIONS.CREATE_PK || SIGAuditTrail.ACTIONS.CREATE_ROUTE;
+        else if (action === "DELETE") actionConst = SIGAuditTrail.ACTIONS.DELETE_PK || SIGAuditTrail.ACTIONS.DELETE_ROUTE;
+        else actionConst = SIGAuditTrail.ACTIONS.UPDATE_PK || SIGAuditTrail.ACTIONS.UPDATE_ROUTE;
         SIGAuditTrail.log(actionConst, {
           featureId: (detail && detail.id) ? String(detail.id) : null,
           featureName: (detail && detail.numero) || 'PK',
           user: getSessionName(),
           details: 'PK ' + ((detail && detail.numero) || '') + ' — action ' + action + ' (couche PK)',
           before: null,
-          after: null
+          after: null,
+          result: 'SUCCESS',
+          entityType: 'pk'
         });
       } catch(e) {}
     }
@@ -302,6 +304,7 @@ var PKModule = (function() {
   function openViewModal(id) {
     var pk = findPK(id);
     if (!pk) return;
+    closeModal("modal-pk-view");
     var p = pk.properties || {};
 
     var html = '<div class="modal-admin-overlay" id="modal-pk-view" onclick="PKModule.closeModalOnOverlay(event, &#39;modal-pk-view&#39;)">';
@@ -345,10 +348,13 @@ var PKModule = (function() {
     var title = isEdit ? "Modifier le PK" : "Ajouter un PK";
     var editId = isEdit ? pk.id : null;
     var routes = getRouteList();
+    var formId = "pk-form-" + safeDomId(editId !== null ? editId : "new");
+
+    closeModal("modal-pk-form");
 
     var html = '<div class="modal-admin-overlay" id="modal-pk-form" onclick="PKModule.closeModalOnOverlay(event, &#39;modal-pk-form&#39;)">';
     html += '<div class="modal-admin"><div class="modal-admin-header"><h2><i class="fas fa-' + (isEdit ? "pen" : "plus") + '" style="color:var(--gold);margin-right:8px"></i> ' + esc(title) + '</h2><button class="modal-admin-close" onclick="PKModule.closeModal(&#39;modal-pk-form&#39;)"><i class="fas fa-times"></i></button></div>';
-    html += '<div class="modal-admin-body"><form id="pk-form" onsubmit="return PKModule.savePK(event, ' + (editId !== null ? "&#39;" + ea(editId) + "&#39;" : "null") + ')">';
+    html += '<div class="modal-admin-body"><form id="' + formId + '" onsubmit="return PKModule.savePK(event, ' + (editId !== null ? "&#39;" + ea(editId) + "&#39;" : "null") + ')">';
 
     /* Numéro */
     html += '<div class="form-row-single"><div class="fm-group"><label>Num\u00e9ro PK *</label>';
@@ -395,7 +401,7 @@ var PKModule = (function() {
 
     html += '</form></div><div class="modal-admin-footer">';
     html += '<button class="btn-sm ghost" onclick="PKModule.closeModal(&#39;modal-pk-form&#39;)">Annuler</button>';
-    html += '<button class="btn-sm primary" onclick="document.getElementById(&#39;pk-form&#39;).dispatchEvent(new Event(&#39;submit&#39;,{cancelable:true}))"><i class="fas fa-save"></i> ' + (isEdit ? "Enregistrer" : "Ajouter") + "</button>";
+    html += '<button class="btn-sm primary" type="submit" form="' + formId + '"><i class="fas fa-save"></i> ' + (isEdit ? "Enregistrer" : "Ajouter") + "</button>";
     html += "</div></div></div>";
     document.body.insertAdjacentHTML("beforeend", html);
   }
@@ -404,6 +410,7 @@ var PKModule = (function() {
     if (!isAdmin()) { notify("Seul un Administrateur peut supprimer.", "error"); return; }
     var pk = findPK(id);
     if (!pk) return;
+    closeModal("modal-pk-delete");
     var name = (pk.properties && pk.properties.numero) || "ce PK";
     var html = '<div class="modal-admin-overlay" id="modal-pk-delete"><div class="modal-admin" style="max-width:440px">';
     html += '<div class="modal-admin-header"><h2><i class="fas fa-exclamation-triangle" style="color:var(--red);margin-right:8px"></i> Confirmer</h2><button class="modal-admin-close" onclick="PKModule.closeModal(&#39;modal-pk-delete&#39;)"><i class="fas fa-times"></i></button></div>';
@@ -416,9 +423,12 @@ var PKModule = (function() {
   /* ===== CRUD ===== */
   function savePK(event, id) {
     if (event) event.preventDefault();
-    var form = document.getElementById("pk-form");
+    var form = event && event.target && event.target.tagName && event.target.tagName.toUpperCase() === "FORM"
+      ? event.target
+      : document.querySelector('#modal-pk-form form');
     if (!form) return false;
     if (!canEdit()) { notify("Permissions insuffisantes.", "error"); return false; }
+    if (typeof form.reportValidity === 'function' && !form.reportValidity()) return false;
 
     var data = {};
     form.querySelectorAll("input,select,textarea").forEach(function(el) {
@@ -448,11 +458,15 @@ var PKModule = (function() {
     if (id !== null && id !== undefined) {
       var pk = findPK(id);
       if (pk) {
+        var previousRoute = (pk.properties && pk.properties.route) || "";
         /* Conserver createdAt si présent (PHASE 5) */
         if (pk.properties && pk.properties.createdAt) props.createdAt = pk.properties.createdAt;
         if (pk.properties) { for (var k in props) pk.properties[k] = props[k]; }
         else { pk.properties = props; }
         pk.geometry = geom;
+        if (previousRoute && previousRoute !== props.route) {
+          clearPKFromRoute(previousRoute);
+        }
         /* Synchroniser les PK_DEB_X/Y et PK_FIN_X/Y de la route associée (sync PK→route) */
         syncPKToRoute(props.route, props);
         persistAndNotify("sig:feature:updated", { id: id, numero: data.numero, type: "pk", action: "UPDATE" });
@@ -478,6 +492,8 @@ var PKModule = (function() {
     if (!isAdmin()) { notify("Permissions insuffisantes.", "error"); return; }
     var pk = findPK(id);
     var name = pk ? ((pk.properties && pk.properties.numero) || "PK") : "PK";
+    var routeName = pk && pk.properties ? pk.properties.route : "";
+    if (routeName) clearPKFromRoute(routeName);
     state.allPKs = state.allPKs.filter(function(p) { return String(p.id) !== String(id); });
     persistAndNotify("sig:feature:deleted", { id: id, numero: name, type: "pk", action: "DELETE" });
     closeModal("modal-pk-delete");
@@ -595,6 +611,24 @@ var PKModule = (function() {
     });
   }
 
+  function clearPKFromRoute(routeName) {
+    if (!routeName || typeof json_Rseauroutier_6 === "undefined" || !json_Rseauroutier_6.features) return;
+    json_Rseauroutier_6.features.forEach(function(feat) {
+      var p = feat.properties || {};
+      if (p.Name === routeName) {
+        p.PK_DEB_X = null;
+        p.PK_DEB_Y = null;
+        p.PK_FIN_X = null;
+        p.PK_FIN_Y = null;
+        p.lastModified = new Date().toISOString();
+        p.modifiedBy = 'PKModule (clear PK)';
+      }
+    });
+    if (typeof SIGPersistence !== "undefined") {
+      try { SIGPersistence.saveLayer(SIGPersistence.LAYERS.ROUTES, json_Rseauroutier_6); } catch(e) {}
+    }
+  }
+
   /* ===== EVENT HANDLERS ===== */
   function onRouteChange(routeName) {
     var sel = document.getElementById("pk-form-route");
@@ -615,8 +649,12 @@ var PKModule = (function() {
   function onFilter(key, val) { state.filters[key] = val; state.page = 1; applyFilters(); refresh(); }
   function resetFilters() { state.search = ""; state.filters = { route: "" }; state.page = 1; applyFilters(); refresh(); }
   function goPage(p) { state.page = p; refresh(); }
-  function closeModal(id) { var el = document.getElementById(id); if (el) el.remove(); }
+  function closeModal(id) { document.querySelectorAll('[id="' + id + '"]').forEach(function(el) { el.remove(); }); }
   function closeModalOnOverlay(event, id) { if (event.target.id === id) closeModal(id); }
+
+  function safeDomId(value) {
+    return String(value || "").replace(/[^a-zA-Z0-9_-]/g, "_") || "item";
+  }
   function refresh() { applyFilters(); var el = document.getElementById("adminContent"); if (el) { el.innerHTML = buildPage(); el.scrollTop = 0; } }
 
   function df(l, v) { return '<div class="detail-item"><div class="detail-label">' + esc(l) + "</div><div class=\"detail-value\">" + esc(v || "\u2014") + "</div></div>"; }

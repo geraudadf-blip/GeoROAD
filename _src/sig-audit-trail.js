@@ -28,11 +28,24 @@ var SIGAuditTrail = (function() {
     CREATE_ROUTE: 'CREATE_ROUTE',
     UPDATE_ROUTE: 'UPDATE_ROUTE',
     DELETE_ROUTE: 'DELETE_ROUTE',
+    CREATE_PK: 'CREATE_PK',
+    UPDATE_PK: 'UPDATE_PK',
+    DELETE_PK: 'DELETE_PK',
+    CREATE_EMPRISE: 'CREATE_EMPRISE',
+    UPDATE_EMPRISE: 'UPDATE_EMPRISE',
+    DELETE_EMPRISE: 'DELETE_EMPRISE',
     EDIT_GEOMETRY: 'EDIT_GEOMETRY',
     LOGIN: 'LOGIN',
+    LOGIN_FAILED: 'LOGIN_FAILED',
     LOGOUT: 'LOGOUT',
     EXPORT: 'EXPORT',
     IMPORT: 'IMPORT',
+    USER_CREATED: 'USER_CREATED',
+    USER_UPDATED: 'USER_UPDATED',
+    USER_DELETED: 'USER_DELETED',
+    SETTINGS_UPDATED: 'SETTINGS_UPDATED',
+    ROUTE_EDITOR_OPENED: 'ROUTE_EDITOR_OPENED',
+    ROUTE_DRAWN: 'ROUTE_DRAWN',
     VALIDATE_ROUTE: 'VALIDATE_ROUTE',
     PUBLISH_ROUTE: 'PUBLISH_ROUTE'
   };
@@ -53,12 +66,27 @@ var SIGAuditTrail = (function() {
    * @param {string} [options.details] - Description textuelle libre
    * @returns {Object} L'entrée d'audit créée
    */
-  function log(action, options) {
+  function normalizeLegacyOptions(options, legacyDetails) {
+    if (typeof options === 'string') {
+      return {
+        source: options,
+        details: legacyDetails || ''
+      };
+    }
+
     options = options || {};
+    if (legacyDetails && !options.details) {
+      options.details = legacyDetails;
+    }
+    return options;
+  }
+
+  function log(action, options, legacyDetails) {
+    options = normalizeLegacyOptions(options, legacyDetails);
 
     /* Identifier l'utilisateur courant */
-    var user = 'Anonyme';
-    if (typeof AdminAuth !== 'undefined') {
+    var user = options.user || 'Anonyme';
+    if (!options.user && typeof AdminAuth !== 'undefined') {
       var session = AdminAuth.getSession();
       if (session) {
         user = session.name || session.user || 'Inconnu';
@@ -74,7 +102,10 @@ var SIGAuditTrail = (function() {
       timestamp: new Date().toISOString(),
       before: options.before || null,
       after: options.after || null,
-      details: options.details || ''
+      details: options.details || '',
+      result: options.result || null,
+      entityType: options.entityType || null,
+      source: options.source || null
     };
 
     /* Stocker */
@@ -218,15 +249,34 @@ var SIGAuditTrail = (function() {
       'CREATE_ROUTE': 'Création de route',
       'UPDATE_ROUTE': 'Modification de route',
       'DELETE_ROUTE': 'Suppression de route',
+      'CREATE_PK': 'Création de PK',
+      'UPDATE_PK': 'Modification de PK',
+      'DELETE_PK': 'Suppression de PK',
+      'CREATE_EMPRISE': 'Création d\'emprise',
+      'UPDATE_EMPRISE': 'Modification d\'emprise',
+      'DELETE_EMPRISE': 'Suppression d\'emprise',
       'EDIT_GEOMETRY': 'Édition géométrique',
       'LOGIN': 'Connexion',
+      'LOGIN_FAILED': 'Échec de connexion',
       'LOGOUT': 'Déconnexion',
       'EXPORT': 'Export de données',
       'IMPORT': 'Import de données',
+      'USER_CREATED': 'Création d\'utilisateur',
+      'USER_UPDATED': 'Modification d\'utilisateur',
+      'USER_DELETED': 'Suppression d\'utilisateur',
+      'SETTINGS_UPDATED': 'Mise à jour des paramètres',
+      'ROUTE_EDITOR_OPENED': 'Ouverture de l\'éditeur',
+      'ROUTE_DRAWN': 'Tracé de route',
       'VALIDATE_ROUTE': 'Validation de route',
       'PUBLISH_ROUTE': 'Publication de route'
     };
-    return labels[action] || action;
+    if (labels[action]) return labels[action];
+    return String(action || '')
+      .toLowerCase()
+      .split('_')
+      .filter(Boolean)
+      .map(function(part) { return part.charAt(0).toUpperCase() + part.slice(1); })
+      .join(' ');
   }
 
   /**
@@ -239,11 +289,24 @@ var SIGAuditTrail = (function() {
       'CREATE_ROUTE': 'fa-plus-circle',
       'UPDATE_ROUTE': 'fa-pen',
       'DELETE_ROUTE': 'fa-trash',
+      'CREATE_PK': 'fa-map-pin',
+      'UPDATE_PK': 'fa-location-dot',
+      'DELETE_PK': 'fa-trash',
+      'CREATE_EMPRISE': 'fa-draw-polygon',
+      'UPDATE_EMPRISE': 'fa-vector-square',
+      'DELETE_EMPRISE': 'fa-trash',
       'EDIT_GEOMETRY': 'fa-draw-polygon',
       'LOGIN': 'fa-sign-in-alt',
+      'LOGIN_FAILED': 'fa-user-lock',
       'LOGOUT': 'fa-sign-out-alt',
       'EXPORT': 'fa-download',
       'IMPORT': 'fa-upload',
+      'USER_CREATED': 'fa-user-plus',
+      'USER_UPDATED': 'fa-user-pen',
+      'USER_DELETED': 'fa-user-xmark',
+      'SETTINGS_UPDATED': 'fa-gear',
+      'ROUTE_EDITOR_OPENED': 'fa-compass-drafting',
+      'ROUTE_DRAWN': 'fa-road',
       'VALIDATE_ROUTE': 'fa-check-circle',
       'PUBLISH_ROUTE': 'fa-globe'
     };

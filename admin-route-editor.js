@@ -892,16 +892,6 @@ var RouteEditor = (function() {
     /* Refresh map layer */
     refreshRoadLayer();
 
-    /* Persist to localStorage */
-    if (typeof SIGPersistence !== 'undefined' && typeof json_Rseauroutier_6 !== 'undefined') {
-      SIGPersistence.saveLayer(SIGPersistence.LAYERS.ROUTES, json_Rseauroutier_6);
-    }
-
-    /* Audit */
-    if (typeof SIGAuditTrail !== 'undefined') {
-      SIGAuditTrail.log('ROUTE_CREATED', 'admin-route-editor', 'Route cr\u00e9\u00e9e : ' + (attrs.Name || 'Sans nom'));
-    }
-
     /* ===== SYNCHRONISATION GLOBALE ===== */
     if (typeof RoadSync !== 'undefined') {
       RoadSync.propagate('created', {
@@ -912,7 +902,7 @@ var RouteEditor = (function() {
 
     /* Notification */
     if (typeof NotificationCenter !== 'undefined') {
-      NotificationCenter.add('route', 'Nouvelle route', (attrs.Name || 'Route') + ' ajout\u00e9e au r\u00e9seau routier');
+      NotificationCenter.add('create', 'Nouvelle route', (attrs.Name || 'Route') + ' ajout\u00e9e au r\u00e9seau routier');
     }
 
     /* Clean up */
@@ -1004,28 +994,22 @@ var RouteEditor = (function() {
         '</ul></div>';
     }
 
-    /* Update the feature */
-    json_Rseauroutier_6.features[featIdx].properties = Object.assign(
-      json_Rseauroutier_6.features[featIdx].properties || {},
-      attrs
-    );
-
-    /* Touch version */
-    if (typeof RoadSync !== 'undefined') {
-      RoadSync.touchVersion(featIdx);
+    var targetFeature = json_Rseauroutier_6.features[featIdx];
+    if (typeof SIGDataEngine !== 'undefined' && targetFeature) {
+      SIGDataEngine.updateFeature(targetFeature.id || featIdx, {
+        properties: attrs
+      });
+    } else if (targetFeature) {
+      targetFeature.properties = Object.assign(
+        targetFeature.properties || {},
+        attrs
+      );
     }
 
     /* Refresh map */
     refreshRoadLayer();
-
-    /* Persist */
-    if (typeof SIGPersistence !== 'undefined') {
-      SIGPersistence.saveLayer(SIGPersistence.LAYERS.ROUTES, json_Rseauroutier_6);
-    }
-
-    /* Audit */
-    if (typeof SIGAuditTrail !== 'undefined') {
-      SIGAuditTrail.log('ROUTE_UPDATED', 'admin-route-editor', 'Route modifi\u00e9e : ' + (attrs.Name || 'Index ' + featIdx));
+    if (typeof RoadSync !== 'undefined') {
+      RoadSync.propagate('updated', { fullReload: true, featureId: featIdx });
     }
 
     var routeName = attrs.Name || 'Route';
@@ -1059,14 +1043,8 @@ var RouteEditor = (function() {
     /* Refresh */
     refreshRoadLayer();
 
-    /* Persist */
-    if (typeof SIGPersistence !== 'undefined') {
-      SIGPersistence.saveLayer(SIGPersistence.LAYERS.ROUTES, json_Rseauroutier_6);
-    }
-
-    /* Audit */
-    if (typeof SIGAuditTrail !== 'undefined') {
-      SIGAuditTrail.log('ROUTE_DELETED', 'admin-route-editor', 'Route supprim\u00e9e : ' + name);
+    if (typeof RoadSync !== 'undefined') {
+      RoadSync.propagate('deleted', { fullReload: true, featureId: null });
     }
 
     _selectedFeatureIdx = null;

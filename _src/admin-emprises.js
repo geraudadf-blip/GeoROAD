@@ -91,16 +91,18 @@ var EmpriseModule = (function() {
       try {
         var a = (eventType === "sig:feature:created" ? "CREATE" : (eventType === "sig:feature:deleted" ? "DELETE" : "UPDATE"));
         var actionConst;
-        if (a === "CREATE") actionConst = SIGAuditTrail.ACTIONS.CREATE_ROUTE;
-        else if (a === "DELETE") actionConst = SIGAuditTrail.ACTIONS.DELETE_ROUTE;
-        else actionConst = SIGAuditTrail.ACTIONS.UPDATE_ROUTE;
+        if (a === "CREATE") actionConst = SIGAuditTrail.ACTIONS.CREATE_EMPRISE || SIGAuditTrail.ACTIONS.CREATE_ROUTE;
+        else if (a === "DELETE") actionConst = SIGAuditTrail.ACTIONS.DELETE_EMPRISE || SIGAuditTrail.ACTIONS.DELETE_ROUTE;
+        else actionConst = SIGAuditTrail.ACTIONS.UPDATE_EMPRISE || SIGAuditTrail.ACTIONS.UPDATE_ROUTE;
         SIGAuditTrail.log(actionConst, {
           featureId: (detail && detail.id) ? String(detail.id) : null,
           featureName: (detail && detail.name) || 'Emprise',
           user: getSessionName(),
           details: 'Emprise ' + ((detail && detail.name) || '') + ' — action ' + a + ' (couche Emprises)',
           before: null,
-          after: null
+          after: null,
+          result: 'SUCCESS',
+          entityType: 'emprise'
         });
       } catch(e) {}
     }
@@ -269,6 +271,7 @@ var EmpriseModule = (function() {
   function viewEmprise(id) {
     var e = findEmprise(id);
     if (!e) return;
+    closeModal("modal-emprise-view");
     var p = e.properties;
     var ev = parseFloat(p.EMPRISE) || 0;
     var cl = CAT_LABELS[p.CLASSE] || p.CLASSE || "\u2014";
@@ -303,10 +306,13 @@ var EmpriseModule = (function() {
     var p = emprise ? emprise.properties : {};
     var title = isEdit ? "Modifier l\u2019emprise" : "Ajouter une emprise";
     var routes = getRouteList();
+    var formId = "emprise-form-" + safeDomId(isEdit ? emprise.id : "new");
+
+    closeModal("modal-emprise-form");
 
     var html = '<div class="modal-admin-overlay" id="modal-emprise-form" onclick="EmpriseModule.closeModalOnOverlay(event, &#39;modal-emprise-form&#39;)">';
     html += '<div class="modal-admin" style="max-width:560px"><div class="modal-admin-header"><h2><i class="fas fa-' + (isEdit ? "pen" : "plus") + '" style="color:var(--gold);margin-right:8px"></i> ' + title + '</h2><button class="modal-admin-close" onclick="EmpriseModule.closeModal(&#39;modal-emprise-form&#39;)"><i class="fas fa-times"></i></button></div>';
-    html += '<div class="modal-admin-body"><form id="emprise-form" onsubmit="return EmpriseModule.saveEmprise(event, ' + (isEdit ? emprise.id : "null") + ')">';
+    html += '<div class="modal-admin-body"><form id="' + formId + '" onsubmit="return EmpriseModule.saveEmprise(event, ' + (isEdit ? emprise.id : "null") + ')">';
 
     /* Route selector */
     html += '<div class="form-row-single"><div class="fm-group"><label>Route associ\u00e9e *</label>';
@@ -347,7 +353,7 @@ var EmpriseModule = (function() {
 
     html += '</form></div><div class="modal-admin-footer">';
     html += '<button class="btn-sm ghost" onclick="EmpriseModule.closeModal(&#39;modal-emprise-form&#39;)">Annuler</button>';
-    html += '<button class="btn-sm primary" onclick="document.getElementById(&#39;emprise-form&#39;).dispatchEvent(new Event(&#39;submit&#39;,{cancelable:true}))"><i class="fas fa-save"></i> ' + (isEdit ? "Enregistrer" : "Ajouter") + "</button>";
+    html += '<button class="btn-sm primary" type="submit" form="' + formId + '"><i class="fas fa-save"></i> ' + (isEdit ? "Enregistrer" : "Ajouter") + "</button>";
     html += "</div></div></div>";
     document.body.insertAdjacentHTML("beforeend", html);
 
@@ -360,6 +366,7 @@ var EmpriseModule = (function() {
     if (!isAdmin()) { notify("Permissions insuffisantes.", "error"); return; }
     var e = findEmprise(id);
     if (!e) return;
+    closeModal("modal-emprise-delete");
     var name = e.properties.Name || "cette emprise";
     var html = '<div class="modal-admin-overlay" id="modal-emprise-delete"><div class="modal-admin" style="max-width:440px">';
     html += '<div class="modal-admin-header"><h2><i class="fas fa-exclamation-triangle" style="color:var(--red);margin-right:8px"></i> Confirmer</h2><button class="modal-admin-close" onclick="EmpriseModule.closeModal(&#39;modal-emprise-delete&#39;)"><i class="fas fa-times"></i></button></div>';
@@ -372,9 +379,12 @@ var EmpriseModule = (function() {
   /* ===== CRUD ===== */
   function saveEmprise(event, id) {
     if (event) event.preventDefault();
-    var form = document.getElementById("emprise-form");
+    var form = event && event.target && event.target.tagName && event.target.tagName.toUpperCase() === "FORM"
+      ? event.target
+      : document.querySelector('#modal-emprise-form form');
     if (!form) return false;
     if (!canEdit()) { notify("Permissions insuffisantes.", "error"); return false; }
+    if (typeof form.reportValidity === 'function' && !form.reportValidity()) return false;
 
     var data = {};
     form.querySelectorAll("input,select,textarea").forEach(function(el) {
@@ -384,6 +394,7 @@ var EmpriseModule = (function() {
     });
 
     if (!data.Name || !data.Name.trim()) { notify("Le nom est obligatoire.", "error"); return false; }
+    if (!data.route || !data.route.trim()) { notify("La route associée est obligatoire.", "error"); return false; }
     if (!data.CLASSE) { notify("La cat\u00e9gorie est obligatoire.", "error"); return false; }
     if (!data.EMPRISE || parseFloat(data.EMPRISE) <= 0) { notify("L\u2019emprise doit \u00eatre positive.", "error"); return false; }
 
@@ -393,15 +404,20 @@ var EmpriseModule = (function() {
     if (id !== null && id !== undefined) {
       var e = findEmprise(id);
       if (e) {
+        var previousRoute = e.properties.route_associee || "";
         e.properties.Name = data.Name.trim();
         e.properties.CLASSE = data.CLASSE;
         e.properties.EMPRISE = parseFloat(data.EMPRISE);
         e.properties.route_associee = data.route || "";
         /* Conservation de l'identifiant unique de la route (PHASE 4) */
-        var routeObj = findAssociatedRoute(data.Name);
+        var routeObj = findAssociatedRoute(data.route || data.Name);
         e.properties.route_id = routeObj && routeObj.id ? String(routeObj.id) : '';
         e.properties.lastModified = now;
         e.properties.modifiedBy = userName;
+        if (previousRoute && previousRoute !== e.properties.route_associee) {
+          clearEmpriseFromRouteIfUnused(previousRoute, id);
+        }
+        syncEmpriseToRoute(e.properties.route_associee, e.properties.EMPRISE, userName);
         persistAndNotify("sig:feature:updated", { id: id, name: data.Name, type: "emprise", action: "update" });
         closeModal("modal-emprise-form");
         notify('"' + data.Name + '" modifi\u00e9e.', "success");
@@ -411,7 +427,7 @@ var EmpriseModule = (function() {
       var newE = {
         id: newId,
         properties: (function() {
-          var r = findAssociatedRoute(data.Name.trim());
+          var r = findAssociatedRoute(data.route || data.Name.trim());
           return {
             Name: data.Name.trim(), CLASSE: data.CLASSE, EMPRISE: parseFloat(data.EMPRISE),
             route_associee: data.route || "",
@@ -424,6 +440,7 @@ var EmpriseModule = (function() {
         geometry: null
       };
       state.allEmprises.push(newE);
+      syncEmpriseToRoute(newE.properties.route_associee, newE.properties.EMPRISE, userName);
       persistAndNotify("sig:feature:created", { id: newId, name: data.Name, type: "emprise", action: "create" });
       closeModal("modal-emprise-form");
       notify('"' + data.Name + '" ajout\u00e9e.', "success");
@@ -436,11 +453,48 @@ var EmpriseModule = (function() {
     if (!isAdmin()) { notify("Permissions insuffisantes.", "error"); return; }
     var e = findEmprise(id);
     var name = e ? (e.properties.Name || "Emprise") : "Emprise";
+    var routeName = e && e.properties ? e.properties.route_associee : "";
     state.allEmprises = state.allEmprises.filter(function(e) { return e.id !== id; });
+    if (routeName) clearEmpriseFromRouteIfUnused(routeName, id);
     persistAndNotify("sig:feature:deleted", { id: id, name: name, type: "emprise", action: "delete" });
     closeModal("modal-emprise-delete");
     notify('"' + name + '" supprim\u00e9e.', "success");
     refresh();
+  }
+
+  function syncEmpriseToRoute(routeName, empriseValue, userName) {
+    if (!routeName || typeof json_Rseauroutier_6 === "undefined" || !json_Rseauroutier_6.features) return;
+    json_Rseauroutier_6.features.forEach(function(feat) {
+      var p = feat.properties || {};
+      if (p.Name === routeName) {
+        p.EMPRISE = parseFloat(empriseValue) || 0;
+        p.lastModified = new Date().toISOString();
+        p.modifiedBy = userName || 'EmpriseModule';
+      }
+    });
+    if (typeof SIGPersistence !== "undefined") {
+      try { SIGPersistence.saveLayer(SIGPersistence.LAYERS.ROUTES, json_Rseauroutier_6); } catch(e) {}
+    }
+  }
+
+  function clearEmpriseFromRouteIfUnused(routeName, excludeId) {
+    if (!routeName || typeof json_Rseauroutier_6 === "undefined" || !json_Rseauroutier_6.features) return;
+    var stillLinked = state.allEmprises.some(function(item) {
+      return item.id !== excludeId && item.properties && item.properties.route_associee === routeName;
+    });
+    if (stillLinked) return;
+
+    json_Rseauroutier_6.features.forEach(function(feat) {
+      var p = feat.properties || {};
+      if (p.Name === routeName) {
+        p.EMPRISE = null;
+        p.lastModified = new Date().toISOString();
+        p.modifiedBy = 'EmpriseModule';
+      }
+    });
+    if (typeof SIGPersistence !== "undefined") {
+      try { SIGPersistence.saveLayer(SIGPersistence.LAYERS.ROUTES, json_Rseauroutier_6); } catch(e) {}
+    }
   }
 
   /* ===== EVENT HANDLERS ===== */
@@ -474,8 +528,12 @@ var EmpriseModule = (function() {
   function onFilter(key, val) { state.filters[key] = val; state.page = 1; applyFilters(); refresh(); }
   function resetFilters() { state.search = ""; state.filters = { region: "", classe: "", empriseMin: "", empriseMax: "" }; state.page = 1; applyFilters(); refresh(); }
   function goPage(p) { state.page = p; refresh(); }
-  function closeModal(id) { var el = document.getElementById(id); if (el) el.remove(); }
+  function closeModal(id) { document.querySelectorAll('[id="' + id + '"]').forEach(function(el) { el.remove(); }); }
   function closeModalOnOverlay(event, id) { if (event.target.id === id) closeModal(id); }
+
+  function safeDomId(value) {
+    return String(value || "").replace(/[^a-zA-Z0-9_-]/g, "_") || "item";
+  }
   function refresh() {
     applyFilters();
     var el = document.getElementById("adminContent");

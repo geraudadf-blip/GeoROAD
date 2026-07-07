@@ -1,24 +1,15 @@
+﻿/* ==== BEGIN admin-notifications.js ==== */
 /* ===================================================================
- * GeoROAD TOGO — Bundle admin-bundle
- * Auto-généré par build_bundles.py — NE PAS ÉDITER MANUELLEMENT
- * Source : admin-notifications.js, admin-ajout.js, admin.js, admin-routes.js, admin-emprises.js, admin-pk.js, admin-spatial.js
- * ===================================================================
- */
-
-
-/* ===== admin-notifications.js ===== */
-
-/* ===================================================================
- * GeoROAD TOGO — Centre de Notifications (V4.0)
+ * GeoROAD TOGO â€” Centre de Notifications (V4.0)
  *
- * Système de notifications en temps réel pour l'administration.
- * Chaque action importante (création, modification, suppression,
- * import, export, erreur, synchronisation) génère une notification.
+ * SystÃ¨me de notifications en temps rÃ©el pour l'administration.
+ * Chaque action importante (crÃ©ation, modification, suppression,
+ * import, export, erreur, synchronisation) gÃ©nÃ¨re une notification.
  *
- * Les notifications sont stockées en sessionStorage (limitées à 100),
- * avec un compteur automatique et la possibilité de les marquer comme lues.
+ * Les notifications sont stockÃ©es en sessionStorage (limitÃ©es Ã  100),
+ * avec un compteur automatique et la possibilitÃ© de les marquer comme lues.
  *
- * Dépend : SIGEventBus, SIGAuditTrail (optionnel)
+ * DÃ©pend : SIGEventBus, SIGAuditTrail (optionnel)
  * =================================================================== */
 var NotificationCenter = (function() {
   'use strict';
@@ -27,9 +18,9 @@ var NotificationCenter = (function() {
   var MAX_NOTIFICATIONS = 100;
   var _panelOpen = false;
 
-  /* ===== TYPES D'ACTIONS → ICÔNES ET COULEURS ===== */
+  /* ===== TYPES D'ACTIONS â†’ ICÃ”NES ET COULEURS ===== */
   var ACTION_CONFIG = {
-    'create':    { icon: 'fa-plus-circle',       color: '#7A8B6F', label: 'Création' },
+    'create':    { icon: 'fa-plus-circle',       color: '#7A8B6F', label: 'CrÃ©ation' },
     'update':    { icon: 'fa-pen',               color: '#4A7FB5', label: 'Modification' },
     'delete':    { icon: 'fa-trash',             color: '#B85C38', label: 'Suppression' },
     'import':    { icon: 'fa-file-import',       color: '#C8A64B', label: 'Import' },
@@ -37,7 +28,7 @@ var NotificationCenter = (function() {
     'error':     { icon: 'fa-exclamation-circle', color: '#B85C38', label: 'Erreur' },
     'sync':      { icon: 'fa-arrows-rotate',     color: '#4A7FB5', label: 'Synchronisation' },
     'info':      { icon: 'fa-info-circle',        color: '#8B8578', label: 'Information' },
-    'geometry':  { icon: 'fa-draw-polygon',       color: '#A68A3A', label: 'Géométrie' },
+    'geometry':  { icon: 'fa-draw-polygon',       color: '#A68A3A', label: 'GÃ©omÃ©trie' },
     'audit':     { icon: 'fa-clipboard-list',     color: '#8B8578', label: 'Audit' }
   };
 
@@ -51,27 +42,27 @@ var NotificationCenter = (function() {
   }
 
   function _save(notifs) {
-    /* Garder seulement les MAX_NOTIFICATIONS plus récentes */
+    /* Garder seulement les MAX_NOTIFICATIONS plus rÃ©centes */
     if (notifs.length > MAX_NOTIFICATIONS) {
       notifs = notifs.slice(notifs.length - MAX_NOTIFICATIONS);
     }
     try {
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify(notifs));
     } catch(e) {
-      /* sessionStorage plein — purger les 20 plus anciennes */
+      /* sessionStorage plein â€” purger les 20 plus anciennes */
       notifs = notifs.slice(20);
       try { sessionStorage.setItem(STORAGE_KEY, JSON.stringify(notifs)); } catch(e2) {}
     }
     _updateBadge();
   }
 
-  /* ===== CRÉATION DE NOTIFICATION ===== */
+  /* ===== CRÃ‰ATION DE NOTIFICATION ===== */
 
   /**
    * Ajoute une notification.
    * @param {string} type - Type d'action (create, update, delete, import, export, error, sync, info)
    * @param {string} message - Message descriptif
-   * @param {Object} [details] - Détails supplémentaires (optionnel, affichés au survol)
+   * @param {Object} [details] - DÃ©tails supplÃ©mentaires (optionnel, affichÃ©s au survol)
    */
   function add(type, message, details) {
     var config = ACTION_CONFIG[type] || ACTION_CONFIG['info'];
@@ -156,7 +147,7 @@ var NotificationCenter = (function() {
         badge.style.display = 'none';
       }
     }
-    /* Mettre à jour le dot si pas de badge numérique */
+    /* Mettre Ã  jour le dot si pas de badge numÃ©rique */
     var dot = document.querySelector('.badge-dot');
     if (dot && !badge) {
       dot.style.display = count > 0 ? 'block' : 'none';
@@ -185,7 +176,7 @@ var NotificationCenter = (function() {
   }
 
   function _createPanel() {
-    /* Créer le panneau de notifications dans la topbar */
+    /* CrÃ©er le panneau de notifications dans la topbar */
     var topbarActions = document.querySelector('.topbar-actions');
     if (!topbarActions) return;
 
@@ -207,7 +198,7 @@ var NotificationCenter = (function() {
       topbarActions.appendChild(wrapper);
     }
 
-    /* Fermer le panneau en cliquant ailleurs — guard anti-doublon */
+    /* Fermer le panneau en cliquant ailleurs â€” guard anti-doublon */
     if (!NotificationCenter._outsideClickBound) {
       NotificationCenter._outsideClickBound = true;
       document.addEventListener('click', function(e) {
@@ -222,7 +213,7 @@ var NotificationCenter = (function() {
     var panel = document.getElementById('notif-panel');
     if (!panel) return;
 
-    var notifs = _load().reverse(); /* Plus récentes en premier */
+    var notifs = _load().reverse(); /* Plus rÃ©centes en premier */
     var unreadCount = notifs.filter(function(n) { return !n.read; }).length;
 
     var html = '';
@@ -260,7 +251,7 @@ var NotificationCenter = (function() {
           + '<i class="fas ' + n.icon + '" style="font-size:.7rem;color:' + n.color + '"></i></div>'
           + '<div style="flex:1;min-width:0">'
           + '<div style="font-size:.78rem;font-weight:' + (n.read ? '400' : '600') + ';color:var(--text);line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + _esc(n.message) + '</div>'
-          + '<div style="font-size:.68rem;color:var(--text-3);margin-top:2px">' + n.label + ' — ' + timeStr + '</div>'
+          + '<div style="font-size:.68rem;color:var(--text-3);margin-top:2px">' + n.label + ' â€” ' + timeStr + '</div>'
           + '</div>'
           + '<button onclick="event.stopPropagation();NotificationCenter.deleteNotification(\'' + n.id + '\')" '
           + 'style="background:none;border:none;cursor:pointer;color:var(--text-3);font-size:.7rem;padding:4px;flex-shrink:0;margin-top:2px;border-radius:4px;transition:all .15s;line-height:1" '
@@ -287,7 +278,7 @@ var NotificationCenter = (function() {
       var now = new Date();
       var diff = now - d;
 
-      if (diff < 60000) return 'À l\'instant';
+      if (diff < 60000) return 'Ã€ l\'instant';
       if (diff < 3600000) return Math.floor(diff / 60000) + ' min';
       if (diff < 86400000) return Math.floor(diff / 3600000) + ' h';
       if (diff < 604800000) return Math.floor(diff / 86400000) + ' j';
@@ -304,48 +295,48 @@ var NotificationCenter = (function() {
 
   /**
    * Connecte le centre de notifications au SIGEventBus.
-   * Appeler cette fonction une fois à l'initialisation de l'admin.
+   * Appeler cette fonction une fois Ã  l'initialisation de l'admin.
    */
   function hookEventBus() {
     if (typeof SIGEventBus === 'undefined') return;
 
     SIGEventBus.on(SIGEventBus.EVENTS.FEATURE_CREATED, function(data) {
       var name = (data.feature && data.feature.properties && data.feature.properties.Name) || 'Route';
-      add('create', name + ' créée avec succès', data);
+      add('create', name + ' crÃ©Ã©e avec succÃ¨s', data);
     });
 
     SIGEventBus.on(SIGEventBus.EVENTS.FEATURE_UPDATED, function(data) {
       var name = (data.feature && data.feature.properties && data.feature.properties.Name) || 'Route';
-      add('update', name + ' modifiée', data);
+      add('update', name + ' modifiÃ©e', data);
     });
 
     SIGEventBus.on(SIGEventBus.EVENTS.FEATURE_DELETED, function(data) {
-      add('delete', 'Élément supprimé (' + (data.featureId || 'ID inconnu') + ')', data);
+      add('delete', 'Ã‰lÃ©ment supprimÃ© (' + (data.featureId || 'ID inconnu') + ')', data);
     });
 
     SIGEventBus.on(SIGEventBus.EVENTS.GEOMETRY_UPDATED, function(data) {
       var name = (data.feature && data.feature.properties && data.feature.properties.Name) || 'Route';
-      add('geometry', 'Géométrie de ' + name + ' modifiée', data);
+      add('geometry', 'GÃ©omÃ©trie de ' + name + ' modifiÃ©e', data);
     });
 
     SIGEventBus.on(SIGEventBus.EVENTS.DASHBOARD_REFRESH, function() {
-      add('sync', 'Tableau de bord mis à jour', null);
+      add('sync', 'Tableau de bord mis Ã  jour', null);
     });
 
     SIGEventBus.on(SIGEventBus.EVENTS.PERSISTENCE_SAVED, function(data) {
-      add('sync', 'Données synchronisées', data || null);
+      add('sync', 'DonnÃ©es synchronisÃ©es', data || null);
     });
 
     SIGEventBus.on(SIGEventBus.EVENTS.STATS_CHANGED, function(data) {
-      add('info', 'Statistiques mises à jour', data || null);
+      add('info', 'Statistiques mises Ã  jour', data || null);
     });
 
     SIGEventBus.on(SIGEventBus.EVENTS.AUDIT_LOGGED, function(data) {
-      var label = (data && data.details) || (data && data.action) || 'Action auditée';
+      var label = (data && data.details) || (data && data.action) || 'Action auditÃ©e';
       var detailParts = [];
       if (data && data.featureName) detailParts.push(data.featureName);
       if (data && data.featureId) detailParts.push('ID: ' + data.featureId);
-      add('audit', label, { action: data && data.action, summary: detailParts.join(' — ') || null });
+      add('audit', label, { action: data && data.action, summary: detailParts.join(' â€” ') || null });
     });
   }
 
@@ -374,33 +365,33 @@ var NotificationCenter = (function() {
     closePanel: closePanel,
     hookEventBus: hookEventBus,
     init: init,
-    /* Exposé pour le onclick inline du panneau */
+    /* ExposÃ© pour le onclick inline du panneau */
     _renderPanel: _renderPanel
   };
 })();
+/* ==== END admin-notifications.js ==== */
 
-/* ===== admin-ajout.js ===== */
-
+/* ==== BEGIN admin-ajout.js ==== */
 /* ===================================================================
- * GeoROAD TOGO — Module AJOUT (Point d'entrée unique de création)
+ * GeoROAD TOGO â€” Module AJOUT (Point d'entrÃ©e unique de crÃ©ation)
  *
- * Ce module est l'interface d'accueil du workflow de création.
- * L'administrateur choisit le type d'objet à créer via des cartes.
+ * Ce module est l'interface d'accueil du workflow de crÃ©ation.
+ * L'administrateur choisit le type d'objet Ã  crÃ©er via des cartes.
  *
  * Objets disponibles :
- *   - Ajouter une route          → ouvre l'éditeur SIG cartographique
- *   - Ajouter un point kilométrique → formulaire CRUD
- *   - Ajouter une emprise         → formulaire CRUD
+ *   - Ajouter une route          â†’ ouvre l'Ã©diteur SIG cartographique
+ *   - Ajouter un point kilomÃ©trique â†’ formulaire CRUD
+ *   - Ajouter une emprise         â†’ formulaire CRUD
  *
- * Le module AJOUT est réservé exclusivement à l'administrateur.
- * Le public n'y a jamais accès.
+ * Le module AJOUT est rÃ©servÃ© exclusivement Ã  l'administrateur.
+ * Le public n'y a jamais accÃ¨s.
  *
- * Dépend : AdminUI (navigation), AdminAuth (vérification session)
+ * DÃ©pend : AdminUI (navigation), AdminAuth (vÃ©rification session)
  * =================================================================== */
 var AjoutModule = (function() {
   'use strict';
 
-  /* ===== CARTE DE CRÉATION ===== */
+  /* ===== CARTE DE CRÃ‰ATION ===== */
   var creationCards = [
     {
       id: 'route',
@@ -442,13 +433,13 @@ var AjoutModule = (function() {
    * =================================================================== */
 
   /**
-   * Génère le HTML complet de la page AJOUT.
-   * @returns {string} HTML injecté dans #adminContent
+   * GÃ©nÃ¨re le HTML complet de la page AJOUT.
+   * @returns {string} HTML injectÃ© dans #adminContent
    */
   function render() {
     var html = '';
 
-    /* En-tête de page */
+    /* En-tÃªte de page */
     html += '<div class="page-header">';
     html += '<h1><i class="fas fa-plus-circle" style="color:var(--gold);margin-right:8px"></i>AJOUT</h1>';
     html += '<p>Point d\u2019entr\u00e9e unique de cr\u00e9ation des donn\u00e9es du syst\u00e8me. Choisissez le type d\u2019objet \u00e0 cr\u00e9er.</p>';
@@ -458,7 +449,7 @@ var AjoutModule = (function() {
     html += '<div style="background:var(--gold-pale);border:1px solid rgba(200,166,75,.25);border-radius:12px;padding:14px 20px;margin-bottom:24px;display:flex;align-items:center;gap:12px">';
     html += '<i class="fas fa-info-circle" style="color:var(--gold-dark);font-size:1.1rem;flex-shrink:0"></i>';
     html += '<div style="font-size:.84rem;color:var(--text-2);line-height:1.5">';
-    html += 'Toute cr\u00e9ation passe obligatoirement par le moteur SIG : <strong>SIGDataEngine</strong> → <strong>SIGSpatialCalculator</strong> → <strong>SIGEventBus</strong> → <strong>SIGAuditTrail</strong> → <strong>SIGPersistence</strong>. Aucune modification directe des donn\u00e9es.';
+    html += 'Toute cr\u00e9ation passe obligatoirement par le moteur SIG : <strong>SIGDataEngine</strong> â†’ <strong>SIGSpatialCalculator</strong> â†’ <strong>SIGEventBus</strong> â†’ <strong>SIGAuditTrail</strong> â†’ <strong>SIGPersistence</strong>. Aucune modification directe des donn\u00e9es.';
     html += '</div></div>';
 
     /* Grille de cartes */
@@ -487,7 +478,7 @@ var AjoutModule = (function() {
 
     var html = '<div class="ajout-card ' + disabledClass + '" ' + onclickAttr + ' style="' + cursorStyle + '">';
 
-    /* Icône et badge */
+    /* IcÃ´ne et badge */
     html += '<div class="ajout-card-icon" style="background:' + card.iconColor + '15;color:' + card.iconColor + '">';
     html += '<i class="fas ' + card.icon + '"></i>';
     html += '</div>';
@@ -502,7 +493,7 @@ var AjoutModule = (function() {
     html += '<p>' + card.description + '</p>';
     html += '</div>';
 
-    /* Flèche */
+    /* FlÃ¨che */
     if (card.enabled) {
       html += '<div class="ajout-card-arrow"><i class="fas fa-chevron-right"></i></div>';
     }
@@ -555,7 +546,7 @@ var AjoutModule = (function() {
    * =================================================================== */
 
   /**
-   * Gère le clic sur une carte de création.
+   * GÃ¨re le clic sur une carte de crÃ©ation.
    * @param {string} cardId - Identifiant de la carte
    */
   function handleCardClick(cardId) {
@@ -614,23 +605,23 @@ var AjoutModule = (function() {
     handleCardClick: handleCardClick
   };
 })();
+/* ==== END admin-ajout.js ==== */
 
-/* ===== admin.js ===== */
-
+/* ==== BEGIN admin.js ==== */
 /* ===================================================================
- * GeoROAD TOGO — Module d'Administration
+ * GeoROAD TOGO â€” Module d'Administration
  * 
- * Architecture modulaire préparée pour l'évolution vers :
+ * Architecture modulaire prÃ©parÃ©e pour l'Ã©volution vers :
  * - Backend REST API (Node.js/Express ou Python/FastAPI)
  * - PostgreSQL/PostGIS pour le stockage spatial
  * - JWT pour l'authentification
  * - RBAC pour les permissions
  * - Audit trail pour l'historique des modifications
  * - Import GPX/Shapefile/GeoJSON
- * - Édition cartographique (OpenLayers)
+ * - Ã‰dition cartographique (OpenLayers)
  * 
  * Convention de code :
- * - Modules exposés sur window (pas d'ESM pour compatibilité locale)
+ * - Modules exposÃ©s sur window (pas d'ESM pour compatibilitÃ© locale)
  * - Pattern IIFE pour l'isolation
  * - Documentation JSDoc sur chaque fonction publique
  * =================================================================== */
@@ -638,7 +629,7 @@ var AjoutModule = (function() {
 /* -------------------------------------------------------------------
  * MODULE : AdminAuth
  * Gestion de l'authentification et de la session.
- * Actuellement : sessionStorage côté client.
+ * Actuellement : sessionStorage cÃ´tÃ© client.
  * Futur : JWT HTTP-only + refresh token via API.
  * ------------------------------------------------------------------- */
 var AdminAuth = (function() {
@@ -646,11 +637,15 @@ var AdminAuth = (function() {
 
   var SESSION_KEY = 'georoad_auth';
 
-  /** Vérifie si l'utilisateur est authentifié. */
+  function isAdminRole(role) {
+    return String(role || '').toLowerCase() === 'administrateur';
+  }
+
+  /** VÃ©rifie si l'utilisateur est authentifiÃ©. */
   function isAuthenticated() {
     try {
       var s = JSON.parse(sessionStorage.getItem(SESSION_KEY));
-      return s && s.authenticated === true;
+      return s && s.authenticated === true && isAdminRole(s.role);
     } catch(e) { return false; }
   }
 
@@ -660,15 +655,32 @@ var AdminAuth = (function() {
     catch(e) { return null; }
   }
 
-  /** Détruit la session et redirige vers la page de connexion. */
+  /** DÃ©truit la session et redirige vers la page de connexion. */
   function logout() {
+    var session = getSession();
+    if (session && typeof SIGAuditTrail !== 'undefined') {
+      try {
+        SIGAuditTrail.log(SIGAuditTrail.ACTIONS.LOGOUT, {
+          user: session.name || session.user || 'Administrateur',
+          featureId: session.userId ? String(session.userId) : null,
+          featureName: session.user || session.name || 'Administrateur',
+          details: 'DÃ©connexion de l\'administration',
+          result: 'SUCCESS',
+          entityType: 'user'
+        });
+      } catch(e) {}
+    }
+    if (session && session.userId && typeof UserAdmin !== 'undefined' && typeof UserAdmin.recordActivity === 'function') {
+      try { UserAdmin.recordActivity(session.userId); } catch(e) {}
+    }
     sessionStorage.removeItem(SESSION_KEY);
     window.location.href = 'admin-login.html';
   }
 
-  /** Middleware de garde — redirige si non authentifié. */
+  /** Middleware de garde â€” redirige si non authentifiÃ©. */
   function requireAuth() {
     if (!isAuthenticated()) {
+      sessionStorage.removeItem(SESSION_KEY);
       window.location.href = 'admin-login.html';
       return false;
     }
@@ -686,7 +698,7 @@ var AdminAuth = (function() {
 
 /* -------------------------------------------------------------------
  * MODULE : AdminData
- * Couche d'accès aux données.
+ * Couche d'accÃ¨s aux donnÃ©es.
  * Actuellement : lecture directe des variables globales GeoJSON.
  * Futur : appels fetch() vers l'API REST / PostgreSQL.
  * ------------------------------------------------------------------- */
@@ -694,8 +706,8 @@ var AdminData = (function() {
   'use strict';
 
   /**
-   * Calcule des statistiques agrégées depuis les données GeoJSON.
-   * @returns {Object} Statistiques structurées pour le dashboard
+   * Calcule des statistiques agrÃ©gÃ©es depuis les donnÃ©es GeoJSON.
+   * @returns {Object} Statistiques structurÃ©es pour le dashboard
    */
   function computeDashboardStats() {
     var stats = {
@@ -734,15 +746,15 @@ var AdminData = (function() {
         stats.byCategory[cls].km += len;
         stats.totalKm += len;
 
-        var reg = p.REGIONS || 'Non défini';
+        var reg = p.REGIONS || 'Non dÃ©fini';
         stats.byRegion[reg] = stats.byRegion[reg] || { count: 0, km: 0 };
         stats.byRegion[reg].count++;
         stats.byRegion[reg].km += len;
 
-        /* PHASE 2 : répartition par état et revêtement (depuis les attributs réels) */
-        var etat = p.Etat || 'Non défini';
+        /* PHASE 2 : rÃ©partition par Ã©tat et revÃªtement (depuis les attributs rÃ©els) */
+        var etat = p.Etat || 'Non dÃ©fini';
         stats.byEtat[etat] = (stats.byEtat[etat] || 0) + 1;
-        var revet = p.Revetement || 'Non défini';
+        var revet = p.Revetement || 'Non dÃ©fini';
         stats.byRevetement[revet] = (stats.byRevetement[revet] || 0) + 1;
       });
     }
@@ -752,7 +764,7 @@ var AdminData = (function() {
       stats.empriseCount = (json_Emprise_5.features || []).length;
     }
 
-    /* Préfectures */
+    /* PrÃ©fectures */
     if (typeof json_Prfecture_3 !== 'undefined') {
       stats.prefectureCount = (json_Prfecture_3.features || []).length;
     }
@@ -762,12 +774,12 @@ var AdminData = (function() {
       stats.cantonCount = (json_Canton_4.features || []).length;
     }
 
-    /* Régions */
+    /* RÃ©gions */
     if (typeof json_Rgion_2 !== 'undefined') {
       stats.regionFeatures = json_Rgion_2.features || [];
     }
 
-    /* PK — depuis SIGPersistence (PHASE 2) */
+    /* PK â€” depuis SIGPersistence (PHASE 2) */
     if (typeof SIGPersistence !== 'undefined') {
       try {
         var pkFC = SIGPersistence.loadLayer(SIGPersistence.LAYERS.PK);
@@ -779,17 +791,17 @@ var AdminData = (function() {
   }
 
   /**
-   * Retourne les données brutes d'une couche GeoJSON.
+   * Retourne les donnÃ©es brutes d'une couche GeoJSON.
    * @param {string} layerName - Nom de la variable globale
    * @returns {Object|null} FeatureCollection ou null
    */
   function getLayerData(layerName) {
     var map = {
-      'Rseauroutier_6': json_Rseauroutier_6,
-      'Emprise_5': json_Emprise_5,
-      'Rgion_2': json_Rgion_2,
-      'Prfecture_3': json_Prfecture_3,
-      'Canton_4': json_Canton_4
+      'Rseauroutier_6': (typeof window.json_Rseauroutier_6 !== 'undefined') ? window.json_Rseauroutier_6 : null,
+      'Emprise_5': (typeof window.json_Emprise_5 !== 'undefined') ? window.json_Emprise_5 : null,
+      'Rgion_2': (typeof window.json_Rgion_2 !== 'undefined') ? window.json_Rgion_2 : null,
+      'Prfecture_3': (typeof window.json_Prfecture_3 !== 'undefined') ? window.json_Prfecture_3 : null,
+      'Canton_4': (typeof window.json_Canton_4 !== 'undefined') ? window.json_Canton_4 : null
     };
     return map[layerName] || null;
   }
@@ -803,17 +815,22 @@ var AdminData = (function() {
 
 /* -------------------------------------------------------------------
  * MODULE : UserAdmin
- * Gestion complète des utilisateurs (CRUD) avec localStorage.
+ * Gestion complÃ¨te des utilisateurs (CRUD) avec localStorage.
  * ------------------------------------------------------------------- */
 var UserAdmin = (function() {
   'use strict';
 
   var STORAGE_KEY = 'georoad_users';
   var LOGIN_HISTORY_KEY = 'georoad_login_history';
-  /* PHASE 8 : uniquement 2 profils autorisés */
+  var ADMIN_USERNAME = 'GeoROAD';
+  var ADMIN_NAME = 'GeoROAD';
+  var ADMIN_EMAIL = 'admin@georoad.tg';
+  var DEFAULT_ADMIN_PASSWORD = 'georoad@2026';
+  var LEGACY_ADMIN_PASSWORD = 'georoad2025';
+  /* PHASE 8 : uniquement 2 profils autorisÃ©s */
   var ALLOWED_ROLES = ['administrateur', 'utilisateur_public'];
   var DEFAULT_USERS = [
-    { id: 1, username: 'admin', name: 'Administrateur', role: 'administrateur', email: 'admin@georoad.tg', status: 'actif', lastLogin: null, lastActivity: null, createdAt: '2025-01-01' }
+    { id: 1, username: ADMIN_USERNAME, name: ADMIN_NAME, role: 'administrateur', email: ADMIN_EMAIL, password: DEFAULT_ADMIN_PASSWORD, status: 'actif', mustChangePassword: false, lastLogin: null, lastActivity: null, createdAt: '2025-01-01' }
   ];
 
   function esc(s) {
@@ -821,21 +838,116 @@ var UserAdmin = (function() {
     return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
+  function cloneUsers(users) {
+    try {
+      return JSON.parse(JSON.stringify(users || []));
+    } catch(e) {
+      return users || [];
+    }
+  }
+
+  function normalizeUsers(users) {
+    var list = Array.isArray(users) ? cloneUsers(users) : [];
+    var foundAdmin = false;
+
+    list = list.filter(function(user) {
+      return user && typeof user === 'object';
+    }).map(function(user, idx) {
+      if (!user.id) user.id = idx + 1;
+      if (!user.username) user.username = 'utilisateur_' + user.id;
+      user.username = String(user.username).trim();
+      if (!user.name) user.name = user.username;
+      if (!user.email) user.email = user.username + '@georoad.tg';
+      if (ALLOWED_ROLES.indexOf(user.role) === -1) {
+        user.role = 'utilisateur_public';
+      }
+      if (!user.status) user.status = 'actif';
+      if (!user.createdAt) user.createdAt = new Date().toISOString().split('T')[0];
+      if (typeof user.mustChangePassword === 'undefined') user.mustChangePassword = false;
+      if (typeof user.password === 'undefined') user.password = '';
+
+      /* Migration automatique de l'ancien compte admin */
+      if (user.username.toLowerCase() === 'admin') {
+        user.username = ADMIN_USERNAME;
+      }
+
+      if (user.username.toLowerCase() === ADMIN_USERNAME.toLowerCase()) {
+        foundAdmin = true;
+        user.name = ADMIN_NAME;
+        user.role = 'administrateur';
+        user.status = 'actif';
+        user.email = ADMIN_EMAIL;
+        if (!user.password || user.password === LEGACY_ADMIN_PASSWORD) {
+          user.password = DEFAULT_ADMIN_PASSWORD;
+        }
+      }
+
+      return user;
+    });
+
+    var seenUsernames = {};
+    list = list.filter(function(user) {
+      var key = String(user.username || '').toLowerCase();
+      if (!key) return false;
+      if (seenUsernames[key]) return false;
+      seenUsernames[key] = true;
+      return true;
+    });
+
+    if (!foundAdmin) {
+      list.unshift(cloneUsers(DEFAULT_USERS)[0]);
+    }
+
+    list.sort(function(a, b) { return (a.id || 0) - (b.id || 0); });
+    return list;
+  }
+
   function loadUsers() {
+    var users = null;
     try {
       var data = localStorage.getItem(STORAGE_KEY);
-      if (data) return JSON.parse(data);
+      if (data) users = JSON.parse(data);
     } catch(e) {}
-    /* Initialiser avec les utilisateurs par défaut */
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_USERS));
-    return DEFAULT_USERS.slice();
+
+    users = normalizeUsers(users || DEFAULT_USERS);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
+    return cloneUsers(users);
   }
 
   function saveUsers(users) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(normalizeUsers(users)));
   }
 
-  /** Charge l'historique des connexions (max 200 entrées). */
+  function findByUsername(username) {
+    var uname = String(username || '').trim().toLowerCase();
+    if (!uname) return null;
+    var users = loadUsers();
+    for (var i = 0; i < users.length; i++) {
+      if (String(users[i].username || '').toLowerCase() === uname) {
+        return users[i];
+      }
+    }
+    return null;
+  }
+
+  function authenticate(username, password) {
+    var user = findByUsername(username);
+    if (!user) {
+      return { ok: false, reason: 'not_found', message: 'Identifiants incorrects.' };
+    }
+    if (user.status !== 'actif') {
+      return { ok: false, reason: 'inactive', user: user, message: 'Ce compte est dÃ©sactivÃ©.' };
+    }
+    if (user.role !== 'administrateur') {
+      return { ok: false, reason: 'forbidden', user: user, message: 'Ce compte n\'a pas accÃ¨s Ã  l\'administration.' };
+    }
+    if (String(user.password || '') !== String(password || '')) {
+      return { ok: false, reason: 'invalid_password', user: user, message: 'Identifiants incorrects.' };
+    }
+    return { ok: true, user: user };
+  }
+
+  /** Charge l'historique des connexions (max 200 entrÃ©es). */
   function loadLoginHistory() {
     try {
       var data = localStorage.getItem(LOGIN_HISTORY_KEY);
@@ -852,12 +964,12 @@ var UserAdmin = (function() {
       username: username,
       timestamp: new Date().toISOString(),
       success: !!success,
-      ip: 'local' /* en production : récupéré côté serveur */
+      ip: 'local' /* en production : rÃ©cupÃ©rÃ© cÃ´tÃ© serveur */
     });
-    /* Limiter à 200 entrées */
+    /* Limiter Ã  200 entrÃ©es */
     if (history.length > 200) history = history.slice(0, 200);
     localStorage.setItem(LOGIN_HISTORY_KEY, JSON.stringify(history));
-    /* Mettre à jour lastLogin et lastActivity de l'utilisateur */
+    /* Mettre Ã  jour lastLogin et lastActivity de l'utilisateur */
     if (success) {
       var users = loadUsers();
       var u = users.find(function(u) { return u.id === userId; });
@@ -867,9 +979,21 @@ var UserAdmin = (function() {
         saveUsers(users);
       }
     }
+    if (typeof SIGAuditTrail !== 'undefined') {
+      try {
+        SIGAuditTrail.log(success ? SIGAuditTrail.ACTIONS.LOGIN : SIGAuditTrail.ACTIONS.LOGIN_FAILED, {
+          user: username || 'Inconnu',
+          featureId: userId ? String(userId) : null,
+          featureName: username || null,
+          details: success ? 'Connexion rÃ©ussie Ã  l\'administration' : 'Tentative de connexion refusÃ©e',
+          result: success ? 'SUCCESS' : 'FAILURE',
+          entityType: 'user'
+        });
+      } catch(e) {}
+    }
   }
 
-  /** Met à jour la dernière activité d'un utilisateur (à appeler sur chaque action). */
+  /** Met Ã  jour la derniÃ¨re activitÃ© d'un utilisateur (Ã  appeler sur chaque action). */
   function recordActivity(userId) {
     var users = loadUsers();
     var u = users.find(function(u) { return u.id === userId; });
@@ -879,20 +1003,31 @@ var UserAdmin = (function() {
     }
   }
 
-  /** Réinitialise le mot de passe d'un utilisateur (génère un mot de passe temporaire). */
+  /** RÃ©initialise le mot de passe d'un utilisateur (gÃ©nÃ¨re un mot de passe temporaire). */
   function resetPassword(id) {
     var users = loadUsers();
     var u = users.find(function(u) { return u.id === id; });
     if (!u) return;
-    /* Générer un mot de passe temporaire de 10 caractères */
+    /* GÃ©nÃ©rer un mot de passe temporaire de 10 caractÃ¨res */
     var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
     var tmp = '';
     for (var i = 0; i < 10; i++) tmp += chars.charAt(Math.floor(Math.random() * chars.length));
     u.password = tmp;
     u.mustChangePassword = true;
     saveUsers(users);
+    if (typeof SIGAuditTrail !== 'undefined') {
+      try {
+        SIGAuditTrail.log(SIGAuditTrail.ACTIONS.USER_UPDATED, {
+          featureId: String(u.id),
+          featureName: u.username,
+          details: 'Mot de passe rÃ©initialisÃ© pour ' + (u.name || u.username),
+          result: 'SUCCESS',
+          entityType: 'user'
+        });
+      } catch(e) {}
+    }
     /* Afficher le mot de passe temporaire */
-    alert("Mot de passe réinitialisé pour \"" + u.name + "\".\n\nMot de passe temporaire : " + tmp + "\n\nL'utilisateur devra le changer à la prochaine connexion.");
+    alert("Mot de passe rÃ©initialisÃ© pour \"" + u.name + "\".\n\nMot de passe temporaire : " + tmp + "\n\nL'utilisateur devra le changer Ã  la prochaine connexion.");
     if (typeof AdminUI !== 'undefined') AdminUI.navigate('users');
   }
 
@@ -903,7 +1038,7 @@ var UserAdmin = (function() {
   }
 
   function formatDate(d) {
-    if (!d) return '—';
+    if (!d) return 'â€”';
     try {
       return new Date(d).toLocaleDateString('fr-FR') + ' ' + new Date(d).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
     } catch(e) { return d; }
@@ -925,7 +1060,7 @@ var UserAdmin = (function() {
 
   function renderTableRows(users) {
     if (users.length === 0) {
-      return '<tr><td colspan="6" style="text-align:center;color:var(--text-3);padding:30px">Aucun utilisateur trouvé</td></tr>';
+      return '<tr><td colspan="6" style="text-align:center;color:var(--text-3);padding:30px">Aucun utilisateur trouvÃ©</td></tr>';
     }
     var html = '';
     users.forEach(function(u) {
@@ -938,9 +1073,9 @@ var UserAdmin = (function() {
         + '<td>'
         + '<div style="display:flex;gap:4px">'
         + '<button class="btn-sm ghost" title="Modifier" onclick="UserAdmin.openForm(' + u.id + ')"><i class="fas fa-pen"></i></button>'
-        + '<button class="btn-sm ghost" title="Réinitialiser le mot de passe" onclick="UserAdmin.resetPassword(' + u.id + ')"><i class="fas fa-key"></i></button>'
+        + '<button class="btn-sm ghost" title="RÃ©initialiser le mot de passe" onclick="UserAdmin.resetPassword(' + u.id + ')"><i class="fas fa-key"></i></button>'
         + '<button class="btn-sm ghost" title="Historique des connexions" onclick="UserAdmin.showLoginHistory(' + u.id + ')"><i class="fas fa-history"></i></button>'
-        + '<button class="btn-sm ghost" title="' + (u.status === 'actif' ? 'Désactiver' : 'Activer') + '" onclick="UserAdmin.toggleStatus(' + u.id + ')">'
+        + '<button class="btn-sm ghost" title="' + (u.status === 'actif' ? 'DÃ©sactiver' : 'Activer') + '" onclick="UserAdmin.toggleStatus(' + u.id + ')">'
         + '<i class="fas ' + (u.status === 'actif' ? 'fa-ban' : 'fa-check-circle') + '"></i></button>'
         + (u.id !== 1 ? '<button class="btn-sm danger" title="Supprimer" onclick="UserAdmin.deleteUser(' + u.id + ')"><i class="fas fa-trash"></i></button>' : '')
         + '</div></td>'
@@ -958,19 +1093,19 @@ var UserAdmin = (function() {
 
     var html = '<div class="modal-admin-overlay" id="modal-user-history" onclick="UserAdmin.closeModalOnOverlay(event)">'
       + '<div class="modal-admin" style="max-width:560px">'
-      + '<div class="modal-admin-header"><h3>Historique des connexions — ' + esc(u.name) + '</h3>'
+      + '<div class="modal-admin-header"><h3>Historique des connexions â€” ' + esc(u.name) + '</h3>'
       + '<button class="modal-admin-close" onclick="UserAdmin.closeModal()"><i class="fas fa-times"></i></button></div>'
       + '<div class="modal-admin-body">';
     if (history.length === 0) {
-      html += '<p style="text-align:center;color:var(--text-3);padding:30px">Aucune connexion enregistrée.</p>';
+      html += '<p style="text-align:center;color:var(--text-3);padding:30px">Aucune connexion enregistrÃ©e.</p>';
     } else {
       html += '<div class="admin-table-wrap"><table class="admin-table"><thead><tr>'
         + '<th>Date</th><th>Statut</th><th>Adresse</th>'
         + '</tr></thead><tbody>';
       history.forEach(function(h) {
         var d = new Date(h.timestamp).toLocaleDateString('fr-FR') + ' ' + new Date(h.timestamp).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-        var st = h.success ? '<span class="status-badge active">Réussie</span>' : '<span class="status-badge inactive">Échouée</span>';
-        html += '<tr><td>' + d + '</td><td>' + st + '</td><td style="font-size:.82rem;color:var(--text-3)">' + esc(h.ip || '—') + '</td></tr>';
+        var st = h.success ? '<span class="status-badge active">RÃ©ussie</span>' : '<span class="status-badge inactive">Ã‰chouÃ©e</span>';
+        html += '<tr><td>' + d + '</td><td>' + st + '</td><td style="font-size:.82rem;color:var(--text-3)">' + esc(h.ip || 'â€”') + '</td></tr>';
       });
       html += '</tbody></table></div>';
     }
@@ -988,7 +1123,7 @@ var UserAdmin = (function() {
   function render() {
     var users = loadUsers();
     var html = '<div class="page-header"><h1>Gestion des utilisateurs</h1>'
-      + '<p>Administration des comptes et des rôles d\'accès à la plateforme GeoROAD. Cette section est réservée aux administrateurs système du Ministère des Travaux Publics pour gérer les permissions des agents.</p></div>';
+      + '<p>Administration des comptes et des rÃ´les d\'accÃ¨s Ã  la plateforme GeoROAD. Cette section est rÃ©servÃ©e aux administrateurs systÃ¨me du MinistÃ¨re des Travaux Publics pour gÃ©rer les permissions des agents.</p></div>';
 
     /* Statistiques rapides */
     var actifs = users.filter(function(u) { return u.status === 'actif'; }).length;
@@ -1011,7 +1146,7 @@ var UserAdmin = (function() {
     /* Tableau */
     html += '<div class="admin-panel"><div class="panel-header"><h3><i class="fas fa-users"></i> Liste des utilisateurs</h3></div>'
       + '<div class="panel-body"><div class="admin-table-wrap"><table class="admin-table"><thead><tr>'
-      + '<th>Nom</th><th>Rôle</th><th>Statut</th><th>Dernière connexion</th><th>Dernière activité</th><th>Actions</th>'
+      + '<th>Nom</th><th>RÃ´le</th><th>Statut</th><th>DerniÃ¨re connexion</th><th>DerniÃ¨re activitÃ©</th><th>Actions</th>'
       + '</tr></thead><tbody id="users-tbody">'
       + renderTableRows(users)
       + '</tbody></table></div></div></div>';
@@ -1051,13 +1186,13 @@ var UserAdmin = (function() {
       + '<input type="text" id="uf-username" value="' + esc(user ? user.username : '') + '" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:.88rem"></div>'
       + '<div><label style="font-size:.82rem;font-weight:600;color:var(--text-2);display:block;margin-bottom:4px">Email *</label>'
       + '<input type="email" id="uf-email" value="' + esc(user ? user.email : '') + '" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:.88rem"></div>'
-      + '<div><label style="font-size:.82rem;font-weight:600;color:var(--text-2);display:block;margin-bottom:4px">Rôle *</label>'
+      + '<div><label style="font-size:.82rem;font-weight:600;color:var(--text-2);display:block;margin-bottom:4px">RÃ´le *</label>'
       + '<select id="uf-role" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:.88rem;background:var(--white)">'
       + '<option value="administrateur"' + (user && user.role === 'administrateur' ? ' selected' : '') + '>Administrateur</option>'
       + '<option value="utilisateur_public"' + (user && user.role === 'utilisateur_public' ? ' selected' : '') + '>Utilisateur public</option>'
       + '</select></div>'
       + '<div style="grid-column:1/-1"><label style="font-size:.82rem;font-weight:600;color:var(--text-2);display:block;margin-bottom:4px">Mot de passe' + (isEdit ? ' (laisser vide pour ne pas changer)' : ' *') + '</label>'
-      + '<input type="password" id="uf-password" placeholder="' + (isEdit ? 'Ne pas modifier' : 'Définir un mot de passe') + '" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:.88rem"></div>'
+      + '<input type="password" id="uf-password" placeholder="' + (isEdit ? 'Ne pas modifier' : 'DÃ©finir un mot de passe') + '" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:.88rem"></div>'
       + '</div>'
       + '<div id="uf-error" style="color:var(--red);font-size:.82rem;margin-top:8px;display:none"></div>';
 
@@ -1068,7 +1203,7 @@ var UserAdmin = (function() {
       + '<div class="modal-admin-body">' + formHtml + '</div>'
       + '<div class="modal-admin-footer">'
       + '<button class="btn-sm ghost" onclick="UserAdmin.closeModal()">Annuler</button>'
-      + '<button class="btn-sm primary" onclick="UserAdmin.saveForm(' + (id || 'null') + ')"><i class="fas fa-check"></i> ' + (isEdit ? 'Enregistrer' : 'Créer') + '</button>'
+      + '<button class="btn-sm primary" onclick="UserAdmin.saveForm(' + (id || 'null') + ')"><i class="fas fa-check"></i> ' + (isEdit ? 'Enregistrer' : 'CrÃ©er') + '</button>'
       + '</div></div></div>';
 
     /* Supprimer un ancien modal s'il existe */
@@ -1081,14 +1216,17 @@ var UserAdmin = (function() {
     document.body.appendChild(modalEl);
   }
 
-  function closeModal() {
-    var modal = document.getElementById('modal-user-form');
-    if (modal) modal.parentNode.removeChild(modal);
+  function closeModal(id) {
+    var ids = id ? [id] : ['modal-user-form', 'modal-user-history'];
+    ids.forEach(function(modalId) {
+      var modal = document.getElementById(modalId);
+      if (modal) modal.parentNode.removeChild(modal);
+    });
   }
 
   function closeModalOnOverlay(event) {
     if (event.target.classList.contains('modal-admin-overlay')) {
-      closeModal();
+      closeModal(event.target.id);
     }
   }
 
@@ -1118,13 +1256,20 @@ var UserAdmin = (function() {
       errorEl.style.display = 'block';
       return;
     }
+    if (ALLOWED_ROLES.indexOf(role) === -1) {
+      errorEl.textContent = 'Le rÃ´le sÃ©lectionnÃ© n\'est pas autorisÃ©.';
+      errorEl.style.display = 'block';
+      return;
+    }
 
     var users = loadUsers();
+    var currentSession = (typeof AdminAuth !== 'undefined') ? AdminAuth.getSession() : null;
+    var currentUser = currentSession ? (currentSession.name || currentSession.user || 'Administrateur') : 'Administrateur';
 
-    /* Vérifier l'unicité du username */
+    /* VÃ©rifier l'unicitÃ© du username */
     var dup = users.find(function(u) { return u.username.toLowerCase() === username.toLowerCase() && u.id !== editId; });
     if (dup) {
-      errorEl.textContent = 'Ce nom d\'utilisateur est déjà pris.';
+      errorEl.textContent = 'Ce nom d\'utilisateur est dÃ©jÃ  pris.';
       errorEl.style.display = 'block';
       return;
     }
@@ -1132,14 +1277,29 @@ var UserAdmin = (function() {
     if (editId) {
       var user = users.find(function(u) { return u.id === editId; });
       if (user) {
+        var beforeState = cloneUsers([user])[0];
         user.name = name;
         user.username = username;
         user.email = email;
         user.role = role;
         if (password) user.password = password;
+        if (typeof SIGAuditTrail !== 'undefined') {
+          try {
+            SIGAuditTrail.log(SIGAuditTrail.ACTIONS.USER_UPDATED, {
+              user: currentUser,
+              featureId: String(user.id),
+              featureName: user.username,
+              before: beforeState,
+              after: cloneUsers([user])[0],
+              details: 'Utilisateur modifiÃ© : ' + user.username,
+              result: 'SUCCESS',
+              entityType: 'user'
+            });
+          } catch(e) {}
+        }
       }
     } else {
-      users.push({
+      var createdUser = {
         id: getNextId(users),
         username: username,
         name: name,
@@ -1149,13 +1309,27 @@ var UserAdmin = (function() {
         status: 'actif',
         lastLogin: null,
         createdAt: new Date().toISOString().split('T')[0]
-      });
+      };
+      users.push(createdUser);
+      if (typeof SIGAuditTrail !== 'undefined') {
+        try {
+          SIGAuditTrail.log(SIGAuditTrail.ACTIONS.USER_CREATED, {
+            user: currentUser,
+            featureId: String(createdUser.id),
+            featureName: createdUser.username,
+            after: cloneUsers([createdUser])[0],
+            details: 'Utilisateur crÃ©Ã© : ' + createdUser.username,
+            result: 'SUCCESS',
+            entityType: 'user'
+          });
+        } catch(e) {}
+      }
     }
 
     saveUsers(users);
     closeModal();
 
-    /* Rafraîchir la page via AdminUI */
+    /* RafraÃ®chir la page via AdminUI */
     if (typeof AdminUI !== 'undefined') AdminUI.navigate('users');
   }
 
@@ -1163,8 +1337,22 @@ var UserAdmin = (function() {
     var users = loadUsers();
     var user = users.find(function(u) { return u.id === id; });
     if (!user || user.id === 1) return;
+    var beforeState = cloneUsers([user])[0];
     user.status = user.status === 'actif' ? 'inactif' : 'actif';
     saveUsers(users);
+    if (typeof SIGAuditTrail !== 'undefined') {
+      try {
+        SIGAuditTrail.log(SIGAuditTrail.ACTIONS.USER_UPDATED, {
+          featureId: String(user.id),
+          featureName: user.username,
+          before: beforeState,
+          after: cloneUsers([user])[0],
+          details: 'Statut utilisateur mis Ã  jour : ' + user.username + ' (' + user.status + ')',
+          result: 'SUCCESS',
+          entityType: 'user'
+        });
+      } catch(e) {}
+    }
     if (typeof AdminUI !== 'undefined') AdminUI.navigate('users');
   }
 
@@ -1174,11 +1362,23 @@ var UserAdmin = (function() {
     var user = users.find(function(u) { return u.id === id; });
     if (!user) return;
 
-    var msg = 'Supprimer l\'utilisateur "' + (user.name || user.username) + '" ? Cette action est irréversible.';
+    var msg = 'Supprimer l\'utilisateur "' + (user.name || user.username) + '" ? Cette action est irrÃ©versible.';
     if (!confirm(msg)) return;
 
     users = users.filter(function(u) { return u.id !== id; });
     saveUsers(users);
+    if (typeof SIGAuditTrail !== 'undefined') {
+      try {
+        SIGAuditTrail.log(SIGAuditTrail.ACTIONS.USER_DELETED, {
+          featureId: String(id),
+          featureName: user.username,
+          before: cloneUsers([user])[0],
+          details: 'Utilisateur supprimÃ© : ' + user.username,
+          result: 'SUCCESS',
+          entityType: 'user'
+        });
+      } catch(e) {}
+    }
     if (typeof AdminUI !== 'undefined') AdminUI.navigate('users');
   }
 
@@ -1197,14 +1397,16 @@ var UserAdmin = (function() {
     recordLogin: recordLogin,
     recordActivity: recordActivity,
     loadLoginHistory: loadLoginHistory,
-    ALLOWED_ROLES: ALLOWED_ROLES
+    ALLOWED_ROLES: ALLOWED_ROLES,
+    findByUsername: findByUsername,
+    authenticate: authenticate
   };
 })();
 
 
 /* -------------------------------------------------------------------
  * MODULE : SettingsAdmin
- * Configuration générale de la plateforme (localStorage).
+ * Configuration gÃ©nÃ©rale de la plateforme (localStorage).
  * ------------------------------------------------------------------- */
 var SettingsAdmin = (function() {
   'use strict';
@@ -1219,16 +1421,9 @@ var SettingsAdmin = (function() {
     coordFormat: 'DMS',
     autoSaveFreq: 'manual',
     theme: 'light',
-    /* PHASE 9 : nouveaux paramètres */
+    /* PHASE 9 : nouveaux paramÃ¨tres */
     logo: '', /* base64 data URL du logo */
     defaultBaseMap: 'satellite', /* satellite | osm | hybrid | light | topographic */
-    ministryName: 'Ministère des Travaux Publics du Togo',
-    ministryAddress: 'Avenue de la Marina, Lomé, Togo',
-    ministryPhone: '+228 22 21 30 00',
-    ministryEmail: 'contact@travauxpublics.tg',
-    supportName: 'Support technique GeoROAD',
-    supportEmail: 'support@georoad.tg',
-    supportPhone: '+228 90 00 00 00',
     backupFrequency: 'manual' /* manual | daily | weekly */
   };
 
@@ -1280,23 +1475,23 @@ var SettingsAdmin = (function() {
 
   function render() {
     var s = loadSettings();
-    var html = '<div class="page-header"><h1>Paramètres</h1>'
-      + '<p>Configuration générale de la plateforme GeoROAD : système de projection cartographique, sauvegarde, affichage et préférences. Ces paramètres sont utilisés par l\'ensemble des modules de l\'application.</p></div>';
+    var html = '<div class="page-header"><h1>ParamÃ¨tres</h1>'
+      + '<p>Configuration gÃ©nÃ©rale de la plateforme GeoROAD : systÃ¨me de projection cartographique, sauvegarde, affichage et prÃ©fÃ©rences. Ces paramÃ¨tres sont utilisÃ©s par l\'ensemble des modules de l\'application.</p></div>';
 
     /* Bouton enregistrer global */
     html += '<div style="display:flex;justify-content:flex-end;margin-bottom:16px">'
-      + '<button class="btn-sm primary" onclick="SettingsAdmin.saveAll()"><i class="fas fa-check"></i> Enregistrer tous les paramètres</button>'
+      + '<button class="btn-sm primary" onclick="SettingsAdmin.saveAll()"><i class="fas fa-check"></i> Enregistrer tous les paramÃ¨tres</button>'
       + '</div>';
 
-    /* Section 1 : Paramètres généraux */
-    html += '<div class="admin-panel"><div class="panel-header"><h3><i class="fas fa-cog"></i> Paramètres généraux</h3></div>'
+    /* Section 1 : ParamÃ¨tres gÃ©nÃ©raux */
+    html += '<div class="admin-panel"><div class="panel-header"><h3><i class="fas fa-cog"></i> ParamÃ¨tres gÃ©nÃ©raux</h3></div>'
       + '<div class="panel-body">'
       + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">'
       + '<div><label style="font-size:.82rem;font-weight:600;color:var(--text-2);display:block;margin-bottom:6px">Nom de la plateforme</label>'
       + inputHtml('platformName', s.platformName)
       + '</div>'
       + '<div><label style="font-size:.82rem;font-weight:600;color:var(--text-2);display:block;margin-bottom:6px">Langue</label>'
-      + selectHtml('language', [{value:'fr',label:'Français'},{value:'en',label:'English'}], s.language)
+      + selectHtml('language', [{value:'fr',label:'FranÃ§ais'},{value:'en',label:'English'}], s.language)
       + '</div>'
       + '</div></div></div>';
 
@@ -1308,54 +1503,36 @@ var SettingsAdmin = (function() {
     if (s.logo) {
       html += '<img src="' + esc(s.logo) + '" alt="Logo" style="max-width:120px;max-height:80px;border:1px solid var(--border);border-radius:8px;padding:4px;background:#fff">';
     } else {
-      html += '<div style="width:120px;height:80px;border:1px dashed var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--text-3);font-size:.78rem;text-align:center">Aucun logo<br>(logo par défaut)</div>';
+      html += '<div style="width:120px;height:80px;border:1px dashed var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--text-3);font-size:.78rem;text-align:center">Aucun logo<br>(logo par dÃ©faut)</div>';
     }
     html += '</div>'
       + '<div style="flex:1;min-width:200px">'
       + '<input type="file" id="setting-logo-file" accept="image/*" style="display:none" onchange="SettingsAdmin.uploadLogo(this)">'
       + '<button class="btn-sm primary" onclick="document.getElementById(\'setting-logo-file\').click()"><i class="fas fa-upload"></i> Choisir un logo</button> '
       + '<button class="btn-sm ghost" onclick="SettingsAdmin.removeLogo()"><i class="fas fa-trash"></i> Supprimer</button>'
-      + '<p style="font-size:.78rem;color:var(--text-3);margin-top:8px">PNG, JPG ou SVG. Taille max recommandée : 200×80 px.</p>'
+      + '<p style="font-size:.78rem;color:var(--text-3);margin-top:8px">PNG, JPG ou SVG. Taille max recommandÃ©e : 200Ã—80 px.</p>'
       + '</div>'
       + '</div></div></div>';
 
-    /* Section 1c : Coordonnées du ministère (PHASE 9) */
-    html += '<div class="admin-panel" style="margin-top:16px"><div class="panel-header"><h3><i class="fas fa-building-columns"></i> Coordonnées du ministère</h3></div>'
-      + '<div class="panel-body">'
-      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">'
-      + '<div><label style="font-size:.82rem;font-weight:600;color:var(--text-2);display:block;margin-bottom:6px">Nom du ministère</label>'
-      + inputHtml('ministryName', s.ministryName)
-      + '</div>'
-      + '<div><label style="font-size:.82rem;font-weight:600;color:var(--text-2);display:block;margin-bottom:6px">Adresse</label>'
-      + inputHtml('ministryAddress', s.ministryAddress)
-      + '</div>'
-      + '<div><label style="font-size:.82rem;font-weight:600;color:var(--text-2);display:block;margin-bottom:6px">Téléphone</label>'
-      + inputHtml('ministryPhone', s.ministryPhone)
-      + '</div>'
-      + '<div><label style="font-size:.82rem;font-weight:600;color:var(--text-2);display:block;margin-bottom:6px">Email</label>'
-      + inputHtml('ministryEmail', s.ministryEmail)
-      + '</div>'
-      + '</div></div></div>';
-
-    /* Section 2 : Cartographie + fond de carte par défaut (PHASE 9) */
+    /* Section 2 : Cartographie + fond de carte par dÃ©faut (PHASE 9) */
     html += '<div class="admin-panel" style="margin-top:16px"><div class="panel-header"><h3><i class="fas fa-map"></i> Cartographie</h3></div>'
       + '<div class="panel-body">'
       + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:20px">'
-      + '<div><label style="font-size:.82rem;font-weight:600;color:var(--text-2);display:block;margin-bottom:6px">Projection par défaut</label>'
+      + '<div><label style="font-size:.82rem;font-weight:600;color:var(--text-2);display:block;margin-bottom:6px">Projection par dÃ©faut</label>'
       + selectHtml('projection', ['EPSG:4326','EPSG:32630','EPSG:32631','EPSG:32632'], s.projection)
       + '</div>'
-      + '<div><label style="font-size:.82rem;font-weight:600;color:var(--text-2);display:block;margin-bottom:6px">Unités de distance</label>'
-      + selectHtml('distanceUnit', [{value:'km',label:'Kilomètres (km)'},{value:'m',label:'Mètres (m)'}], s.distanceUnit)
+      + '<div><label style="font-size:.82rem;font-weight:600;color:var(--text-2);display:block;margin-bottom:6px">UnitÃ©s de distance</label>'
+      + selectHtml('distanceUnit', [{value:'km',label:'KilomÃ¨tres (km)'},{value:'m',label:'MÃ¨tres (m)'}], s.distanceUnit)
       + '</div>'
-      + '<div><label style="font-size:.82rem;font-weight:600;color:var(--text-2);display:block;margin-bottom:6px">Affichage coordonnées</label>'
-      + selectHtml('coordFormat', [{value:'DMS',label:'DMS (degrés, minutes, secondes)'},{value:'DD',label:'DD (degrés décimaux)'}], s.coordFormat)
+      + '<div><label style="font-size:.82rem;font-weight:600;color:var(--text-2);display:block;margin-bottom:6px">Affichage coordonnÃ©es</label>'
+      + selectHtml('coordFormat', [{value:'DMS',label:'DMS (degrÃ©s, minutes, secondes)'},{value:'DD',label:'DD (degrÃ©s dÃ©cimaux)'}], s.coordFormat)
       + '</div>'
-      + '<div><label style="font-size:.82rem;font-weight:600;color:var(--text-2);display:block;margin-bottom:6px">Fond de carte par défaut</label>'
-      + selectHtml('defaultBaseMap', [{value:'satellite',label:'Google Satellite'},{value:'osm',label:'OpenStreetMap'},{value:'hybrid',label:'Google Hybrid'},{value:'light',label:'Fond clair (CartoDB)'},{value:'topographic',label:'Topographique (OpenTopoMap)'}], s.defaultBaseMap)
+      + '<div><label style="font-size:.82rem;font-weight:600;color:var(--text-2);display:block;margin-bottom:6px">Fond de carte par dÃ©faut</label>'
+      + selectHtml('defaultBaseMap', [{value:'satellite',label:'Google Satellite'},{value:'osm',label:'OpenStreetMap'},{value:'hybrid',label:'Google Hybrid'}], s.defaultBaseMap)
       + '</div>'
       + '</div></div></div>';
 
-    /* Section 3 : Sauvegarde + fréquence (PHASE 9) */
+    /* Section 3 : Sauvegarde + frÃ©quence (PHASE 9) */
     var storageSize = 0;
     if (typeof SIGPersistence !== 'undefined') {
       try { storageSize = SIGPersistence.getStorageSize(); } catch(e) {}
@@ -1366,14 +1543,14 @@ var SettingsAdmin = (function() {
     html += '<div class="admin-panel" style="margin-top:16px"><div class="panel-header"><h3><i class="fas fa-database"></i> Sauvegarde</h3></div>'
       + '<div class="panel-body">'
       + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">'
-      + '<div><label style="font-size:.82rem;font-weight:600;color:var(--text-2);display:block;margin-bottom:6px">Fréquence de sauvegarde automatique</label>'
+      + '<div><label style="font-size:.82rem;font-weight:600;color:var(--text-2);display:block;margin-bottom:6px">FrÃ©quence de sauvegarde automatique</label>'
       + selectHtml('autoSaveFreq', [
-        {value:'onchange',label:'À chaque modification'},
+        {value:'onchange',label:'Ã€ chaque modification'},
         {value:'5min',label:'Toutes les 5 minutes'},
         {value:'manual',label:'Manuelle'}
       ], s.autoSaveFreq)
       + '</div>'
-      + '<div><label style="font-size:.82rem;font-weight:600;color:var(--text-2);display:block;margin-bottom:6px">Fréquence des sauvegardes de sécurité</label>'
+      + '<div><label style="font-size:.82rem;font-weight:600;color:var(--text-2);display:block;margin-bottom:6px">FrÃ©quence des sauvegardes de sÃ©curitÃ©</label>'
       + selectHtml('backupFrequency', [
         {value:'manual',label:'Manuelle'},
         {value:'daily',label:'Quotidienne'},
@@ -1385,39 +1562,24 @@ var SettingsAdmin = (function() {
       + '</div>'
       + '</div></div></div>';
 
-    /* Section 3b : Coordonnées du support (PHASE 9) */
-    html += '<div class="admin-panel" style="margin-top:16px"><div class="panel-header"><h3><i class="fas fa-headset"></i> Coordonnées du support technique</h3></div>'
-      + '<div class="panel-body">'
-      + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px">'
-      + '<div><label style="font-size:.82rem;font-weight:600;color:var(--text-2);display:block;margin-bottom:6px">Nom du support</label>'
-      + inputHtml('supportName', s.supportName)
-      + '</div>'
-      + '<div><label style="font-size:.82rem;font-weight:600;color:var(--text-2);display:block;margin-bottom:6px">Email</label>'
-      + inputHtml('supportEmail', s.supportEmail)
-      + '</div>'
-      + '<div><label style="font-size:.82rem;font-weight:600;color:var(--text-2);display:block;margin-bottom:6px">Téléphone</label>'
-      + inputHtml('supportPhone', s.supportPhone)
-      + '</div>'
-      + '</div></div></div>';
-
     /* Section 4 : Apparence */
     html += '<div class="admin-panel" style="margin-top:16px"><div class="panel-header"><h3><i class="fas fa-palette"></i> Apparence</h3></div>'
       + '<div class="panel-body">'
       + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">'
-      + '<div><label style="font-size:.82rem;font-weight:600;color:var(--text-2);display:block;margin-bottom:6px">Thème</label>'
+      + '<div><label style="font-size:.82rem;font-weight:600;color:var(--text-2);display:block;margin-bottom:6px">ThÃ¨me</label>'
       + selectHtml('theme', [{value:'light',label:'Clair'}], s.theme)
       + '</div>'
       + '</div></div></div>';
 
     /* Section 5 : Informations */
-    var schemaVersion = '—';
+    var schemaVersion = 'â€”';
     if (typeof SIGPersistence !== 'undefined') {
       try {
         var desc = SIGPersistence.getSchemaDescription();
-        schemaVersion = desc.version || '—';
+        schemaVersion = desc.version || 'â€”';
       } catch(e) {}
     }
-    var lastSync = '—';
+    var lastSync = 'â€”';
     if (typeof SIGPersistence !== 'undefined') {
       try {
         var ls = SIGPersistence.getMeta('lastSync');
@@ -1434,10 +1596,10 @@ var SettingsAdmin = (function() {
       + '<div><label style="font-size:.82rem;font-weight:600;color:var(--text-2);display:block;margin-bottom:6px">Version</label>'
       + '<div style="padding:9px 12px;background:var(--bg);border-radius:8px;font-size:.88rem;color:var(--text-2)">3.0</div>'
       + '</div>'
-      + '<div><label style="font-size:.82rem;font-weight:600;color:var(--text-2);display:block;margin-bottom:6px">Schéma de données</label>'
+      + '<div><label style="font-size:.82rem;font-weight:600;color:var(--text-2);display:block;margin-bottom:6px">SchÃ©ma de donnÃ©es</label>'
       + '<div style="padding:9px 12px;background:var(--bg);border-radius:8px;font-size:.88rem;color:var(--text-2)">' + esc(schemaVersion) + '</div>'
       + '</div>'
-      + '<div><label style="font-size:.82rem;font-weight:600;color:var(--text-2);display:block;margin-bottom:6px">Dernière synchronisation</label>'
+      + '<div><label style="font-size:.82rem;font-weight:600;color:var(--text-2);display:block;margin-bottom:6px">DerniÃ¨re synchronisation</label>'
       + '<div style="padding:9px 12px;background:var(--bg);border-radius:8px;font-size:.88rem;color:var(--text-2)">' + esc(lastSync) + '</div>'
       + '</div>'
       + '</div></div></div>';
@@ -1446,14 +1608,31 @@ var SettingsAdmin = (function() {
   }
 
   function saveAll() {
-    /* Tous les champs sont déjà sauvegardés en temps réel via onchange/oninput. */
+    var settingsSnapshot = loadSettings();
+    if (typeof SIGAuditTrail !== 'undefined') {
+      try {
+        SIGAuditTrail.log(SIGAuditTrail.ACTIONS.SETTINGS_UPDATED, {
+          featureName: 'Configuration GeoROAD TOGO',
+          details: 'ParamÃ¨tres de la plateforme enregistrÃ©s',
+          after: settingsSnapshot,
+          result: 'SUCCESS',
+          entityType: 'settings'
+        });
+      } catch(e) {}
+    }
+    if (typeof NotificationCenter !== 'undefined') {
+      try {
+        NotificationCenter.add('update', 'ParamÃ¨tres enregistrÃ©s', 'La configuration de la plateforme a Ã©tÃ© mise Ã  jour.');
+      } catch(e) {}
+    }
+    /* Tous les champs sont dÃ©jÃ  sauvegardÃ©s en temps rÃ©el via onchange/oninput. */
     /* Ce bouton sert de confirmation visuelle. */
     var toast = document.getElementById('settings-toast');
     if (toast) toast.parentNode.removeChild(toast);
     var div = document.createElement('div');
     div.id = 'settings-toast';
     div.style.cssText = 'position:fixed;bottom:24px;right:24px;background:var(--green);color:#fff;padding:12px 24px;border-radius:10px;font-size:.88rem;font-weight:600;z-index:10000;box-shadow:0 8px 24px rgba(0,0,0,.15)';
-    div.innerHTML = '<i class="fas fa-check-circle"></i> Paramètres enregistrés avec succès';
+    div.innerHTML = '<i class="fas fa-check-circle"></i> ParamÃ¨tres enregistrÃ©s avec succÃ¨s';
     document.body.appendChild(div);
     setTimeout(function() { if (div.parentNode) div.parentNode.removeChild(div); }, 3000);
   }
@@ -1462,7 +1641,7 @@ var SettingsAdmin = (function() {
   function uploadLogo(input) {
     if (!input.files || input.files.length === 0) return;
     var file = input.files[0];
-    /* Limiter à 500 Ko */
+    /* Limiter Ã  500 Ko */
     if (file.size > 500 * 1024) {
       alert('Le fichier est trop volumineux (max 500 Ko). Choisissez une image plus petite.');
       return;
@@ -1479,9 +1658,9 @@ var SettingsAdmin = (function() {
     reader.readAsDataURL(file);
   }
 
-  /** Supprime le logo personnalisé (PHASE 9). */
+  /** Supprime le logo personnalisÃ© (PHASE 9). */
   function removeLogo() {
-    if (!confirm('Supprimer le logo personnalisé ? Le logo par défaut sera utilisé.')) return;
+    if (!confirm('Supprimer le logo personnalisÃ© ? Le logo par dÃ©faut sera utilisÃ©.')) return;
     save('logo', '');
     if (typeof AdminUI !== 'undefined') AdminUI.navigate('settings');
   }
@@ -1511,7 +1690,7 @@ var AuditAdmin = (function() {
   }
 
   function formatDate(iso) {
-    if (!iso) return '—';
+    if (!iso) return 'â€”';
     try {
       var d = new Date(iso);
       return d.toLocaleDateString('fr-FR') + ' ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
@@ -1547,7 +1726,7 @@ var AuditAdmin = (function() {
     if (elAction) actionFilter = elAction.value;
     if (elSearch) searchQuery = elSearch.value.trim().toLowerCase();
 
-    /* Récupérer toutes les entrées (large limite) */
+    /* RÃ©cupÃ©rer toutes les entrÃ©es (large limite) */
     var entries = SIGAuditTrail.getRecentChanges(500);
 
     /* Filtrer par date */
@@ -1583,11 +1762,11 @@ var AuditAdmin = (function() {
 
   function renderTableBody(entries) {
     if (typeof SIGAuditTrail === 'undefined') {
-      return '<tr><td colspan="6" style="text-align:center;color:var(--text-3);padding:30px">Module d\'audit non chargé</td></tr>';
+      return '<tr><td colspan="6" style="text-align:center;color:var(--text-3);padding:30px">Module d\'audit non chargÃ©</td></tr>';
     }
 
     if (entries.length === 0) {
-      return '<tr><td colspan="6" style="text-align:center;color:var(--text-3);padding:30px">Aucune entrée ne correspond aux filtres</td></tr>';
+      return '<tr><td colspan="6" style="text-align:center;color:var(--text-3);padding:30px">Aucune entrÃ©e ne correspond aux filtres</td></tr>';
     }
 
     var html = '';
@@ -1595,18 +1774,18 @@ var AuditAdmin = (function() {
       var actionLabel = SIGAuditTrail.getActionLabel(e.action);
       var actionIcon = SIGAuditTrail.getActionIcon(e.action);
       var featName = e.featureName || e.featureId || '';
-      /* Bouton "Zoom sur entité" — uniquement pour les actions sur routes/PK/emprises */
+      /* Bouton "Zoom sur entitÃ©" â€” uniquement pour les actions sur routes/PK/emprises */
       var canZoom = featName && (e.action === 'CREATE_ROUTE' || e.action === 'UPDATE_ROUTE' || e.action === 'DELETE_ROUTE' || e.action === 'EDIT_GEOMETRY');
-      /* Encoder le nom pour éviter les soucis d'apostrophes : utilisation de data-* attributes */
+      /* Encoder le nom pour Ã©viter les soucis d'apostrophes : utilisation de data-* attributes */
       var safeId = String(e.featureId || featName || '').replace(/"/g, '&quot;');
       html += '<tr>'
         + '<td>' + formatDate(e.timestamp) + '</td>'
         + '<td>' + esc(e.user) + '</td>'
         + '<td><i class="fas ' + actionIcon + '" style="margin-right:4px"></i> ' + actionLabel + '</td>'
-        + '<td>' + esc(featName || '—') + '</td>'
-        + '<td>' + esc(e.details || '—') + '</td>'
+        + '<td>' + esc(featName || 'â€”') + '</td>'
+        + '<td>' + esc(e.details || 'â€”') + '</td>'
         + '<td style="text-align:right;white-space:nowrap">'
-        + (canZoom ? '<button class="btn-icon" title="Voir sur le géoportail" data-zoom-id="' + safeId + '" data-zoom-name="' + esc(featName) + '" onclick="AuditAdmin.zoomToEntity(this.getAttribute(\'data-zoom-id\'),this.getAttribute(\'data-zoom-name\'))"><i class="fas fa-external-link-alt"></i></button>' : '')
+        + (canZoom ? '<button class="btn-icon" title="Voir sur le gÃ©oportail" data-zoom-id="' + safeId + '" data-zoom-name="' + esc(featName) + '" onclick="AuditAdmin.zoomToEntity(this.getAttribute(\'data-zoom-id\'),this.getAttribute(\'data-zoom-name\'))"><i class="fas fa-external-link-alt"></i></button>' : '')
         + '</td>'
         + '</tr>';
     });
@@ -1615,12 +1794,12 @@ var AuditAdmin = (function() {
 
   function render() {
     var html = '<div class="page-header"><h1>Journal d\'audit</h1>'
-      + '<p>Historique des modifications du réseau routier. Chaque action (création, modification, suppression, import, export) est enregistrée avec l\'utilisateur, la date et les détails.</p></div>';
+      + '<p>Historique des modifications du rÃ©seau routier. Chaque action (crÃ©ation, modification, suppression, import, export) est enregistrÃ©e avec l\'utilisateur, la date et les dÃ©tails.</p></div>';
 
     if (typeof SIGAuditTrail === 'undefined') {
       html += '<div class="admin-panel"><div class="panel-body"><div class="empty-state">'
         + '<i class="fas fa-clipboard-list"></i>'
-        + '<h3>Module d\'audit non chargé</h3>'
+        + '<h3>Module d\'audit non chargÃ©</h3>'
         + '<p>Le module SIGAuditTrail V3.0 n\'est pas disponible sur cette page.</p>'
         + '</div></div></div>';
       return html;
@@ -1630,8 +1809,8 @@ var AuditAdmin = (function() {
     var actionCounts = SIGAuditTrail.getActionCounts();
     var totalEntries = SIGAuditTrail.count();
     html += '<div class="stats-row">';
-    html += '<div class="stat-card-admin"><div class="sc-icon gold"><i class="fas fa-clipboard-list"></i></div><div class="sc-value">' + totalEntries + '</div><div class="sc-label">Entrées d\'audit</div></div>';
-    html += '<div class="stat-card-admin"><div class="sc-icon green"><i class="fas fa-plus-circle"></i></div><div class="sc-value">' + (actionCounts['CREATE_ROUTE'] || 0) + '</div><div class="sc-label">Routes créées</div></div>';
+    html += '<div class="stat-card-admin"><div class="sc-icon gold"><i class="fas fa-clipboard-list"></i></div><div class="sc-value">' + totalEntries + '</div><div class="sc-label">EntrÃ©es d\'audit</div></div>';
+    html += '<div class="stat-card-admin"><div class="sc-icon green"><i class="fas fa-plus-circle"></i></div><div class="sc-value">' + (actionCounts['CREATE_ROUTE'] || 0) + '</div><div class="sc-label">Routes crÃ©Ã©es</div></div>';
     html += '<div class="stat-card-admin"><div class="sc-icon blue"><i class="fas fa-pen"></i></div><div class="sc-value">' + ((actionCounts['UPDATE_ROUTE'] || 0) + (actionCounts['EDIT_GEOMETRY'] || 0)) + '</div><div class="sc-label">Modifications</div></div>';
     html += '<div class="stat-card-admin"><div class="sc-icon red"><i class="fas fa-trash"></i></div><div class="sc-value">' + (actionCounts['DELETE_ROUTE'] || 0) + '</div><div class="sc-label">Suppressions</div></div>';
     html += '</div>';
@@ -1654,7 +1833,7 @@ var AuditAdmin = (function() {
       + '</div></div>'
       + '<div class="panel-body">'
       + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;gap:12px;align-items:end">'
-      + '<div><label style="font-size:.78rem;font-weight:600;color:var(--text-3);display:block;margin-bottom:4px">Date début</label>'
+      + '<div><label style="font-size:.78rem;font-weight:600;color:var(--text-3);display:block;margin-bottom:4px">Date dÃ©but</label>'
       + '<input type="date" id="audit-date-from" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:.84rem"></div>'
       + '<div><label style="font-size:.78rem;font-weight:600;color:var(--text-3);display:block;margin-bottom:4px">Date fin</label>'
       + '<input type="date" id="audit-date-to" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:.84rem"></div>'
@@ -1669,10 +1848,10 @@ var AuditAdmin = (function() {
 
     /* Tableau d'audit */
     var entries = SIGAuditTrail.getRecentChanges(50);
-    html += '<div class="admin-panel" style="margin-top:16px"><div class="panel-header"><h3><i class="fas fa-clock-rotate-left"></i> Dernières modifications</h3>'
-      + '<span style="font-size:.82rem;color:var(--text-3)" id="audit-count-label">' + entries.length + ' résultats</span></div>'
+    html += '<div class="admin-panel" style="margin-top:16px"><div class="panel-header"><h3><i class="fas fa-clock-rotate-left"></i> DerniÃ¨res modifications</h3>'
+      + '<span style="font-size:.82rem;color:var(--text-3)" id="audit-count-label">' + entries.length + ' rÃ©sultats</span></div>'
       + '<div class="panel-body"><div class="admin-table-wrap"><table class="admin-table"><thead><tr>'
-      + '<th>Date</th><th>Utilisateur</th><th>Action</th><th>Objet concerné</th><th>Détails</th><th style="text-align:right">Actions</th>'
+      + '<th>Date</th><th>Utilisateur</th><th>Action</th><th>Objet concernÃ©</th><th>DÃ©tails</th><th style="text-align:right">Actions</th>'
       + '</tr></thead><tbody id="audit-tbody">'
       + renderTableBody(entries)
       + '</tbody></table></div></div></div>';
@@ -1685,17 +1864,17 @@ var AuditAdmin = (function() {
     var tbody = document.getElementById('audit-tbody');
     if (tbody) tbody.innerHTML = renderTableBody(entries);
     var countLabel = document.getElementById('audit-count-label');
-    if (countLabel) countLabel.textContent = entries.length + ' résultats';
+    if (countLabel) countLabel.textContent = entries.length + ' rÃ©sultats';
   }
 
   function exportCSV() {
     var entries = getFilteredEntries();
     if (entries.length === 0) {
-      alert('Aucune entrée à exporter.');
+      alert('Aucune entrÃ©e Ã  exporter.');
       return;
     }
 
-    var csv = 'Date;Utilisateur;Action;Route;Détails\n';
+    var csv = 'Date;Utilisateur;Action;Route;DÃ©tails\n';
     entries.forEach(function(e) {
       var actionLabel = (typeof SIGAuditTrail !== 'undefined') ? SIGAuditTrail.getActionLabel(e.action) : e.action;
       csv += '"' + (e.timestamp || '').replace(/"/g, '""') + '";'
@@ -1706,48 +1885,55 @@ var AuditAdmin = (function() {
     });
 
     var blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
-    var url = URL.createObjectURL(blob);
-    var a = document.createElement('a');
-    a.href = url;
-    a.download = 'audit_georoad_' + new Date().toISOString().split('T')[0] + '.csv';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    var filename = 'audit_georoad_' + new Date().toISOString().split('T')[0] + '.csv';
+    if (typeof GeoROADDownload !== 'undefined' && typeof GeoROADDownload.downloadBlob === 'function') {
+      GeoROADDownload.downloadBlob(blob, filename);
+    } else {
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      (document.body || document.documentElement).appendChild(a);
+      a.click();
+      setTimeout(function() {
+        if (a.parentNode) a.parentNode.removeChild(a);
+        URL.revokeObjectURL(url);
+      }, 400);
+    }
   }
 
-  /** Export PDF du journal d'audit filtré (utilise jsPDF + autoTable déjà chargés sur admin.html). */
+  /** Export PDF du journal d'audit filtrÃ© (utilise jsPDF + autoTable dÃ©jÃ  chargÃ©s sur admin.html). */
   function exportPDF() {
     var entries = getFilteredEntries();
     if (entries.length === 0) {
-      alert('Aucune entrée à exporter.');
+      alert('Aucune entrÃ©e Ã  exporter.');
       return;
     }
     if (typeof jspdf === 'undefined' || !jspdf.jsPDF) {
-      alert('Librairie jsPDF non chargée.');
+      alert('Librairie jsPDF non chargÃ©e.');
       return;
     }
     var doc = new jspdf.jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
     var now = new Date();
     var dateStr = now.toLocaleDateString('fr-FR') + ' ' + now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
 
-    /* En-tête */
+    /* En-tÃªte */
     doc.setFontSize(14);
     doc.setTextColor(60, 60, 60);
-    doc.text('Journal d\'audit — GeoROAD TOGO', 14, 14);
+    doc.text('Journal d\'audit â€” GeoROAD TOGO', 14, 14);
     doc.setFontSize(9);
     doc.setTextColor(120, 120, 120);
-    doc.text('Édité le ' + dateStr + ' — ' + entries.length + ' entrée(s)', 14, 20);
+    doc.text('Ã‰ditÃ© le ' + dateStr + ' â€” ' + entries.length + ' entrÃ©e(s)', 14, 20);
 
     /* Tableau */
     var rows = entries.map(function(e) {
       var actionLabel = (typeof SIGAuditTrail !== 'undefined') ? SIGAuditTrail.getActionLabel(e.action) : e.action;
-      var d = e.timestamp ? new Date(e.timestamp).toLocaleString('fr-FR') : '—';
-      return [d, e.user || '—', actionLabel, e.featureName || e.featureId || '—', (e.details || '').substring(0, 100)];
+      var d = e.timestamp ? new Date(e.timestamp).toLocaleString('fr-FR') : 'â€”';
+      return [d, e.user || 'â€”', actionLabel, e.featureName || e.featureId || 'â€”', (e.details || '').substring(0, 100)];
     });
     if (doc.autoTable) {
       doc.autoTable({
-        head: [['Date', 'Utilisateur', 'Action', 'Objet concerné', 'Détails']],
+        head: [['Date', 'Utilisateur', 'Action', 'Objet concernÃ©', 'DÃ©tails']],
         body: rows,
         startY: 26,
         styles: { fontSize: 7, cellPadding: 1.5 },
@@ -1769,9 +1955,9 @@ var AuditAdmin = (function() {
     doc.save('audit_georoad_' + new Date().toISOString().split('T')[0] + '.pdf');
   }
 
-  /** Ouvre le géoportail public en pointant sur l'entité concernée par une entrée d'audit. */
+  /** Ouvre le gÃ©oportail public en pointant sur l'entitÃ© concernÃ©e par une entrÃ©e d'audit. */
   function zoomToEntity(featureId, featureName) {
-    /* On ouvre le géoportail avec un hash qui sera interprété pour centrer la carte */
+    /* On ouvre le gÃ©oportail avec un hash qui sera interprÃ©tÃ© pour centrer la carte */
     var url = 'geoportail.html#feature=' + encodeURIComponent(featureName || featureId || '');
     window.open(url, '_blank');
   }
@@ -1788,20 +1974,20 @@ var AuditAdmin = (function() {
 
 /* -------------------------------------------------------------------
  * MODULE : AdminPages
- * Générateur du HTML pour chaque page/section de l'administration.
- * Chaque fonction retourne du HTML injecté dans #adminContent.
+ * GÃ©nÃ©rateur du HTML pour chaque page/section de l'administration.
+ * Chaque fonction retourne du HTML injectÃ© dans #adminContent.
  * 
- * Architecture : chaque page est une fonction indépendante,
- * facilitant l'ajout de nouvelles pages à l'avenir.
+ * Architecture : chaque page est une fonction indÃ©pendante,
+ * facilitant l'ajout de nouvelles pages Ã  l'avenir.
  * ------------------------------------------------------------------- */
 var AdminPages = (function() {
   'use strict';
 
-  /* Labels complets des catégories de routes */
+  /* Labels complets des catÃ©gories de routes */
   var CAT_LABELS = {
     'CU': 'Route Communautaire',
     'RN': 'Route Nationale',
-    'RR': 'Route Régionale',
+    'RR': 'Route RÃ©gionale',
     'RC': 'Route Communale',
     'RL': 'Route Locale'
   };
@@ -1819,32 +2005,32 @@ var AdminPages = (function() {
 
     /* Cartes statistiques */
     var html = '<div class="page-header"><h1>Tableau de bord</h1>'
-      + '<p>Vue d\'ensemble du réseau routier national — Régions Centre, Kara et Savanes</p></div>';
+      + '<p>Vue d\'ensemble du rÃ©seau routier national â€” RÃ©gions Centre, Kara et Savanes</p></div>';
 
     html += '<div class="stats-row">';
-    html += statCard('fa-road', 'gold', s.totalRoutes + '', 'Tronçons routiers', 'up');
-    html += statCard('fa-ruler-horizontal', 'blue', s.totalKm.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' km', 'Kilomètres totaux', 'up');
+    html += statCard('fa-road', 'gold', s.totalRoutes + '', 'TronÃ§ons routiers', 'up');
+    html += statCard('fa-ruler-horizontal', 'blue', s.totalKm.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' km', 'KilomÃ¨tres totaux', 'up');
     html += statCard('fa-users', 'green', totalRurale.toLocaleString('fr-FR'), 'Population rurale', '');
-    html += statCard('fa-vector-square', 'red', s.empriseCount + '', 'Emprises délimitées', '');
+    html += statCard('fa-vector-square', 'red', s.empriseCount + '', 'Emprises dÃ©limitÃ©es', '');
     html += '</div>';
 
-    /* PHASE 2 : ligne supplémentaire avec PK, cantons, préf., régions */
+    /* PHASE 2 : ligne supplÃ©mentaire avec PK, cantons, prÃ©f., rÃ©gions */
     html += '<div class="stats-row" style="margin-top:4px">';
-    html += statCard('fa-map-pin', 'gold', s.pkCount + '', 'Points kilométriques', '');
-    html += statCard('fa-map', 'blue', s.regionFeatures.length + '', 'Régions', '');
-    html += statCard('fa-map-marker-alt', 'green', s.prefectureCount + '', 'Préfectures', '');
+    html += statCard('fa-map-pin', 'gold', s.pkCount + '', 'Points kilomÃ©triques', '');
+    html += statCard('fa-map', 'blue', s.regionFeatures.length + '', 'RÃ©gions', '');
+    html += statCard('fa-map-marker-alt', 'green', s.prefectureCount + '', 'PrÃ©fectures', '');
     html += statCard('fa-location-dot', 'red', s.cantonCount + '', 'Cantons', '');
     html += '</div>';
 
     /* Graphiques : 2 colonnes */
     html += '<div class="grid-2">';
 
-    /* Panel barres par catégorie */
+    /* Panel barres par catÃ©gorie */
     var catOrder = ['CU', 'RN', 'RR', 'RC', 'RL'];
     var maxKm = 0;
     catOrder.forEach(function(c) { if ((s.byCategory[c] || {}).km > maxKm) maxKm = (s.byCategory[c] || {}).km; });
 
-    html += '<div class="admin-panel"><div class="panel-header"><h3><i class="fas fa-road"></i> Routes par catégorie</h3></div>'
+    html += '<div class="admin-panel"><div class="panel-header"><h3><i class="fas fa-road"></i> Routes par catÃ©gorie</h3></div>'
       + '<div class="panel-body"><div class="chart-bars">';
     catOrder.forEach(function(c) {
       var d = s.byCategory[c] || { count: 0, km: 0 };
@@ -1856,13 +2042,13 @@ var AdminPages = (function() {
     });
     html += '</div></div></div>';
 
-    /* Panel routes par région — calculées exclusivement depuis les données réelles */
-    var regNames = Object.keys(s.byRegion).filter(function(r) { return r !== 'Non défini'; });
-    if (regNames.length === 0) regNames = ['Aucune donnée'];
+    /* Panel routes par rÃ©gion â€” calculÃ©es exclusivement depuis les donnÃ©es rÃ©elles */
+    var regNames = Object.keys(s.byRegion).filter(function(r) { return r !== 'Non dÃ©fini'; });
+    if (regNames.length === 0) regNames = ['Aucune donnÃ©e'];
     var maxRegKm = 0;
     regNames.forEach(function(r) { if ((s.byRegion[r] || {}).km > maxRegKm) maxRegKm = (s.byRegion[r] || {}).km; });
 
-    html += '<div class="admin-panel"><div class="panel-header"><h3><i class="fas fa-map"></i> Routes par région</h3></div>'
+    html += '<div class="admin-panel"><div class="panel-header"><h3><i class="fas fa-map"></i> Routes par rÃ©gion</h3></div>'
       + '<div class="panel-body"><div class="chart-bars">';
     regNames.forEach(function(r) {
       var d = s.byRegion[r] || { count: 0, km: 0 };
@@ -1875,10 +2061,10 @@ var AdminPages = (function() {
     html += '</div></div></div>';
     html += '</div>';
 
-    /* Tableau résumé des régions */
-    html += '<div class="admin-panel" style="margin-top:4px"><div class="panel-header"><h3><i class="fas fa-table"></i> Données régionales</h3></div>'
+    /* Tableau rÃ©sumÃ© des rÃ©gions */
+    html += '<div class="admin-panel" style="margin-top:4px"><div class="panel-header"><h3><i class="fas fa-table"></i> DonnÃ©es rÃ©gionales</h3></div>'
       + '<div class="panel-body"><div class="admin-table-wrap"><table class="admin-table"><thead><tr>'
-      + '<th>Région</th><th>Population (2022)</th><th>Pop. rurale totale</th><th>Pop. rurale impactée</th><th>IAR (%)</th><th>Taux urbanisation</th>'
+      + '<th>RÃ©gion</th><th>Population (2022)</th><th>Pop. rurale totale</th><th>Pop. rurale impactÃ©e</th><th>IAR (%)</th><th>Taux urbanisation</th>'
       + '</tr></thead><tbody>';
     s.regionFeatures.forEach(function(f) {
       var p = f.properties;
@@ -1891,19 +2077,19 @@ var AdminPages = (function() {
     });
     html += '</tbody></table></div></div></div>';
 
-    /* Longueur moyenne — calculée depuis les données réelles des routes */
+    /* Longueur moyenne â€” calculÃ©e depuis les donnÃ©es rÃ©elles des routes */
     var avgLen = s.totalRoutes > 0 ? (s.totalKm / s.totalRoutes) : 0;
     html += '<div class="stats-row" style="margin-top:4px">';
     html += statCard('fa-ruler-combined', 'gold', avgLen.toFixed(1) + ' km', 'Longueur moyenne', '');
     html += '</div>';
 
-    /* Densité routière par région — calculée depuis les données réelles */
-    /* Superficies officielles des régions du Togo (km²) */
+    /* DensitÃ© routiÃ¨re par rÃ©gion â€” calculÃ©e depuis les donnÃ©es rÃ©elles */
+    /* Superficies officielles des rÃ©gions du Togo (kmÂ²) */
     var regionAreas = { 'Centre': 13329, 'Kara': 11640, 'Savanes': 8602 };
-    var regionKeys = Object.keys(s.byRegion).filter(function(r) { return r !== 'Non défini' && regionAreas[r]; });
+    var regionKeys = Object.keys(s.byRegion).filter(function(r) { return r !== 'Non dÃ©fini' && regionAreas[r]; });
     if (regionKeys.length > 0) {
     html += '<div class="grid-2">';
-    html += '<div class="admin-panel"><div class="panel-header"><h3><i class="fas fa-gauge-high"></i> Densité routière par région</h3></div>'
+    html += '<div class="admin-panel"><div class="panel-header"><h3><i class="fas fa-gauge-high"></i> DensitÃ© routiÃ¨re par rÃ©gion</h3></div>'
       + '<div class="panel-body"><div class="chart-bars">';
     var maxDensity = 0;
     var densities = {};
@@ -1919,16 +2105,16 @@ var AdminPages = (function() {
       html += '<div class="chart-bar-row">'
         + '<span class="chart-bar-label">' + r + '</span>'
         + '<div class="chart-bar-track"><div class="chart-bar-fill rr" style="width:' + pct + '%">' + densities[r].toFixed(2) + '</div></div>'
-        + '<span class="chart-bar-val">' + densities[r].toFixed(2) + ' km/100km²</span></div>';
+        + '<span class="chart-bar-val">' + densities[r].toFixed(2) + ' km/100kmÂ²</span></div>';
     });
     html += '</div></div></div>';
 
-    /* PHASE 2 : répartition par état (depuis les attributs Etat réels) */
+    /* PHASE 2 : rÃ©partition par Ã©tat (depuis les attributs Etat rÃ©els) */
     var etatKeys = Object.keys(s.byEtat);
     if (etatKeys.length > 0) {
       var maxEtat = 0;
       etatKeys.forEach(function(k) { if (s.byEtat[k] > maxEtat) maxEtat = s.byEtat[k]; });
-      html += '<div class="admin-panel"><div class="panel-header"><h3><i class="fas fa-traffic-light"></i> Répartition par état</h3></div>'
+      html += '<div class="admin-panel"><div class="panel-header"><h3><i class="fas fa-traffic-light"></i> RÃ©partition par Ã©tat</h3></div>'
         + '<div class="panel-body"><div class="chart-bars">';
       etatKeys.forEach(function(k) {
         var pct = maxEtat > 0 ? (s.byEtat[k] / maxEtat * 100) : 0;
@@ -1941,16 +2127,16 @@ var AdminPages = (function() {
       html += '</div></div></div>';
     }
 
-    /* PHASE 2 : répartition par revêtement (depuis les attributs Revetement réels) */
+    /* PHASE 2 : rÃ©partition par revÃªtement (depuis les attributs Revetement rÃ©els) */
     var revetKeys = Object.keys(s.byRevetement);
     if (revetKeys.length > 0) {
       var maxRevet = 0;
       revetKeys.forEach(function(k) { if (s.byRevetement[k] > maxRevet) maxRevet = s.byRevetement[k]; });
-      html += '<div class="admin-panel"><div class="panel-header"><h3><i class="fas fa-road-circle-check"></i> Répartition par revêtement</h3></div>'
+      html += '<div class="admin-panel"><div class="panel-header"><h3><i class="fas fa-road-circle-check"></i> RÃ©partition par revÃªtement</h3></div>'
         + '<div class="panel-body"><div class="chart-bars">';
       revetKeys.forEach(function(k) {
         var pct = maxRevet > 0 ? (s.byRevetement[k] / maxRevet * 100) : 0;
-        var revetCss = k === 'Bitume' ? 'rn' : (k === 'Terre' ? 'rr' : (k === 'Gravier' ? 'rl' : (k === 'Non revêtu' ? 'rc' : 'cu')));
+        var revetCss = k === 'Bitume' ? 'rn' : (k === 'Terre' ? 'rr' : (k === 'Gravier' ? 'rl' : (k === 'Non revÃªtu' ? 'rc' : 'cu')));
         html += '<div class="chart-bar-row">'
           + '<span class="chart-bar-label">' + k + '</span>'
           + '<div class="chart-bar-track"><div class="chart-bar-fill ' + revetCss + '" style="width:' + pct + '%">' + s.byRevetement[k] + '</div></div>'
@@ -1958,9 +2144,9 @@ var AdminPages = (function() {
       });
       html += '</div></div></div>';
     }
-    } /* fin du bloc densité si données disponibles */
+    } /* fin du bloc densitÃ© si donnÃ©es disponibles */
 
-    /* Routes récemment modifiées */
+    /* Routes rÃ©cemment modifiÃ©es */
     var recentFeatures = [];
     if (typeof json_Rseauroutier_6 !== 'undefined') {
       recentFeatures = json_Rseauroutier_6.features.slice().filter(function(f) {
@@ -1970,19 +2156,19 @@ var AdminPages = (function() {
       }).slice(0, 5);
     }
 
-    html += '<div class="admin-panel"><div class="panel-header"><h3><i class="fas fa-history"></i> Routes récemment modifiées</h3></div>'
+    html += '<div class="admin-panel"><div class="panel-header"><h3><i class="fas fa-history"></i> Routes rÃ©cemment modifiÃ©es</h3></div>'
       + '<div class="panel-body"><div class="admin-table-wrap"><table class="admin-table"><thead><tr>'
-      + '<th>Route</th><th>Modifié par</th><th>Date</th>'
+      + '<th>Route</th><th>ModifiÃ© par</th><th>Date</th>'
       + '</tr></thead><tbody>';
     if (recentFeatures.length === 0) {
-      html += '<tr><td colspan="3" style="text-align:center;color:var(--text-3);padding:20px">Aucune modification récente</td></tr>';
+      html += '<tr><td colspan="3" style="text-align:center;color:var(--text-3);padding:20px">Aucune modification rÃ©cente</td></tr>';
     } else {
       recentFeatures.forEach(function(f) {
         var p = f.properties;
-        var dateStr = p.lastModified ? new Date(p.lastModified).toLocaleDateString('fr-FR') + ' ' + new Date(p.lastModified).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '—';
+        var dateStr = p.lastModified ? new Date(p.lastModified).toLocaleDateString('fr-FR') + ' ' + new Date(p.lastModified).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : 'â€”';
         html += '<tr>'
-          + '<td><strong>' + esc(p.Name || '—') + '</strong></td>'
-          + '<td>' + esc(p.modifiedBy || '—') + '</td>'
+          + '<td><strong>' + esc(p.Name || 'â€”') + '</strong></td>'
+          + '<td>' + esc(p.modifiedBy || 'â€”') + '</td>'
           + '<td>' + dateStr + '</td>'
           + '</tr>';
       });
@@ -1997,79 +2183,60 @@ var AdminPages = (function() {
 
   function pageRoutes() {
     if (typeof RouteModule !== 'undefined') return RouteModule.render();
-    return pageHeader('Gestion des routes', 'Consultez, modifiez et gérez l\'ensemble des tronçons du réseau routier national. Chaque route dispose d\'attributs détaillés : nom, code, catégorie (RN, RR, RC, RL, CU), région d\'appartenance, longueur et état de revêtement.')
-      + emptyState('fa-road', 'Module non chargé', 'Le module de gestion des routes n\'est pas disponible.', '—');
+    return pageHeader('Gestion des routes', 'Consultez, modifiez et gÃ©rez l\'ensemble des tronÃ§ons du rÃ©seau routier national. Chaque route dispose d\'attributs dÃ©taillÃ©s : nom, code, catÃ©gorie (RN, RR, RC, RL, CU), rÃ©gion d\'appartenance, longueur et Ã©tat de revÃªtement.')
+      + emptyState('fa-road', 'Module non chargÃ©', 'Le module de gestion des routes n\'est pas disponible.', 'â€”');
   }
 
   function pageEmprises() {
     if (typeof EmpriseModule !== 'undefined') return EmpriseModule.render();
-    return pageHeader('Gestion des emprises', 'Gestion des zones d\'emprise routière du domaine public du Ministère des Travaux Publics. Les emprises délimitent la largeur de terrain nécessaire à la construction, l\'entretien et l\'élargissement des routes.')
-      + emptyState('fa-vector-square', 'Module non chargé', 'Le module de gestion des emprises n\'est pas disponible.', '—');
+    return pageHeader('Gestion des emprises', 'Gestion des zones d\'emprise routiÃ¨re du domaine public du MinistÃ¨re des Travaux Publics. Les emprises dÃ©limitent la largeur de terrain nÃ©cessaire Ã  la construction, l\'entretien et l\'Ã©largissement des routes.')
+      + emptyState('fa-vector-square', 'Module non chargÃ©', 'Le module de gestion des emprises n\'est pas disponible.', 'â€”');
   }
 
   function pagePK() {
     if (typeof PKModule !== 'undefined') return PKModule.render();
-    return pageHeader('Gestion des points kilométriques', 'Référencement et localisation des points kilométriques (PK) le long du réseau routier. Les PK servent de repères pour la signalisation, l\'entretien et les interventions sur les routes.')
-      + emptyState('fa-map-pin', 'Module non chargé', 'Le module de gestion des PK n\'est pas disponible.', '—');
+    return pageHeader('Gestion des points kilomÃ©triques', 'RÃ©fÃ©rencement et localisation des points kilomÃ©triques (PK) le long du rÃ©seau routier. Les PK servent de repÃ¨res pour la signalisation, l\'entretien et les interventions sur les routes.')
+      + emptyState('fa-map-pin', 'Module non chargÃ©', 'Le module de gestion des PK n\'est pas disponible.', 'â€”');
   }
 
   function pageSpatial() {
     if (typeof SpatialModule !== 'undefined') return SpatialModule.render();
-    /* Fallback dynamique si SpatialModule non chargé — utilise les données réelles */
+    /* Fallback dynamique si SpatialModule non chargÃ© â€” utilise les donnÃ©es rÃ©elles */
     var routeCount = (typeof json_Rseauroutier_6 !== 'undefined' && json_Rseauroutier_6.features) ? json_Rseauroutier_6.features.length : 0;
     var empCount = (typeof json_Emprise_5 !== 'undefined' && json_Emprise_5.features) ? json_Emprise_5.features.length : 0;
     var regCount = (typeof json_Rgion_2 !== 'undefined' && json_Rgion_2.features) ? json_Rgion_2.features.length : 0;
     var prefCount = (typeof json_Prfecture_3 !== 'undefined' && json_Prfecture_3.features) ? json_Prfecture_3.features.length : 0;
     var cantCount = (typeof json_Canton_4 !== 'undefined' && json_Canton_4.features) ? json_Canton_4.features.length : 0;
-    return pageHeader('Gestion des données spatiales', 'Import et export de données géographiques — GeoJSON, CSV')
+    return pageHeader('Gestion des donnÃ©es spatiales', 'Import et export de donnÃ©es gÃ©ographiques â€” GeoJSON, CSV')
       + '<div class="grid-2">'
-      + uploadCard('fa-file-import', 'Importer des données', 'GeoJSON, CSV', 'Importer')
-      + uploadCard('fa-file-export', 'Exporter des données', 'GeoJSON, CSV, PDF, Excel', 'Exporter')
+      + uploadCard('fa-file-import', 'Importer des donnÃ©es', 'GeoJSON, CSV', 'Importer')
+      + uploadCard('fa-file-export', 'Exporter des donnÃ©es', 'GeoJSON, CSV, PDF, Excel', 'Exporter')
       + '</div>'
       + '<div class="admin-panel" style="margin-top:20px"><div class="panel-header"><h3><i class="fas fa-layer-group"></i> Couches disponibles</h3></div>'
       + '<div class="panel-body"><div class="admin-table-wrap"><table class="admin-table"><thead><tr>'
-      + '<th>Couche</th><th>Entités</th><th>Type</th><th>Statut</th>'
+      + '<th>Couche</th><th>EntitÃ©s</th><th>Type</th><th>Statut</th>'
       + '</tr></thead><tbody>'
-      + layerRow('Réseau routier', routeCount, 'Ligne', routeCount > 0 ? 'active' : 'inactive')
+      + layerRow('RÃ©seau routier', routeCount, 'Ligne', routeCount > 0 ? 'active' : 'inactive')
       + layerRow('Emprises', empCount, 'Polygone', empCount > 0 ? 'active' : 'inactive')
-      + layerRow('Régions', regCount, 'Polygone', regCount > 0 ? 'active' : 'inactive')
-      + layerRow('Préfectures', prefCount, 'Polygone', prefCount > 0 ? 'active' : 'inactive')
+      + layerRow('RÃ©gions', regCount, 'Polygone', regCount > 0 ? 'active' : 'inactive')
+      + layerRow('PrÃ©fectures', prefCount, 'Polygone', prefCount > 0 ? 'active' : 'inactive')
       + layerRow('Cantons', cantCount, 'Polygone', cantCount > 0 ? 'active' : 'inactive')
       + '</tbody></table></div></div></div>';
   }
 
-  function pageUsers() {
-    return pageHeader('Gestion des utilisateurs', 'Administration des comptes et des rôles d\'accès à la plateforme GeoROAD. Cette section est réservée aux administrateurs système du Ministère des Travaux Publics pour gérer les permissions des agents.')
-      + emptyState('fa-users-gear', 'Gestion des utilisateurs',
-        'Cette section permettra de créer et gérer les comptes utilisateurs avec des rôles et permissions différenciés.',
-        'Créer un utilisateur');
-  }
-
-  function pageTableau() {
-    return pageHeader('Tableau de bord cartographique', 'Visualisation cartographique avancée avec outils d\'analyse')
-      + emptyState('fa-map-location-dot', 'Tableau de bord cartographique',
-        'Cette section intégrera une carte interactive avec des couches analytiques, des filtres avancés et des outils de mesure.',
-        'Ouvrir la carte')
-      + '<div class="admin-panel" style="margin-top:20px"><div class="panel-header"><h3><i class="fas fa-globe"></i> Accès rapide</h3></div>'
-      + '<div class="panel-body" style="display:flex;gap:12px;flex-wrap:wrap">'
-      + '<a href="geoportail.html" target="_blank" class="btn-sm primary"><i class="fas fa-external-link-alt"></i> Ouvrir le géoportail public</a>'
-      + '<button class="btn-sm ghost" disabled><i class="fas fa-map"></i> Carte d\'édition (à venir)</button>'
-      + '</div></div>';
-  }
-
   function pageSettings() {
-    return pageHeader('Paramètres', 'Configuration générale de la plateforme GeoROAD : système de projection cartographique, base de données, authentification et sécurité. Ces paramètres sont utilisés par l\'ensemble des modules de l\'application.')
+    return pageHeader('ParamÃ¨tres', 'Configuration gÃ©nÃ©rale de la plateforme GeoROAD : systÃ¨me de projection cartographique, base de donnÃ©es, authentification et sÃ©curitÃ©. Ces paramÃ¨tres sont utilisÃ©s par l\'ensemble des modules de l\'application.')
       + '<div class="grid-2">'
-      + settingsCard('fa-server', 'Base de données', 'PostgreSQL/PostGIS', 'Connexion non configurée', 'inactive')
-      + settingsCard('fa-key', 'Authentification', 'JWT / Session', 'Non activée', 'pending')
+      + settingsCard('fa-server', 'Base de donnÃ©es', 'PostgreSQL/PostGIS', 'Connexion non configurÃ©e', 'inactive')
+      + settingsCard('fa-key', 'Authentification', 'JWT / Session', 'Non activÃ©e', 'pending')
       + settingsCard('fa-map', 'Projection', 'EPSG:4326 (WGS 84)', 'Active', 'active')
-      + settingsCard('fa-shield-halved', 'Sécurité', 'HTTPS / CORS', 'À configurer', 'pending')
+      + settingsCard('fa-shield-halved', 'SÃ©curitÃ©', 'HTTPS / CORS', 'Ã€ configurer', 'pending')
       + '</div>';
   }
 
   /* ===== PAGE : Journal d'audit (V3.0) ===== */
   function pageAudit() {
-    var html = pageHeader('Journal d\'audit', 'Historique des modifications du réseau routier');
+    var html = pageHeader('Journal d\'audit', 'Historique des modifications du rÃ©seau routier');
 
     /* V3.0 SIG Core : utiliser SIGAuditTrail si disponible */
     if (typeof SIGAuditTrail !== 'undefined') {
@@ -2077,26 +2244,26 @@ var AdminPages = (function() {
       var actionCounts = SIGAuditTrail.getActionCounts();
       var totalEntries = SIGAuditTrail.count();
 
-      /* Résumé statistique */
+      /* RÃ©sumÃ© statistique */
       html += '<div class="stats-row">';
-      html += statCard('fa-clipboard-list', 'gold', totalEntries + '', 'Entrées d\'audit', '');
+      html += statCard('fa-clipboard-list', 'gold', totalEntries + '', 'EntrÃ©es d\'audit', '');
       var createCount = actionCounts['CREATE_ROUTE'] || 0;
       var updateCount = actionCounts['UPDATE_ROUTE'] || 0;
       var deleteCount = actionCounts['DELETE_ROUTE'] || 0;
       var geomCount = actionCounts['EDIT_GEOMETRY'] || 0;
-      html += statCard('fa-plus-circle', 'green', createCount + '', 'Routes créées', '');
+      html += statCard('fa-plus-circle', 'green', createCount + '', 'Routes crÃ©Ã©es', '');
       html += statCard('fa-pen', 'blue', (updateCount + geomCount) + '', 'Modifications', '');
       html += statCard('fa-trash', 'red', deleteCount + '', 'Suppressions', '');
       html += '</div>';
 
       /* Tableau d'audit */
-      html += '<div class="admin-panel" style="margin-top:4px"><div class="panel-header"><h3><i class="fas fa-clock-rotate-left"></i> Dernières modifications</h3></div>'
+      html += '<div class="admin-panel" style="margin-top:4px"><div class="panel-header"><h3><i class="fas fa-clock-rotate-left"></i> DerniÃ¨res modifications</h3></div>'
         + '<div class="panel-body"><div class="admin-table-wrap"><table class="admin-table"><thead><tr>'
-        + '<th>Date</th><th>Utilisateur</th><th>Action</th><th>Route</th><th>Détails</th>'
+        + '<th>Date</th><th>Utilisateur</th><th>Action</th><th>Route</th><th>DÃ©tails</th>'
         + '</tr></thead><tbody>';
 
       if (entries.length === 0) {
-        html += '<tr><td colspan="5" style="text-align:center;color:var(--text-3);padding:30px">Aucune modification enregistrée</td></tr>';
+        html += '<tr><td colspan="5" style="text-align:center;color:var(--text-3);padding:30px">Aucune modification enregistrÃ©e</td></tr>';
       } else {
         entries.forEach(function(e) {
           var date = new Date(e.timestamp);
@@ -2107,8 +2274,8 @@ var AdminPages = (function() {
             + '<td>' + dateStr + '</td>'
             + '<td>' + esc(e.user) + '</td>'
             + '<td><i class="fas ' + actionIcon + '" style="margin-right:4px"></i> ' + actionLabel + '</td>'
-            + '<td>' + esc(e.featureName || e.featureId || '—') + '</td>'
-            + '<td>' + esc(e.details || '—') + '</td>'
+            + '<td>' + esc(e.featureName || e.featureId || 'â€”') + '</td>'
+            + '<td>' + esc(e.details || 'â€”') + '</td>'
             + '</tr>';
         });
       }
@@ -2116,7 +2283,7 @@ var AdminPages = (function() {
     } else {
       html += '<div class="admin-panel"><div class="panel-body"><div class="empty-state">'
         + '<i class="fas fa-clipboard-list"></i>'
-        + '<h3>Module d\'audit non chargé</h3>'
+        + '<h3>Module d\'audit non chargÃ©</h3>'
         + '<p>Le module SIGAuditTrail V3.0 n\'est pas disponible sur cette page.</p>'
         + '</div></div></div>';
     }
@@ -2129,7 +2296,7 @@ var AdminPages = (function() {
     return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
-  /* Alias court utilisé dans les pages */
+  /* Alias court utilisÃ© dans les pages */
   function esc(s) { return escHtml(s); }
 
   /* ===== HELPERS ===== */
@@ -2186,7 +2353,7 @@ var AdminPages = (function() {
       + '</div></div></div>';
   }
 
-  /* Mapping page → fonction */
+  /* Mapping page â†’ fonction */
   var pageMap = {
     'dashboard': pageDashboard,
     'ajout': function() { return AjoutModule.render(); },
@@ -2196,7 +2363,7 @@ var AdminPages = (function() {
     'spatial': pageSpatial,
     'audit': function() { return AuditAdmin.render(); },
     'users': function() { return UserAdmin.render(); },
-    'tableau': pageTableau,
+    'tableau': pageDashboard,
     'settings': function() { return SettingsAdmin.render(); }
   };
 
@@ -2204,24 +2371,24 @@ var AdminPages = (function() {
   var PAGE_LABELS_HELP = {
     'dashboard':  { label: 'Tableau de bord', help: null },
     'ajout':     { label: 'AJOUT', help: "Point d\u2019entr\u00e9e unique de cr\u00e9ation des donn\u00e9es du syst\u00e8me. Toute cr\u00e9ation passe obligatoirement par le moteur SIG." },
-    'routes':     { label: 'Gestion des routes', help: 'Consultez, modifiez et gérez les tronçons du réseau routier national. Chaque route dispose d\'attributs détaillés : nom, code, catégorie (RN, RR, RC, RL, CU), région, longueur et état.' },
-    'emprises':   { label: 'Gestion des emprises', help: 'Gestion des zones d\'emprise du domaine public routier du Ministère des Travaux Publics. Les emprises délimitent la largeur de terrain nécessaire à la construction et l\'entretien des routes.' },
-    'pk':         { label: 'Points kilométriques', help: 'Référencement et localisation des points kilométriques (PK) le long du réseau. Les PK servent de repères pour la signalisation et les interventions d\'entretien.' },
-    'spatial':    { label: 'Données spatiales', help: 'Importez et exportez vos données géographiques en GeoJSON et CSV. Le moteur détecte automatiquement les colonnes de coordonnées et le système de projection.' },
-    'audit':      { label: 'Journal d\'audit', help: 'Historique des modifications apportées au réseau routier. Chaque action (création, modification, suppression, import, export) est enregistrée avec l\'utilisateur, la date et les détails.' },
-    'users':      { label: 'Gestion des utilisateurs', help: 'Administration des comptes et des rôles d\'accès à la plateforme GeoROAD du Ministère des Travaux Publics.' },
+    'routes':     { label: 'Gestion des routes', help: 'Consultez, modifiez et gÃ©rez les tronÃ§ons du rÃ©seau routier national. Chaque route dispose d\'attributs dÃ©taillÃ©s : nom, code, catÃ©gorie (RN, RR, RC, RL, CU), rÃ©gion, longueur et Ã©tat.' },
+    'emprises':   { label: 'Gestion des emprises', help: 'Gestion des zones d\'emprise du domaine public routier du MinistÃ¨re des Travaux Publics. Les emprises dÃ©limitent la largeur de terrain nÃ©cessaire Ã  la construction et l\'entretien des routes.' },
+    'pk':         { label: 'Points kilomÃ©triques', help: 'RÃ©fÃ©rencement et localisation des points kilomÃ©triques (PK) le long du rÃ©seau. Les PK servent de repÃ¨res pour la signalisation et les interventions d\'entretien.' },
+    'spatial':    { label: 'DonnÃ©es spatiales', help: 'Importez et exportez vos donnÃ©es gÃ©ographiques en GeoJSON et CSV. Le moteur dÃ©tecte automatiquement les colonnes de coordonnÃ©es et le systÃ¨me de projection.' },
+    'audit':      { label: 'Journal d\'audit', help: 'Historique des modifications apportÃ©es au rÃ©seau routier. Chaque action (crÃ©ation, modification, suppression, import, export) est enregistrÃ©e avec l\'utilisateur, la date et les dÃ©tails.' },
+    'users':      { label: 'Gestion des utilisateurs', help: 'Administration des comptes et des rÃ´les d\'accÃ¨s Ã  la plateforme GeoROAD du MinistÃ¨re des Travaux Publics.' },
     'tableau':    { label: 'Tableau de bord', help: null },
-    'settings':   { label: 'Paramètres', help: 'Configuration générale de la plateforme : système de projection, base de données, authentification et sécurité.' }
+    'settings':   { label: 'ParamÃ¨tres', help: 'Configuration gÃ©nÃ©rale de la plateforme : systÃ¨me de projection, base de donnÃ©es, authentification et sÃ©curitÃ©.' }
   };
 
-  /** Retourne le HTML d'une page donnée. */
+  /** Retourne le HTML d'une page donnÃ©e. */
   function render(pageKey) {
     var fn = pageMap[pageKey];
     if (fn) return fn();
-    return pageHeader('Page non trouvée', '') + emptyState('fa-circle-exclamation', 'Page en cours de développement', 'Cette section sera disponible prochainement.', 'Retour');
+    return pageHeader('Page non trouvÃ©e', '') + emptyState('fa-circle-exclamation', 'Page en cours de dÃ©veloppement', 'Cette section sera disponible prochainement.', 'Retour');
   }
 
-  /** Vérifie si une page existe. */
+  /** VÃ©rifie si une page existe. */
   function exists(pageKey) {
     return !!pageMap[pageKey];
   }
@@ -2247,6 +2414,34 @@ var AdminPages = (function() {
   };
 })();
 
+/* -------------------------------------------------------------------
+ * UTIL : Normalisation d'encodage (correction mojibake)
+ * ------------------------------------------------------------------- */
+function decodeMojibakeText(text) {
+  if (typeof text !== 'string') return text;
+  if (text.indexOf('Ãƒ') === -1 && text.indexOf('Ã¢') === -1 && text.indexOf('Ã‚') === -1) {
+    return text;
+  }
+  try {
+    return decodeURIComponent(escape(text));
+  } catch(e) {
+    return text;
+  }
+}
+
+function normalizeMojibakeInNode(root) {
+  if (!root || typeof document === 'undefined' || typeof document.createTreeWalker !== 'function') return;
+  var showText = (typeof NodeFilter !== 'undefined' && NodeFilter.SHOW_TEXT) ? NodeFilter.SHOW_TEXT : 4;
+  var walker = document.createTreeWalker(root, showText, null, false);
+  var node = null;
+  while ((node = walker.nextNode())) {
+    var fixed = decodeMojibakeText(node.nodeValue || '');
+    if (fixed !== node.nodeValue) {
+      node.nodeValue = fixed;
+    }
+  }
+}
+
 
 /* -------------------------------------------------------------------
  * MODULE : AdminUI
@@ -2258,18 +2453,40 @@ var AdminUI = (function() {
   var currentPage = 'dashboard';
   var sidebarCollapsed = false;
 
-  /* Labels pour le fil d'Ariane et l'aide — partagés avec AdminPages */
-    var _labelsRef = function() { return (typeof AdminPages !== 'undefined' && AdminPages.PAGE_LABELS_HELP) ? AdminPages.PAGE_LABELS_HELP : null; };
+  /* Labels pour le fil d'Ariane et l'aide â€” partagÃ©s avec AdminPages */
+  var _labelsRef = function() { return (typeof AdminPages !== 'undefined' && AdminPages.PAGE_LABELS_HELP) ? AdminPages.PAGE_LABELS_HELP : null; };
+
+  function syncCurrentUserActivity() {
+    if (typeof UserAdmin === 'undefined' || typeof UserAdmin.recordActivity !== 'function') return;
+    var session = AdminAuth.getSession();
+    if (!session) return;
+
+    var userId = session.userId;
+    if (!userId && typeof UserAdmin.findByUsername === 'function') {
+      var matchedUser = UserAdmin.findByUsername(session.user || session.username || session.name);
+      if (matchedUser) {
+        userId = matchedUser.id;
+        session.userId = matchedUser.id;
+        session.name = session.name || matchedUser.name;
+        session.role = session.role || matchedUser.role;
+        sessionStorage.setItem('georoad_auth', JSON.stringify(session));
+      }
+    }
+
+    if (userId) {
+      try { UserAdmin.recordActivity(userId); } catch(e) {}
+    }
+  }
 
   /**
    * Initialise l'interface d'administration.
-   * Vérifie l'authentification, charge le dashboard, configure le user.
+   * VÃ©rifie l'authentification, charge le dashboard, configure le user.
    */
   function init() {
     /* Garde d'authentification */
     if (!AdminAuth.requireAuth()) return;
 
-    /* Charger les données GeoJSON nécessaires pour le dashboard */
+    /* Charger les donnÃ©es GeoJSON nÃ©cessaires pour le dashboard */
     loadRequiredData();
 
     /* Initialize SIG Core */
@@ -2288,16 +2505,24 @@ var AdminUI = (function() {
       if (avatarEl) avatarEl.textContent = (session.name || 'U').charAt(0).toUpperCase();
     }
 
-    /* Naviguer vers la page par défaut */
-    navigate('dashboard');
+    syncCurrentUserActivity();
+
+    /* Naviguer vers la page demandÃ©e */
+    var initialPage = 'dashboard';
+    var hash = window.location.hash.replace('#', '');
+    if (hash && AdminPages.exists(hash)) {
+      initialPage = hash;
+    }
+    navigate(initialPage);
+    normalizeMojibakeInNode(document.body);
   }
 
   /**
-   * Charge les scripts de données GeoJSON requis.
-   * Futur : remplacé par des appels API fetch().
+   * Charge les scripts de donnÃ©es GeoJSON requis.
+   * Futur : remplacÃ© par des appels API fetch().
    */
   function loadRequiredData() {
-    /* Les données sont déjà chargées via <script> sur la page publique.
+    /* Les donnÃ©es sont dÃ©jÃ  chargÃ©es via <script> sur la page publique.
      * Sur la page admin, on les charge dynamiquement si absentes. */
     var requiredScripts = [
       'layers/Rgion_2.js',
@@ -2311,19 +2536,19 @@ var AdminUI = (function() {
     var toLoad = [];
 
     requiredScripts.forEach(function(src) {
-      var varName = src.split('/')[1].replace('.js', '');
+      var varName = 'json_' + src.split('/').pop().replace('.js', '');
       if (typeof window[varName] === 'undefined') {
         toLoad.push(src);
       }
     });
 
-    /* Si toutes les données sont déjà disponibles, on initialise */
+    /* Si toutes les donnÃ©es sont dÃ©jÃ  disponibles, on initialise */
     if (toLoad.length === 0) {
       onAllDataLoaded();
       return;
     }
 
-    /* Charger les scripts manquants en séquence */
+    /* Charger les scripts manquants en sÃ©quence */
     toLoad.forEach(function(src) {
       var script = document.createElement('script');
       script.src = src;
@@ -2339,33 +2564,43 @@ var AdminUI = (function() {
     });
   }
 
-  /** Callback quand toutes les données sont prêtes. */
+  /** Callback quand toutes les donnÃ©es sont prÃªtes. */
   function onAllDataLoaded() {
-    /* Les données sont prêtes — le dashboard est déjà rendu via navigate() */
+    /* Les donnÃ©es sont prÃªtes â€” le dashboard est dÃ©jÃ  rendu via navigate() */
   }
 
   /**
    * Navigue vers une page de l'administration.
-   * @param {string} pageKey - Clé de la page (ex: 'dashboard', 'routes')
+   * @param {string} pageKey - ClÃ© de la page (ex: 'dashboard', 'routes')
    */
   function navigate(pageKey) {
     if (!AdminPages.exists(pageKey)) return;
     currentPage = pageKey;
 
-    /* Mettre à jour le contenu */
+    /* Garder le hash synchronisÃ© pour les modules qui se rafraÃ®chissent sur la page courante */
+    try {
+      if (window.history && typeof window.history.replaceState === 'function') {
+        window.history.replaceState(null, '', '#' + pageKey);
+      } else {
+        window.location.hash = pageKey;
+      }
+    } catch(e) {}
+
+    /* Mettre Ã  jour le contenu */
     var contentEl = document.getElementById('adminContent');
     if (contentEl) {
       contentEl.innerHTML = AdminPages.render(pageKey);
       contentEl.scrollTop = 0;
+      normalizeMojibakeInNode(contentEl);
     }
 
-    /* Mettre à jour le menu actif */
+    /* Mettre Ã  jour le menu actif */
     var items = document.querySelectorAll('.nav-item[data-page]');
     items.forEach(function(el) {
       el.classList.toggle('active', el.getAttribute('data-page') === pageKey);
     });
 
-    /* Mettre à jour le fil d'Ariane */
+    /* Mettre Ã  jour le fil d'Ariane */
     var bc = document.getElementById('breadcrumb-current');
     if (bc) {
       var labels = _labelsRef();
@@ -2373,14 +2608,15 @@ var AdminUI = (function() {
       bc.textContent = label;
     }
 
-    /* Mettre à jour les badges de compteurs dans la sidebar */
+    /* Mettre Ã  jour les badges de compteurs dans la sidebar */
     refreshNavBadges();
 
     /* Fermer le sidebar mobile si ouvert */
     closeMobileSidebar();
+    syncCurrentUserActivity();
   }
 
-  /** Met à jour dynamiquement les compteurs de la sidebar depuis les données réelles. */
+  /** Met Ã  jour dynamiquement les compteurs de la sidebar depuis les donnÃ©es rÃ©elles. */
   function refreshNavBadges() {
     var routeBadge = document.getElementById('nav-routes-count');
     if (routeBadge && typeof json_Rseauroutier_6 !== 'undefined' && json_Rseauroutier_6.features) {
@@ -2403,7 +2639,7 @@ var AdminUI = (function() {
     }
   }
 
-  /** Bascule la sidebar entre étendue et réduite. */
+  /** Bascule la sidebar entre Ã©tendue et rÃ©duite. */
   function toggleSidebar() {
     var sidebar = document.getElementById('adminSidebar');
     if (!sidebar) return;
@@ -2435,7 +2671,7 @@ var AdminUI = (function() {
     if (!helpText) {
       helpText = 'Aide non disponible pour cette page.';
     }
-    /* Créer un modal d'aide simple */
+    /* CrÃ©er un modal d'aide simple */
     var existing = document.getElementById('help-modal');
     if (existing) existing.parentNode.removeChild(existing);
     var div = document.createElement('div');
@@ -2443,7 +2679,7 @@ var AdminUI = (function() {
     div.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;padding:20px;';
     div.innerHTML = '<div style="background:var(--white);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.15);width:100%;max-width:480px;padding:32px">'
       + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">'
-      + '<h3 style="font-size:1rem;font-weight:700"><i class="fas fa-circle-question" style="color:var(--gold);margin-right:8px"></i>Aide — ' + (AdminPages.getLabel(currentPage) || currentPage) + '</h3>'
+      + '<h3 style="font-size:1rem;font-weight:700"><i class="fas fa-circle-question" style="color:var(--gold);margin-right:8px"></i>Aide â€” ' + (AdminPages.getLabel(currentPage) || currentPage) + '</h3>'
       + '<button onclick="document.getElementById(\'help-modal\').parentNode.removeChild(document.getElementById(\'help-modal\'))" style="background:none;border:none;cursor:pointer;font-size:1.1rem;color:var(--text-3);padding:4px"><i class="fas fa-times"></i></button></div>'
       + '<p style="font-size:.88rem;color:var(--text-2);line-height:1.6">' + helpText + '</p></div>';
     div.addEventListener('click', function(e) { if (e.target === div) div.parentNode.removeChild(div); });
@@ -2456,7 +2692,8 @@ var AdminUI = (function() {
     toggleSidebar: toggleSidebar,
     closeMobileSidebar: closeMobileSidebar,
     showHelp: showHelp,
-    refreshNavBadges: refreshNavBadges
+    refreshNavBadges: refreshNavBadges,
+    getCurrentPage: function() { return currentPage; }
   };
 })();
 
@@ -2467,14 +2704,8 @@ var AdminUI = (function() {
 document.addEventListener('DOMContentLoaded', function() {
   AdminUI.init();
 
-  /* Handle hash-based navigation (e.g. admin.html#routes) */
-  var hash = window.location.hash.replace('#', '');
-  if (hash && AdminPages.exists(hash)) {
-    AdminUI.navigate(hash);
-  }
-
-  /* Abonnement au SIGEventBus pour rafraîchir dynamiquement les compteurs
-     et la page courante quand une feature est créée/modifiée/supprimée. */
+  /* Abonnement au SIGEventBus pour rafraÃ®chir dynamiquement les compteurs
+     et la page courante quand une feature est crÃ©Ã©e/modifiÃ©e/supprimÃ©e. */
   if (typeof SIGEventBus !== 'undefined') {
     var refreshTimer = null;
     var scheduleRefresh = function() {
@@ -2482,13 +2713,15 @@ document.addEventListener('DOMContentLoaded', function() {
       if (refreshTimer) clearTimeout(refreshTimer);
       refreshTimer = setTimeout(function() {
         AdminUI.refreshNavBadges();
-        /* Re-render la page courante pour refléter les changements */
+        /* Re-render la page courante pour reflÃ©ter les changements */
         var contentEl = document.getElementById('adminContent');
         if (contentEl && typeof AdminPages !== 'undefined') {
-          var currentHash = window.location.hash.replace('#', '');
-          var pageKey = currentHash || 'dashboard';
+          var pageKey = (typeof AdminUI !== 'undefined' && typeof AdminUI.getCurrentPage === 'function')
+            ? AdminUI.getCurrentPage()
+            : (window.location.hash.replace('#', '') || 'dashboard');
           if (AdminPages.exists(pageKey)) {
             contentEl.innerHTML = AdminPages.render(pageKey);
+            normalizeMojibakeInNode(contentEl);
           }
         }
       }, 200);
@@ -2500,15 +2733,16 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 
-/* ===== admin-routes.js ===== */
+/* ==== END admin.js ==== */
 
+/* ==== BEGIN admin-routes.js ==== */
 /* ===================================================================
- * GeoROAD TOGO — Module Gestion des Routes
+ * GeoROAD TOGO â€” Module Gestion des Routes
  * 
- * CRUD complet pour les tronçons routiers.
- * Architecture préparée pour PostgreSQL/PostGIS :
+ * CRUD complet pour les tronÃ§ons routiers.
+ * Architecture prÃ©parÃ©e pour PostgreSQL/PostGIS :
  *   - Remplacer RouteStore par des appels fetch('/api/routes')
- *   - Garder la même interface (getById, getAll, save, remove)
+ *   - Garder la mÃªme interface (getById, getAll, save, remove)
  * =================================================================== */
 var RouteModule = (function() {
   'use strict';
@@ -2519,41 +2753,41 @@ var RouteModule = (function() {
   var CAT_LABELS = {
     'CU': 'Route Communautaire',
     'RN': 'Route Nationale',
-    'RR': 'Route Régionale',
+    'RR': 'Route RÃ©gionale',
     'RC': 'Route Communale',
     'RL': 'Route Locale'
   };
 
   var CAT_CSS = { 'CU': 'cu', 'RN': 'rn', 'RR': 'rr', 'RC': 'rc', 'RL': 'rl' };
 
-  /* Étiquettes pour les filtres (valeurs possibles) */
+  /* Ã‰tiquettes pour les filtres (valeurs possibles) */
   var ETAT_OPTIONS = ['Bon', 'Moyen', 'Mauvais', 'En travaux'];
-  var REVET_OPTIONS = ['Bitume', 'Terre', 'Gravier', 'Non revêtu'];
+  var REVET_OPTIONS = ['Bitume', 'Terre', 'Gravier', 'Non revÃªtu'];
 
-  /* ===== ÉTAT INTERNE ===== */
+  /* ===== Ã‰TAT INTERNE ===== */
   var state = {
     allRoutes: [],       /* Array de {id, properties, geometry} */
-    filtered: [],        /* Résultat après filtres */
+    filtered: [],        /* RÃ©sultat aprÃ¨s filtres */
     page: 1,
     search: '',
     filters: { region: '', classe: '', etat: '', revetement: '' }
   };
 
   /* ===== DATA ACCESS LAYER =====
-   * Couche d'abstraction : les données viennent de la variable globale
+   * Couche d'abstraction : les donnÃ©es viennent de la variable globale
    * json_Rseauroutier_6. Futur : remplacer par fetch('/api/routes').
    */
   function loadData() {
     if (typeof json_Rseauroutier_6 !== 'undefined' && json_Rseauroutier_6.features) {
       state.allRoutes = json_Rseauroutier_6.features.map(function(f, idx) {
         return {
-          id: idx,
+          id: (f.id !== undefined && f.id !== null) ? String(f.id) : ('route_' + idx),
           properties: Object.assign({}, f.properties),
-          geometry: f.geometry ? Object.assign({}, f.geometry) : null
+          geometry: f.geometry ? JSON.parse(JSON.stringify(f.geometry)) : null
         };
       });
     }
-    /* Ajouter les champs manquants avec valeurs par défaut */
+    /* Ajouter les champs manquants avec valeurs par dÃ©faut */
     state.allRoutes.forEach(function(r) {
       if (!r.properties.Code) r.properties.Code = '';
       if (!r.properties.Origine) {
@@ -2580,7 +2814,7 @@ var RouteModule = (function() {
   function saveRoute(routeData) {
     var idx = -1;
     for (var i = 0; i < state.allRoutes.length; i++) {
-      if (state.allRoutes[i].id === routeData.id) { idx = i; break; }
+      if (String(state.allRoutes[i].id) === String(routeData.id)) { idx = i; break; }
     }
     if (idx >= 0) {
       state.allRoutes[idx].properties = Object.assign(state.allRoutes[idx].properties, routeData.properties);
@@ -2591,9 +2825,7 @@ var RouteModule = (function() {
 
   /** Ajoute une nouvelle route (futur : POST /api/routes). */
   function addRoute(routeData) {
-    var newId = state.allRoutes.length > 0
-      ? Math.max.apply(null, state.allRoutes.map(function(r) { return r.id; })) + 1
-      : 0;
+    var newId = routeData.id || ('route_' + Date.now());
     var newRoute = {
       id: newId,
       properties: Object.assign({}, routeData.properties),
@@ -2606,17 +2838,20 @@ var RouteModule = (function() {
 
   /** Supprime une route (futur : DELETE /api/routes/:id). */
   function removeRoute(id) {
-    state.allRoutes = state.allRoutes.filter(function(r) { return r.id !== id; });
+    state.allRoutes = state.allRoutes.filter(function(r) { return String(r.id) !== String(id); });
     syncToGlobal();
   }
 
-  /** Synchronise vers la variable globale (utilisé par le géoportail public). */
+  /** Synchronise vers la variable globale (utilisÃ© par le gÃ©oportail public). */
   function syncToGlobal() {
     if (typeof json_Rseauroutier_6 !== 'undefined') {
       json_Rseauroutier_6.features = state.allRoutes.map(function(r) {
-        return { type: 'Feature', properties: r.properties, geometry: r.geometry };
+        return { type: 'Feature', id: r.id, properties: r.properties, geometry: r.geometry };
       });
-      /* Mettre à jour le badge dans la sidebar */
+      if (typeof SIGPersistence !== 'undefined') {
+        try { SIGPersistence.saveLayer(SIGPersistence.LAYERS.ROUTES, json_Rseauroutier_6); } catch(e) {}
+      }
+      /* Mettre Ã  jour le badge dans la sidebar */
       var badge = document.querySelector('.nav-item[data-page="routes"] .nav-badge');
       if (badge) badge.textContent = state.allRoutes.length;
     }
@@ -2684,7 +2919,7 @@ var RouteModule = (function() {
 
   /* ===== RENDU HTML ===== */
 
-  /** Point d'entrée principal — rend la page complète. */
+  /** Point d'entrÃ©e principal â€” rend la page complÃ¨te. */
   function render() {
     loadData();
     return buildPage();
@@ -2696,7 +2931,7 @@ var RouteModule = (function() {
 
     var html = '<div class="page-header">'
       + '<h1>Gestion des routes</h1>'
-      + '<p>Consultation, modification et gestion des ' + state.allRoutes.length + ' tronçons routiers — ' + totalKm.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' km au total</p>'
+      + '<p>Consultation, modification et gestion des ' + state.allRoutes.length + ' tronÃ§ons routiers â€” ' + totalKm.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' km au total</p>'
       + '</div>';
 
     /* Barre d'actions : recherche + boutons */
@@ -2706,21 +2941,21 @@ var RouteModule = (function() {
     html += '</div>';
     html += '<div class="routes-actions">';
     html += '<button class="btn-sm ghost" onclick="RouteModule.exportCSV()"><i class="fas fa-file-csv"></i> Export CSV</button>';
-    /* Bouton "Nouvelle route" supprimé — sera réintégré sous le module "AJOUT" */
+    /* Bouton "Nouvelle route" supprimÃ© â€” sera rÃ©intÃ©grÃ© sous le module "AJOUT" */
     html += '</div></div>';
 
     /* Filtres */
     html += buildFilters();
 
     /* Tableau */
-    html += '<div class="admin-panel"><div class="panel-header"><h3><i class="fas fa-list"></i> Tronçons routiers <span style="font-weight:400;color:var(--text-4);font-size:.82rem;margin-left:8px">(' + state.filtered.length + ' résultat' + (state.filtered.length > 1 ? 's' : '') + ')</span></h3></div>';
+    html += '<div class="admin-panel"><div class="panel-header"><h3><i class="fas fa-list"></i> TronÃ§ons routiers <span style="font-weight:400;color:var(--text-4);font-size:.82rem;margin-left:8px">(' + state.filtered.length + ' rÃ©sultat' + (state.filtered.length > 1 ? 's' : '') + ')</span></h3></div>';
     html += '<div class="admin-table-wrap"><table class="admin-table"><thead><tr>';
-    html += '<th>Nom</th><th>Code</th><th>Catégorie</th><th>Région</th><th>Longueur</th><th>Emprise</th><th>État</th><th style="text-align:right">Actions</th>';
+    html += '<th>Nom</th><th>Code</th><th>CatÃ©gorie</th><th>RÃ©gion</th><th>Longueur</th><th>Emprise</th><th>Ã‰tat</th><th style="text-align:right">Actions</th>';
     html += '</tr></thead><tbody id="routes-tbody">';
 
     var rows = getPageData();
     if (rows.length === 0) {
-      html += '<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--text-4)">Aucun tronçon trouvé.</td></tr>';
+      html += '<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--text-4)">Aucun tronÃ§on trouvÃ©.</td></tr>';
     } else {
       rows.forEach(function(r) {
         html += buildRow(r);
@@ -2741,11 +2976,11 @@ var RouteModule = (function() {
     var regions = getUniqueValues('REGIONS');
     var classes = ['CU', 'RN', 'RR', 'RC', 'RL'];
     var html = '<div class="routes-filters">';
-    html += filterSelect('region', 'Région', regions, state.filters.region, '-- Toutes --');
-    html += filterSelect('classe', 'Catégorie', classes, state.filters.classe, '-- Toutes --', CAT_LABELS);
-    html += filterSelect('etat', 'État', ETAT_OPTIONS, state.filters.etat, '-- Tous --');
-    html += filterSelect('revetement', 'Revêtement', REVET_OPTIONS, state.filters.revetement, '-- Tous --');
-    html += '<button class="btn-sm ghost" onclick="RouteModule.resetFilters()" style="white-space:nowrap"><i class="fas fa-rotate-left"></i> Réinitialiser</button>';
+    html += filterSelect('region', 'RÃ©gion', regions, state.filters.region, '-- Toutes --');
+    html += filterSelect('classe', 'CatÃ©gorie', classes, state.filters.classe, '-- Toutes --', CAT_LABELS);
+    html += filterSelect('etat', 'Ã‰tat', ETAT_OPTIONS, state.filters.etat, '-- Tous --');
+    html += filterSelect('revetement', 'RevÃªtement', REVET_OPTIONS, state.filters.revetement, '-- Tous --');
+    html += '<button class="btn-sm ghost" onclick="RouteModule.resetFilters()" style="white-space:nowrap"><i class="fas fa-rotate-left"></i> RÃ©initialiser</button>';
     html += '</div>';
     return html;
   }
@@ -2767,21 +3002,22 @@ var RouteModule = (function() {
   function buildRow(r) {
     var p = r.properties;
     var km = ((p.LONGEUR || 0) / 1000).toFixed(1);
-    var catLabel = CAT_LABELS[p.CLASSE] || p.CLASSE || '—';
+    var catLabel = CAT_LABELS[p.CLASSE] || p.CLASSE || 'â€”';
     var etatClass = !p.Etat ? '' : (p.Etat === 'Bon' ? 'active' : (p.Etat === 'Mauvais' ? 'inactive' : 'pending'));
+    var routeId = jsArg(r.id);
 
     var html = '<tr>';
-    html += '<td><strong style="cursor:pointer;color:var(--gold-dark)" onclick="RouteModule.viewRoute(' + r.id + ')" title="Voir la fiche">' + escapeHtml(p.Name || '—') + '</strong></td>';
-    html += '<td>' + escapeHtml(p.Code || '—') + '</td>';
+    html += '<td><strong style="cursor:pointer;color:var(--gold-dark)" onclick="RouteModule.viewRoute(' + routeId + ')" title="Voir la fiche">' + escapeHtml(p.Name || 'â€”') + '</strong></td>';
+    html += '<td>' + escapeHtml(p.Code || 'â€”') + '</td>';
     html += '<td><span class="cat-dot cat-' + (CAT_CSS[p.CLASSE] || '') + '"></span> ' + escapeHtml(catLabel) + '</td>';
-    html += '<td>' + escapeHtml(p.REGIONS || '—') + '</td>';
+    html += '<td>' + escapeHtml(p.REGIONS || 'â€”') + '</td>';
     html += '<td>' + km + ' km</td>';
-    html += '<td>' + (p.EMPRISE || '—') + ' m</td>';
-    html += '<td>' + (p.Etat ? '<span class="status-badge ' + etatClass + '">' + escapeHtml(p.Etat) + '</span>' : '<span style="color:var(--text-4)">—</span>') + '</td>';
+    html += '<td>' + (p.EMPRISE || 'â€”') + ' m</td>';
+    html += '<td>' + (p.Etat ? '<span class="status-badge ' + etatClass + '">' + escapeHtml(p.Etat) + '</span>' : '<span style="color:var(--text-4)">â€”</span>') + '</td>';
     html += '<td style="text-align:right;white-space:nowrap">';
-    html += '<button class="btn-icon" title="Voir" onclick="RouteModule.viewRoute(' + r.id + ')"><i class="fas fa-eye"></i></button>';
-    html += '<button class="btn-icon" title="Modifier" onclick="RouteModule.openEditForm(' + r.id + ')"><i class="fas fa-pen"></i></button>';
-    html += '<button class="btn-icon danger" title="Supprimer" onclick="RouteModule.confirmDelete(' + r.id + ')"><i class="fas fa-trash"></i></button>';
+    html += '<button class="btn-icon" title="Voir" onclick="RouteModule.viewRoute(' + routeId + ')"><i class="fas fa-eye"></i></button>';
+    html += '<button class="btn-icon" title="Modifier" onclick="RouteModule.openEditForm(' + routeId + ')"><i class="fas fa-pen"></i></button>';
+    html += '<button class="btn-icon danger" title="Supprimer" onclick="RouteModule.confirmDelete(' + routeId + ')"><i class="fas fa-trash"></i></button>';
     html += '</td></tr>';
     return html;
   }
@@ -2790,7 +3026,7 @@ var RouteModule = (function() {
     var tp = totalPages();
     if (tp <= 1) return '';
     var html = '<div class="routes-pagination">';
-    html += '<span class="pag-info">Page ' + state.page + ' / ' + tp + ' (' + state.filtered.length + ' résultat' + (state.filtered.length > 1 ? 's' : '') + ')</span>';
+    html += '<span class="pag-info">Page ' + state.page + ' / ' + tp + ' (' + state.filtered.length + ' rÃ©sultat' + (state.filtered.length > 1 ? 's' : '') + ')</span>';
     html += '<div class="pag-buttons">';
     html += '<button class="btn-sm ghost" ' + (state.page <= 1 ? 'disabled' : '') + ' onclick="RouteModule.goPage(' + (state.page - 1) + ')"><i class="fas fa-chevron-left"></i></button>';
     /* Page numbers (max 7 visible) */
@@ -2821,10 +3057,11 @@ var RouteModule = (function() {
 
   /* ===== MODALES ===== */
 
-  /** Modale de visualisation (fiche complète). */
+  /** Modale de visualisation (fiche complÃ¨te). */
   function viewRoute(id) {
     var route = findRoute(id);
     if (!route) return;
+    closeModal('modal-route-view');
     var p = route.properties;
     var km = ((p.LONGEUR || 0) / 1000).toFixed(2);
 
@@ -2834,26 +3071,26 @@ var RouteModule = (function() {
     html += '<div class="modal-admin-body">';
     html += '<div class="detail-grid">';
     html += detailField('Nom de la route', p.Name);
-    html += detailField('Code', p.Code || '—');
-    html += detailField('Origine', p.Origine || '—');
-    html += detailField('Destination', p.Destination || '—');
-    html += detailField('Catégorie', CAT_LABELS[p.CLASSE] || p.CLASSE || '—');
+    html += detailField('Code', p.Code || 'â€”');
+    html += detailField('Origine', p.Origine || 'â€”');
+    html += detailField('Destination', p.Destination || 'â€”');
+    html += detailField('CatÃ©gorie', CAT_LABELS[p.CLASSE] || p.CLASSE || 'â€”');
     html += detailField('Longueur', km + ' km');
-    html += detailField('Largeur', p.Largeur ? p.Largeur + ' m' : '—');
-    html += detailField('Emprise', (p.EMPRISE || '—') + ' m');
-    html += detailField('Type de revêtement', p.Revetement || '—');
-    html += detailField('État', p.Etat || '—');
-    html += detailField('Région', p.REGIONS || '—');
-    html += detailField('Préfecture', p.Prefecture || '—');
-    html += detailField('Communes', p.Communes || '—');
-    html += detailField('Population desservie', p.Pop_Dessertie ? Number(p.Pop_Dessertie).toLocaleString('fr-FR') + ' hab' : '—');
-    html += detailField('PK Début', p.PK_DEB_X ? p.PK_DEB_X + ', ' + p.PK_DEB_Y : '—');
-    html += detailField('PK Fin', p.PK_FIN_X ? p.PK_FIN_X + ', ' + p.PK_FIN_Y : '—');
+    html += detailField('Largeur', p.Largeur ? p.Largeur + ' m' : 'â€”');
+    html += detailField('Emprise', (p.EMPRISE || 'â€”') + ' m');
+    html += detailField('Type de revÃªtement', p.Revetement || 'â€”');
+    html += detailField('Ã‰tat', p.Etat || 'â€”');
+    html += detailField('RÃ©gion', p.REGIONS || 'â€”');
+    html += detailField('PrÃ©fecture', p.Prefecture || 'â€”');
+    html += detailField('Communes', p.Communes || 'â€”');
+    html += detailField('Population desservie', p.Pop_Dessertie ? Number(p.Pop_Dessertie).toLocaleString('fr-FR') + ' hab' : 'â€”');
+    html += detailField('PK DÃ©but', p.PK_DEB_X ? p.PK_DEB_X + ', ' + p.PK_DEB_Y : 'â€”');
+    html += detailField('PK Fin', p.PK_FIN_X ? p.PK_FIN_X + ', ' + p.PK_FIN_Y : 'â€”');
     html += '</div>';
-    html += detailField('Observations', p.Observations || '—', true);
+    html += detailField('Observations', p.Observations || 'â€”', true);
     html += '</div>';
     html += '<div class="modal-admin-footer"><button class="btn-sm ghost" onclick="RouteModule.closeModal(\'modal-route-view\')">Fermer</button>';
-    html += '<button class="btn-sm primary" onclick="RouteModule.closeModal(\'modal-route-view\');RouteModule.openEditForm(' + id + ')"><i class="fas fa-pen"></i> Modifier</button></div>';
+    html += '<button class="btn-sm primary" onclick="RouteModule.closeModal(\'modal-route-view\');RouteModule.openEditForm(' + jsArg(id) + ')"><i class="fas fa-pen"></i> Modifier</button></div>';
     html += '</div></div>';
     document.body.insertAdjacentHTML('beforeend', html);
   }
@@ -2874,46 +3111,49 @@ var RouteModule = (function() {
     var isEdit = !!route;
     var p = route ? route.properties : {};
     var title = isEdit ? 'Modifier la route' : 'Ajouter une route';
+    var formId = 'route-form-' + safeDomId(isEdit ? route.id : 'new');
+
+    closeModal('modal-route-form');
 
     var html = '<div class="modal-admin-overlay" id="modal-route-form" onclick="RouteModule.closeModalOnOverlay(event, \'modal-route-form\')">';
     html += '<div class="modal-admin" style="max-width:720px">';
     html += '<div class="modal-admin-header"><h2><i class="fas fa-' + (isEdit ? 'pen' : 'plus') + '" style="color:var(--gold);margin-right:8px"></i> ' + title + '</h2><button class="modal-admin-close" onclick="RouteModule.closeModal(\'modal-route-form\')"><i class="fas fa-times"></i></button></div>';
-    html += '<div class="modal-admin-body"><form id="route-form" onsubmit="return RouteModule.saveForm(event, ' + (isEdit ? route.id : 'null') + ')">';
+    html += '<div class="modal-admin-body"><form id="' + formId + '" onsubmit="return RouteModule.saveForm(event, ' + (isEdit ? jsArg(route.id) : 'null') + ')">';
 
     /* Ligne 1 */
     html += formRow(
-      formGroup('Nom de la route *', '<input type="text" name="Name" required value="' + escapeAttr(p.Name || '') + '" placeholder="Ex: Lomé-Sokodé">'),
+      formGroup('Nom de la route *', '<input type="text" name="Name" required value="' + escapeAttr(p.Name || '') + '" placeholder="Ex: LomÃ©-SokodÃ©">'),
       formGroup('Code', '<input type="text" name="Code" value="' + escapeAttr(p.Code || '') + '" placeholder="Ex: RN1">')
     );
 
     /* Ligne 2 */
     html += formRow(
-      formGroup('Origine', '<input type="text" name="Origine" value="' + escapeAttr(p.Origine || '') + '" placeholder="Ex: Lomé">'),
-      formGroup('Destination', '<input type="text" name="Destination" value="' + escapeAttr(p.Destination || '') + '" placeholder="Ex: Sokodé">')
+      formGroup('Origine', '<input type="text" name="Origine" value="' + escapeAttr(p.Origine || '') + '" placeholder="Ex: LomÃ©">'),
+      formGroup('Destination', '<input type="text" name="Destination" value="' + escapeAttr(p.Destination || '') + '" placeholder="Ex: SokodÃ©">')
     );
 
     /* Ligne 3 */
     html += formRow(
-      formGroup('Catégorie *', formSelect('CLASSE', [['CU','Route Communautaire'],['RN','Route Nationale'],['RR','Route Régionale'],['RC','Route Communale'],['RL','Route Locale']], p.CLASSE || 'CU')),
-      formGroup('Région *', formSelect('REGIONS', getRegionOptions(), p.REGIONS || ''))
+      formGroup('CatÃ©gorie *', formSelect('CLASSE', [['CU','Route Communautaire'],['RN','Route Nationale'],['RR','Route RÃ©gionale'],['RC','Route Communale'],['RL','Route Locale']], p.CLASSE || 'CU')),
+      formGroup('RÃ©gion *', formSelect('REGIONS', getRegionOptions(), p.REGIONS || ''))
     );
 
     /* Ligne 4 */
     html += formRow(
-      formGroup('Longueur (m) *', '<input type="number" name="LONGEUR" step="0.01" required value="' + (p.LONGEUR || '') + '" placeholder="Ex: 52197">'),
-      formGroup('Largeur (m)', '<input type="number" name="Largeur" step="0.1" value="' + escapeAttr(p.Largeur || '') + '" placeholder="Ex: 7">')
+      formGroup('Longueur (m) *', '<input type="number" name="LONGEUR" step="any" required value="' + escapeAttr(formatNumericInputValue(p.LONGEUR)) + '" placeholder="Ex: 52197">'),
+      formGroup('Largeur (m)', '<input type="number" name="Largeur" step="any" value="' + escapeAttr(formatNumericInputValue(p.Largeur)) + '" placeholder="Ex: 7">')
     );
 
     /* Ligne 5 */
     html += formRow(
-      formGroup('Emprise (m)', '<input type="number" name="EMPRISE" step="1" value="' + (p.EMPRISE || '') + '" placeholder="Ex: 70">'),
-      formGroup('Type de revêtement', formSelect('Revetement', REVET_OPTIONS.map(function(e) { return [e, e]; }).concat([['','Non défini']]), p.Revetement || ''))
+      formGroup('Emprise (m)', '<input type="number" name="EMPRISE" step="any" value="' + escapeAttr(formatNumericInputValue(p.EMPRISE)) + '" placeholder="Ex: 70">'),
+      formGroup('Type de revÃªtement', formSelect('Revetement', REVET_OPTIONS.map(function(e) { return [e, e]; }).concat([['','Non dÃ©fini']]), p.Revetement || ''))
     );
 
     /* Ligne 6 */
     html += formRow(
-      formGroup('État', formSelect('Etat', ETAT_OPTIONS.map(function(e) { return [e, e]; }).concat([['','Non défini']]), p.Etat || '')),
-      formGroup('Préfecture', '<input type="text" name="Prefecture" value="' + escapeAttr(p.Prefecture || '') + '" placeholder="Ex: Tchamba">')
+      formGroup('Ã‰tat', formSelect('Etat', ETAT_OPTIONS.map(function(e) { return [e, e]; }).concat([['','Non dÃ©fini']]), p.Etat || '')),
+      formGroup('PrÃ©fecture', '<input type="text" name="Prefecture" value="' + escapeAttr(p.Prefecture || '') + '" placeholder="Ex: Tchamba">')
     );
 
     /* Ligne 7 */
@@ -2922,10 +3162,10 @@ var RouteModule = (function() {
       formGroup('Population desservie', '<input type="number" name="Pop_Dessertie" value="' + escapeAttr(p.Pop_Dessertie || '') + '" placeholder="Ex: 15000">')
     );
 
-    /* Ligne 8 : Coordonnées */
+    /* Ligne 8 : CoordonnÃ©es */
     html += formRow(
-      formGroup('PK Début X', '<input type="number" name="PK_DEB_X" value="' + (p.PK_DEB_X || '') + '">'),
-      formGroup('PK Début Y', '<input type="number" name="PK_DEB_Y" value="' + (p.PK_DEB_Y || '') + '">')
+      formGroup('PK DÃ©but X', '<input type="number" name="PK_DEB_X" value="' + (p.PK_DEB_X || '') + '">'),
+      formGroup('PK DÃ©but Y', '<input type="number" name="PK_DEB_Y" value="' + (p.PK_DEB_Y || '') + '">')
     );
 
     html += formRow(
@@ -2941,7 +3181,7 @@ var RouteModule = (function() {
     html += '</form></div>';
     html += '<div class="modal-admin-footer">';
     html += '<button class="btn-sm ghost" onclick="RouteModule.closeModal(\'modal-route-form\')">Annuler</button>';
-    html += '<button class="btn-sm primary" onclick="document.getElementById(\'route-form\').dispatchEvent(new Event(\'submit\',{cancelable:true}))"><i class="fas fa-save"></i> ' + (isEdit ? 'Enregistrer' : 'Ajouter') + '</button>';
+    html += '<button class="btn-sm primary" type="submit" form="' + formId + '"><i class="fas fa-save"></i> ' + (isEdit ? 'Enregistrer' : 'Ajouter') + '</button>';
     html += '</div></div></div>';
     document.body.insertAdjacentHTML('beforeend', html);
   }
@@ -2950,19 +3190,20 @@ var RouteModule = (function() {
   function confirmDelete(id) {
     var route = findRoute(id);
     if (!route) return;
+    closeModal('modal-route-delete');
     var name = route.properties.Name || 'cette route';
 
     var html = '<div class="modal-admin-overlay" id="modal-route-delete">';
     html += '<div class="modal-admin" style="max-width:440px">';
     html += '<div class="modal-admin-header"><h2><i class="fas fa-exclamation-triangle" style="color:var(--red);margin-right:8px"></i> Confirmer la suppression</h2><button class="modal-admin-close" onclick="RouteModule.closeModal(\'modal-route-delete\')"><i class="fas fa-times"></i></button></div>';
     html += '<div class="modal-admin-body">';
-    html += '<p style="font-size:.92rem;margin-bottom:8px">Vous êtes sur le point de supprimer :</p>';
+    html += '<p style="font-size:.92rem;margin-bottom:8px">Vous Ãªtes sur le point de supprimer :</p>';
     html += '<p style="font-weight:700;font-size:1rem;color:var(--red);margin-bottom:16px">' + escapeHtml(name) + '</p>';
-    html += '<p style="font-size:.84rem;color:var(--text-3)">Cette action est irréversible. La route sera retirée de la carte et des statistiques.</p>';
+    html += '<p style="font-size:.84rem;color:var(--text-3)">Cette action est irrÃ©versible. La route sera retirÃ©e de la carte et des statistiques.</p>';
     html += '</div>';
     html += '<div class="modal-admin-footer">';
     html += '<button class="btn-sm ghost" onclick="RouteModule.closeModal(\'modal-route-delete\')">Annuler</button>';
-    html += '<button class="btn-sm" style="background:var(--red);color:#fff" onclick="RouteModule.doDelete(' + id + ')"><i class="fas fa-trash"></i> Supprimer définitivement</button>';
+    html += '<button class="btn-sm" style="background:var(--red);color:#fff" onclick="RouteModule.doDelete(' + jsArg(id) + ')"><i class="fas fa-trash"></i> Supprimer dÃ©finitivement</button>';
     html += '</div></div></div>';
     document.body.insertAdjacentHTML('beforeend', html);
   }
@@ -2973,36 +3214,76 @@ var RouteModule = (function() {
     var route = findRoute(id);
     var name = route ? (route.properties.Name || 'Route') : 'Route';
     var beforeState = route ? JSON.parse(JSON.stringify(route.properties)) : null;
-    removeRoute(id);
-    /* EventBus + Audit (signature correcte : log(action, options) ) */
-    if (typeof SIGEventBus !== 'undefined') {
-      SIGEventBus.emit(SIGEventBus.EVENTS.FEATURE_DELETED, { featureId: id, layer: 'routes' });
+    var deleted = false;
+
+    if (route && typeof SIGDataEngine !== 'undefined') {
+      deleted = !!SIGDataEngine.deleteFeature(route.id);
+      if (deleted) {
+        removeRoute(route.id);
+      }
+      if (deleted && typeof RoadSync !== 'undefined') {
+        RoadSync.propagate('deleted', { fullReload: true, featureId: null });
+      }
+    } else {
+      removeRoute(id);
+      deleted = true;
+      if (typeof SIGEventBus !== 'undefined') {
+        SIGEventBus.emit(SIGEventBus.EVENTS.FEATURE_DELETED, { featureId: id, layer: 'routes' });
+      }
+      if (typeof SIGAuditTrail !== 'undefined') {
+        try {
+          SIGAuditTrail.log(SIGAuditTrail.ACTIONS.DELETE_ROUTE, {
+            featureId: String(id),
+            featureName: name,
+            user: (typeof AdminAuth !== 'undefined' && AdminAuth.getSession()) ? (AdminAuth.getSession().name || 'admin') : 'admin',
+            details: 'Route supprimÃ©e : ' + name,
+            before: beforeState,
+            after: null,
+            result: 'SUCCESS'
+          });
+        } catch(e) {}
+      }
     }
-    if (typeof SIGAuditTrail !== 'undefined') {
-      try {
-        SIGAuditTrail.log(SIGAuditTrail.ACTIONS.DELETE_ROUTE, {
-          featureId: String(id),
-          featureName: name,
-          user: (typeof AdminAuth !== 'undefined' && AdminAuth.getSession()) ? (AdminAuth.getSession().name || 'admin') : 'admin',
-          details: 'Route supprimée : ' + name,
-          before: beforeState,
-          after: null
-        });
-      } catch(e) {}
+
+    if (!deleted) {
+      notify('Impossible de supprimer cette route.', 'error');
+      return;
     }
+
     closeModal('modal-route-delete');
-    notify('"' + name + '" supprimée avec succès.', 'success');
+    if (typeof NotificationCenter !== 'undefined') {
+      NotificationCenter.add('delete', 'Route supprimÃ©e', name);
+    }
+    notify('"' + name + '" supprimÃ©e avec succÃ¨s.', 'success');
     refresh();
   }
 
   function saveForm(event, id) {
     if (event) event.preventDefault();
-    var form = document.getElementById('route-form');
+    var form = event && event.target && event.target.tagName && event.target.tagName.toUpperCase() === 'FORM'
+      ? event.target
+      : document.querySelector('#modal-route-form form');
     if (!form) return false;
+    if (typeof form.reportValidity === 'function' && !form.reportValidity()) return false;
 
     var data = getFormData(form);
+    if (typeof data.Observations === 'string') {
+      data.Observations = data.Observations.trim();
+    }
     if (!data.Name || !data.Name.trim()) {
       notify('Le nom de la route est obligatoire.', 'error');
+      return false;
+    }
+    if (!data.CLASSE) {
+      notify('La catÃ©gorie de la route est obligatoire.', 'error');
+      return false;
+    }
+    if (!data.REGIONS) {
+      notify('La rÃ©gion de la route est obligatoire.', 'error');
+      return false;
+    }
+    if (!data.LONGEUR || parseFloat(data.LONGEUR) <= 0) {
+      notify('La longueur de la route doit Ãªtre supÃ©rieure Ã  0.', 'error');
       return false;
     }
 
@@ -3012,30 +3293,60 @@ var RouteModule = (function() {
       /* Modification */
       var route = findRoute(id);
       if (route) {
-        var beforeState = JSON.parse(JSON.stringify(route.properties));
-        saveRoute({ id: id, properties: data });
-        notify('"' + data.Name + '" modifiée avec succès.', 'success');
-        /* EventBus + Audit */
-        if (typeof SIGEventBus !== 'undefined') {
-          SIGEventBus.emit(SIGEventBus.EVENTS.FEATURE_UPDATED, { featureId: id, layer: 'routes' });
-        }
-        if (typeof SIGAuditTrail !== 'undefined') {
-          try {
-            SIGAuditTrail.log(SIGAuditTrail.ACTIONS.UPDATE_ROUTE, {
-              featureId: String(id),
-              featureName: data.Name,
-              user: currentUser,
-              details: 'Route modifiée : ' + (data.Name || 'Sans nom'),
-              before: beforeState,
-              after: data
+        var updated = null;
+        if (typeof SIGDataEngine !== 'undefined' && route.geometry) {
+          updated = SIGDataEngine.updateFeature(route.id, {
+            properties: data
+          });
+          if (updated) {
+            saveRoute({
+              id: route.id,
+              properties: Object.assign({}, updated.properties),
+              geometry: updated.geometry || route.geometry
             });
-          } catch(e) {}
+            updated = findRoute(route.id);
+          }
+          if (updated && typeof RoadSync !== 'undefined') {
+            RoadSync.propagate('updated', {
+              fullReload: true,
+              featureId: (typeof SIGDataEngine.getFeatureIndex === 'function') ? SIGDataEngine.getFeatureIndex(route.id) : null
+            });
+          }
+        } else {
+          var beforeState = JSON.parse(JSON.stringify(route.properties));
+          saveRoute({ id: id, properties: data });
+          updated = findRoute(id);
+          /* EventBus + Audit */
+          if (typeof SIGEventBus !== 'undefined') {
+            SIGEventBus.emit(SIGEventBus.EVENTS.FEATURE_UPDATED, { featureId: id, layer: 'routes' });
+          }
+          if (typeof SIGAuditTrail !== 'undefined') {
+            try {
+              SIGAuditTrail.log(SIGAuditTrail.ACTIONS.UPDATE_ROUTE, {
+                featureId: String(id),
+                featureName: data.Name,
+                user: currentUser,
+                details: 'Route modifiÃ©e : ' + (data.Name || 'Sans nom'),
+                before: beforeState,
+                after: data,
+                result: 'SUCCESS'
+              });
+            } catch(e) {}
+          }
+        }
+        if (!updated) {
+          notify('La mise Ã  jour de la route a Ã©chouÃ©.', 'error');
+          return false;
+        }
+        notify('"' + data.Name + '" modifiÃ©e avec succÃ¨s.', 'success');
+        if (typeof NotificationCenter !== 'undefined') {
+          NotificationCenter.add('update', 'Route modifiÃ©e', data.Name);
         }
       }
     } else {
       /* Ajout */
       var newId = addRoute({ properties: data, geometry: null });
-      notify('"' + data.Name + '" ajoutée avec succès.', 'success');
+      notify('"' + data.Name + '" ajoutÃ©e avec succÃ¨s.', 'success');
       /* EventBus + Audit */
       if (typeof SIGEventBus !== 'undefined') {
         SIGEventBus.emit(SIGEventBus.EVENTS.FEATURE_CREATED, { featureId: newId, layer: 'routes' });
@@ -3046,11 +3357,15 @@ var RouteModule = (function() {
             featureId: String(newId),
             featureName: data.Name,
             user: currentUser,
-            details: 'Route créée : ' + (data.Name || 'Sans nom'),
+            details: 'Route crÃ©Ã©e : ' + (data.Name || 'Sans nom'),
             before: null,
-            after: data
+            after: data,
+            result: 'SUCCESS'
           });
         } catch(e) {}
+      }
+      if (typeof NotificationCenter !== 'undefined') {
+        NotificationCenter.add('create', 'Route ajoutÃ©e', data.Name);
       }
     }
 
@@ -3060,7 +3375,7 @@ var RouteModule = (function() {
   }
 
   function exportCSV() {
-    var headers = ['Nom', 'Code', 'Origine', 'Destination', 'Catégorie', 'Longueur (m)', 'Largeur (m)', 'Emprise (m)', 'Revêtement', 'État', 'Région', 'Préfecture', 'Communes', 'Population desservie', 'PK Début X', 'PK Début Y', 'PK Fin X', 'PK Fin Y', 'Observations'];
+    var headers = ['Nom', 'Code', 'Origine', 'Destination', 'CatÃ©gorie', 'Longueur (m)', 'Largeur (m)', 'Emprise (m)', 'RevÃªtement', 'Ã‰tat', 'RÃ©gion', 'PrÃ©fecture', 'Communes', 'Population desservie', 'PK DÃ©but X', 'PK DÃ©but Y', 'PK Fin X', 'PK Fin Y', 'Observations'];
     var keys = ['Name', 'Code', 'Origine', 'Destination', 'CLASSE', 'LONGEUR', 'Largeur', 'EMPRISE', 'Revetement', 'Etat', 'REGIONS', 'Prefecture', 'Communes', 'Pop_Dessertie', 'PK_DEB_X', 'PK_DEB_Y', 'PK_FIN_X', 'PK_FIN_Y', 'Observations'];
     var csv = headers.join(';') + '\n';
     state.filtered.forEach(function(r) {
@@ -3072,15 +3387,37 @@ var RouteModule = (function() {
     });
 
     var blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
-    var link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = 'routes_georoad_' + new Date().toISOString().slice(0, 10) + '.csv';
-    link.click();
-    URL.revokeObjectURL(link.href);
-    notify('Export CSV téléchargé (' + state.filtered.length + ' routes).', 'success');
+    var filename = 'routes_georoad_' + new Date().toISOString().slice(0, 10) + '.csv';
+    if (typeof GeoROADDownload !== 'undefined' && typeof GeoROADDownload.downloadBlob === 'function') {
+      GeoROADDownload.downloadBlob(blob, filename);
+    } else {
+      var link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = filename;
+      (document.body || document.documentElement).appendChild(link);
+      link.click();
+      setTimeout(function() {
+        if (link.parentNode) link.parentNode.removeChild(link);
+        URL.revokeObjectURL(link.href);
+      }, 400);
+    }
+    if (typeof SIGAuditTrail !== 'undefined') {
+      try {
+        SIGAuditTrail.log(SIGAuditTrail.ACTIONS.EXPORT, {
+          details: 'Export CSV du module routes (' + state.filtered.length + ' route(s))',
+          after: { format: 'csv', count: state.filtered.length, source: 'routes' },
+          result: 'SUCCESS',
+          entityType: 'routes'
+        });
+      } catch(e) {}
+    }
+    if (typeof NotificationCenter !== 'undefined') {
+      NotificationCenter.add('export', 'Routes exportÃ©es', state.filtered.length + ' route(s) exportÃ©e(s) en CSV');
+    }
+    notify('Export CSV tÃ©lÃ©chargÃ© (' + state.filtered.length + ' routes).', 'success');
   }
 
-  /* ===== EVENT HANDLERS (appelés par le HTML) ===== */
+  /* ===== EVENT HANDLERS (appelÃ©s par le HTML) ===== */
 
   function onSearch(val) {
     state.search = val;
@@ -3110,15 +3447,16 @@ var RouteModule = (function() {
   }
 
   function closeModal(id) {
-    var el = document.getElementById(id);
-    if (el) el.remove();
+    document.querySelectorAll('[id="' + id + '"]').forEach(function(el) {
+      el.remove();
+    });
   }
 
   function closeModalOnOverlay(event, id) {
     if (event.target.id === id) closeModal(id);
   }
 
-  /** Rafraîchit le contenu de la page routes. */
+  /** RafraÃ®chit le contenu de la page routes. */
   function refresh() {
     applyFilters();
     var el = document.getElementById('adminContent');
@@ -3132,7 +3470,7 @@ var RouteModule = (function() {
 
   function findRoute(id) {
     for (var i = 0; i < state.allRoutes.length; i++) {
-      if (state.allRoutes[i].id === id) return state.allRoutes[i];
+      if (String(state.allRoutes[i].id) === String(id)) return state.allRoutes[i];
     }
     return null;
   }
@@ -3164,6 +3502,21 @@ var RouteModule = (function() {
     return String(str).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   }
 
+  function jsArg(str) {
+    return '\'' + String(str).replace(/\\/g, '\\\\').replace(/'/g, '\\\'') + '\'';
+  }
+
+  function safeDomId(value) {
+    return String(value || '').replace(/[^a-zA-Z0-9_-]/g, '_') || 'item';
+  }
+
+  function formatNumericInputValue(value) {
+    if (value === null || value === undefined || value === '') return '';
+    if (typeof value === 'number') return isFinite(value) ? String(value) : '';
+    var normalized = String(value).trim().replace(',', '.');
+    return normalized !== '' && !isNaN(Number(normalized)) ? normalized : '';
+  }
+
   function formGroup(label, inputHtml) {
     return '<div class="fm-group"><label>' + label + '</label>' + inputHtml + '</div>';
   }
@@ -3188,11 +3541,11 @@ var RouteModule = (function() {
 
   function detailField(label, value, full) {
     var cls = full ? 'detail-item detail-full' : 'detail-item';
-    return '<div class="' + cls + '"><div class="detail-label">' + escapeHtml(label) + '</div><div class="detail-value">' + escapeHtml(value || '—') + '</div></div>';
+    return '<div class="' + cls + '"><div class="detail-label">' + escapeHtml(label) + '</div><div class="detail-value">' + escapeHtml(value || 'â€”') + '</div></div>';
   }
 
-  /** Renvoie la liste des régions depuis json_Rgion_2 (toutes les régions du Togo présentes dans la couche).
-      Fallback : les 3 régions historiques si la couche n'est pas chargée. */
+  /** Renvoie la liste des rÃ©gions depuis json_Rgion_2 (toutes les rÃ©gions du Togo prÃ©sentes dans la couche).
+      Fallback : les 3 rÃ©gions historiques si la couche n'est pas chargÃ©e. */
   function getRegionOptions() {
     var regions = [];
     if (typeof json_Rgion_2 !== 'undefined' && json_Rgion_2.features) {
@@ -3209,15 +3562,15 @@ var RouteModule = (function() {
     return regions;
   }
 
-  /* ===== ÉCOUTE SIGEventBus POUR SYNCHRONISATION ENTRANTE ===== */
-  /* Quand une route est créée/modifiée/supprimée par un autre module
-     (admin-ajout, admin-spatial, géoportail), on recharge la liste. */
+  /* ===== Ã‰COUTE SIGEventBus POUR SYNCHRONISATION ENTRANTE ===== */
+  /* Quand une route est crÃ©Ã©e/modifiÃ©e/supprimÃ©e par un autre module
+     (admin-ajout, admin-spatial, gÃ©oportail), on recharge la liste. */
   if (typeof SIGEventBus !== 'undefined') {
     var _routeRefreshTimer = null;
     var _scheduleRouteRefresh = function() {
       if (_routeRefreshTimer) clearTimeout(_routeRefreshTimer);
       _routeRefreshTimer = setTimeout(function() {
-        /* Recharger les données depuis la variable globale */
+        /* Recharger les donnÃ©es depuis la variable globale */
         loadData();
         /* Si on est sur la page routes, re-rendre */
         var currentHash = window.location.hash.replace('#', '');
@@ -3258,10 +3611,11 @@ var RouteModule = (function() {
   };
 })();
 
-/* ===== admin-emprises.js ===== */
+/* ==== END admin-routes.js ==== */
 
+/* ==== BEGIN admin-emprises.js ==== */
 /* ===================================================================
- * GeoROAD TOGO — Module Gestion des Emprises
+ * GeoROAD TOGO â€” Module Gestion des Emprises
  *
  * Formulaire avec selecteur de route, definition emprise.
  * Synchronisation globale apres chaque enregistrement.
@@ -3353,16 +3707,18 @@ var EmpriseModule = (function() {
       try {
         var a = (eventType === "sig:feature:created" ? "CREATE" : (eventType === "sig:feature:deleted" ? "DELETE" : "UPDATE"));
         var actionConst;
-        if (a === "CREATE") actionConst = SIGAuditTrail.ACTIONS.CREATE_ROUTE;
-        else if (a === "DELETE") actionConst = SIGAuditTrail.ACTIONS.DELETE_ROUTE;
-        else actionConst = SIGAuditTrail.ACTIONS.UPDATE_ROUTE;
+        if (a === "CREATE") actionConst = SIGAuditTrail.ACTIONS.CREATE_EMPRISE || SIGAuditTrail.ACTIONS.CREATE_ROUTE;
+        else if (a === "DELETE") actionConst = SIGAuditTrail.ACTIONS.DELETE_EMPRISE || SIGAuditTrail.ACTIONS.DELETE_ROUTE;
+        else actionConst = SIGAuditTrail.ACTIONS.UPDATE_EMPRISE || SIGAuditTrail.ACTIONS.UPDATE_ROUTE;
         SIGAuditTrail.log(actionConst, {
           featureId: (detail && detail.id) ? String(detail.id) : null,
           featureName: (detail && detail.name) || 'Emprise',
           user: getSessionName(),
-          details: 'Emprise ' + ((detail && detail.name) || '') + ' — action ' + a + ' (couche Emprises)',
+          details: 'Emprise ' + ((detail && detail.name) || '') + ' â€” action ' + a + ' (couche Emprises)',
           before: null,
-          after: null
+          after: null,
+          result: 'SUCCESS',
+          entityType: 'emprise'
         });
       } catch(e) {}
     }
@@ -3531,6 +3887,7 @@ var EmpriseModule = (function() {
   function viewEmprise(id) {
     var e = findEmprise(id);
     if (!e) return;
+    closeModal("modal-emprise-view");
     var p = e.properties;
     var ev = parseFloat(p.EMPRISE) || 0;
     var cl = CAT_LABELS[p.CLASSE] || p.CLASSE || "\u2014";
@@ -3565,10 +3922,13 @@ var EmpriseModule = (function() {
     var p = emprise ? emprise.properties : {};
     var title = isEdit ? "Modifier l\u2019emprise" : "Ajouter une emprise";
     var routes = getRouteList();
+    var formId = "emprise-form-" + safeDomId(isEdit ? emprise.id : "new");
+
+    closeModal("modal-emprise-form");
 
     var html = '<div class="modal-admin-overlay" id="modal-emprise-form" onclick="EmpriseModule.closeModalOnOverlay(event, &#39;modal-emprise-form&#39;)">';
     html += '<div class="modal-admin" style="max-width:560px"><div class="modal-admin-header"><h2><i class="fas fa-' + (isEdit ? "pen" : "plus") + '" style="color:var(--gold);margin-right:8px"></i> ' + title + '</h2><button class="modal-admin-close" onclick="EmpriseModule.closeModal(&#39;modal-emprise-form&#39;)"><i class="fas fa-times"></i></button></div>';
-    html += '<div class="modal-admin-body"><form id="emprise-form" onsubmit="return EmpriseModule.saveEmprise(event, ' + (isEdit ? emprise.id : "null") + ')">';
+    html += '<div class="modal-admin-body"><form id="' + formId + '" onsubmit="return EmpriseModule.saveEmprise(event, ' + (isEdit ? emprise.id : "null") + ')">';
 
     /* Route selector */
     html += '<div class="form-row-single"><div class="fm-group"><label>Route associ\u00e9e *</label>';
@@ -3609,7 +3969,7 @@ var EmpriseModule = (function() {
 
     html += '</form></div><div class="modal-admin-footer">';
     html += '<button class="btn-sm ghost" onclick="EmpriseModule.closeModal(&#39;modal-emprise-form&#39;)">Annuler</button>';
-    html += '<button class="btn-sm primary" onclick="document.getElementById(&#39;emprise-form&#39;).dispatchEvent(new Event(&#39;submit&#39;,{cancelable:true}))"><i class="fas fa-save"></i> ' + (isEdit ? "Enregistrer" : "Ajouter") + "</button>";
+    html += '<button class="btn-sm primary" type="submit" form="' + formId + '"><i class="fas fa-save"></i> ' + (isEdit ? "Enregistrer" : "Ajouter") + "</button>";
     html += "</div></div></div>";
     document.body.insertAdjacentHTML("beforeend", html);
 
@@ -3622,6 +3982,7 @@ var EmpriseModule = (function() {
     if (!isAdmin()) { notify("Permissions insuffisantes.", "error"); return; }
     var e = findEmprise(id);
     if (!e) return;
+    closeModal("modal-emprise-delete");
     var name = e.properties.Name || "cette emprise";
     var html = '<div class="modal-admin-overlay" id="modal-emprise-delete"><div class="modal-admin" style="max-width:440px">';
     html += '<div class="modal-admin-header"><h2><i class="fas fa-exclamation-triangle" style="color:var(--red);margin-right:8px"></i> Confirmer</h2><button class="modal-admin-close" onclick="EmpriseModule.closeModal(&#39;modal-emprise-delete&#39;)"><i class="fas fa-times"></i></button></div>';
@@ -3634,9 +3995,12 @@ var EmpriseModule = (function() {
   /* ===== CRUD ===== */
   function saveEmprise(event, id) {
     if (event) event.preventDefault();
-    var form = document.getElementById("emprise-form");
+    var form = event && event.target && event.target.tagName && event.target.tagName.toUpperCase() === "FORM"
+      ? event.target
+      : document.querySelector('#modal-emprise-form form');
     if (!form) return false;
     if (!canEdit()) { notify("Permissions insuffisantes.", "error"); return false; }
+    if (typeof form.reportValidity === 'function' && !form.reportValidity()) return false;
 
     var data = {};
     form.querySelectorAll("input,select,textarea").forEach(function(el) {
@@ -3646,6 +4010,7 @@ var EmpriseModule = (function() {
     });
 
     if (!data.Name || !data.Name.trim()) { notify("Le nom est obligatoire.", "error"); return false; }
+    if (!data.route || !data.route.trim()) { notify("La route associÃ©e est obligatoire.", "error"); return false; }
     if (!data.CLASSE) { notify("La cat\u00e9gorie est obligatoire.", "error"); return false; }
     if (!data.EMPRISE || parseFloat(data.EMPRISE) <= 0) { notify("L\u2019emprise doit \u00eatre positive.", "error"); return false; }
 
@@ -3655,15 +4020,20 @@ var EmpriseModule = (function() {
     if (id !== null && id !== undefined) {
       var e = findEmprise(id);
       if (e) {
+        var previousRoute = e.properties.route_associee || "";
         e.properties.Name = data.Name.trim();
         e.properties.CLASSE = data.CLASSE;
         e.properties.EMPRISE = parseFloat(data.EMPRISE);
         e.properties.route_associee = data.route || "";
         /* Conservation de l'identifiant unique de la route (PHASE 4) */
-        var routeObj = findAssociatedRoute(data.Name);
+        var routeObj = findAssociatedRoute(data.route || data.Name);
         e.properties.route_id = routeObj && routeObj.id ? String(routeObj.id) : '';
         e.properties.lastModified = now;
         e.properties.modifiedBy = userName;
+        if (previousRoute && previousRoute !== e.properties.route_associee) {
+          clearEmpriseFromRouteIfUnused(previousRoute, id);
+        }
+        syncEmpriseToRoute(e.properties.route_associee, e.properties.EMPRISE, userName);
         persistAndNotify("sig:feature:updated", { id: id, name: data.Name, type: "emprise", action: "update" });
         closeModal("modal-emprise-form");
         notify('"' + data.Name + '" modifi\u00e9e.', "success");
@@ -3673,7 +4043,7 @@ var EmpriseModule = (function() {
       var newE = {
         id: newId,
         properties: (function() {
-          var r = findAssociatedRoute(data.Name.trim());
+          var r = findAssociatedRoute(data.route || data.Name.trim());
           return {
             Name: data.Name.trim(), CLASSE: data.CLASSE, EMPRISE: parseFloat(data.EMPRISE),
             route_associee: data.route || "",
@@ -3686,6 +4056,7 @@ var EmpriseModule = (function() {
         geometry: null
       };
       state.allEmprises.push(newE);
+      syncEmpriseToRoute(newE.properties.route_associee, newE.properties.EMPRISE, userName);
       persistAndNotify("sig:feature:created", { id: newId, name: data.Name, type: "emprise", action: "create" });
       closeModal("modal-emprise-form");
       notify('"' + data.Name + '" ajout\u00e9e.', "success");
@@ -3698,11 +4069,48 @@ var EmpriseModule = (function() {
     if (!isAdmin()) { notify("Permissions insuffisantes.", "error"); return; }
     var e = findEmprise(id);
     var name = e ? (e.properties.Name || "Emprise") : "Emprise";
+    var routeName = e && e.properties ? e.properties.route_associee : "";
     state.allEmprises = state.allEmprises.filter(function(e) { return e.id !== id; });
+    if (routeName) clearEmpriseFromRouteIfUnused(routeName, id);
     persistAndNotify("sig:feature:deleted", { id: id, name: name, type: "emprise", action: "delete" });
     closeModal("modal-emprise-delete");
     notify('"' + name + '" supprim\u00e9e.', "success");
     refresh();
+  }
+
+  function syncEmpriseToRoute(routeName, empriseValue, userName) {
+    if (!routeName || typeof json_Rseauroutier_6 === "undefined" || !json_Rseauroutier_6.features) return;
+    json_Rseauroutier_6.features.forEach(function(feat) {
+      var p = feat.properties || {};
+      if (p.Name === routeName) {
+        p.EMPRISE = parseFloat(empriseValue) || 0;
+        p.lastModified = new Date().toISOString();
+        p.modifiedBy = userName || 'EmpriseModule';
+      }
+    });
+    if (typeof SIGPersistence !== "undefined") {
+      try { SIGPersistence.saveLayer(SIGPersistence.LAYERS.ROUTES, json_Rseauroutier_6); } catch(e) {}
+    }
+  }
+
+  function clearEmpriseFromRouteIfUnused(routeName, excludeId) {
+    if (!routeName || typeof json_Rseauroutier_6 === "undefined" || !json_Rseauroutier_6.features) return;
+    var stillLinked = state.allEmprises.some(function(item) {
+      return item.id !== excludeId && item.properties && item.properties.route_associee === routeName;
+    });
+    if (stillLinked) return;
+
+    json_Rseauroutier_6.features.forEach(function(feat) {
+      var p = feat.properties || {};
+      if (p.Name === routeName) {
+        p.EMPRISE = null;
+        p.lastModified = new Date().toISOString();
+        p.modifiedBy = 'EmpriseModule';
+      }
+    });
+    if (typeof SIGPersistence !== "undefined") {
+      try { SIGPersistence.saveLayer(SIGPersistence.LAYERS.ROUTES, json_Rseauroutier_6); } catch(e) {}
+    }
   }
 
   /* ===== EVENT HANDLERS ===== */
@@ -3736,8 +4144,12 @@ var EmpriseModule = (function() {
   function onFilter(key, val) { state.filters[key] = val; state.page = 1; applyFilters(); refresh(); }
   function resetFilters() { state.search = ""; state.filters = { region: "", classe: "", empriseMin: "", empriseMax: "" }; state.page = 1; applyFilters(); refresh(); }
   function goPage(p) { state.page = p; refresh(); }
-  function closeModal(id) { var el = document.getElementById(id); if (el) el.remove(); }
+  function closeModal(id) { document.querySelectorAll('[id="' + id + '"]').forEach(function(el) { el.remove(); }); }
   function closeModalOnOverlay(event, id) { if (event.target.id === id) closeModal(id); }
+
+  function safeDomId(value) {
+    return String(value || "").replace(/[^a-zA-Z0-9_-]/g, "_") || "item";
+  }
   function refresh() {
     applyFilters();
     var el = document.getElementById("adminContent");
@@ -3749,14 +4161,14 @@ var EmpriseModule = (function() {
   function df(l, v) { return '<div class="detail-item"><div class="detail-label">' + esc(l) + "</div><div class=\"detail-value\">" + esc(v || "\u2014") + "</div></div>"; }
 
   /**
-   * Calcule la surface réelle d'une emprise si elle possède une géométrie polygonale.
-   * Sinon, fallback estimation : largeur (EMPRISE) × longueur route (LONGEUR).
+   * Calcule la surface rÃ©elle d'une emprise si elle possÃ¨de une gÃ©omÃ©trie polygonale.
+   * Sinon, fallback estimation : largeur (EMPRISE) Ã— longueur route (LONGEUR).
    * @returns {Object} { surface_m2, surface_ha, source } ou null si impossible
    */
   function computeEmpriseSurface(e) {
     if (!e) return null;
     var p = e.properties || {};
-    /* Si l'emprise a une géométrie polygonale, calculer la surface réelle */
+    /* Si l'emprise a une gÃ©omÃ©trie polygonale, calculer la surface rÃ©elle */
     if (e.geometry && (e.geometry.type === 'Polygon' || e.geometry.type === 'MultiPolygon')) {
       if (typeof ol !== 'undefined' && ol.sphere && ol.sphere.getArea) {
         try {
@@ -3769,14 +4181,14 @@ var EmpriseModule = (function() {
         } catch(err) {}
       }
     }
-    /* Fallback : estimation largeur × longueur route */
+    /* Fallback : estimation largeur Ã— longueur route */
     var ev = parseFloat(p.EMPRISE) || 0;
     if (ev > 0) {
       var route = findAssociatedRoute(p.Name);
       var rl = route && route.properties ? (parseFloat(route.properties.LONGEUR) || 0) : 0;
       if (rl > 0) {
         var surf = ev * rl;
-        return { surface_m2: surf, surface_ha: surf / 10000, source: 'estimation (largeur × longueur route)' };
+        return { surface_m2: surf, surface_ha: surf / 10000, source: 'estimation (largeur Ã— longueur route)' };
       }
     }
     return null;
@@ -3784,8 +4196,8 @@ var EmpriseModule = (function() {
 
   /**
    * Calcule la largeur moyenne d'une emprise.
-   * Si polygone : surface / longueur concernée.
-   * Sinon : valeur EMPRISE stockée.
+   * Si polygone : surface / longueur concernÃ©e.
+   * Sinon : valeur EMPRISE stockÃ©e.
    */
   function computeEmpriseLargeurMoyenne(e) {
     if (!e) return 0;
@@ -3799,7 +4211,7 @@ var EmpriseModule = (function() {
     return parseFloat(p.EMPRISE) || 0;
   }
 
-  /* ===== ÉCOUTE SIGEventBus : supprimer les emprises orphelines quand une route est supprimée ===== */
+  /* ===== Ã‰COUTE SIGEventBus : supprimer les emprises orphelines quand une route est supprimÃ©e ===== */
   if (typeof SIGEventBus !== "undefined") {
     SIGEventBus.on(SIGEventBus.EVENTS.FEATURE_DELETED, function(data) {
       if (!data) return;
@@ -3833,13 +4245,14 @@ var EmpriseModule = (function() {
   };
 })();
 
-/* ===== admin-pk.js ===== */
+/* ==== END admin-emprises.js ==== */
 
+/* ==== BEGIN admin-pk.js ==== */
 /* ===================================================================
- * GeoROAD TOGO — Module Gestion des Points Kilométriques (PK)
+ * GeoROAD TOGO â€” Module Gestion des Points KilomÃ©triques (PK)
  *
- * Chaque PK a un point de DÉBUT (X, Y) et un point de FIN (X, Y).
- * Synchronisé avec les routes existantes (PK_DEB_X/Y, PK_FIN_X/Y).
+ * Chaque PK a un point de DÃ‰BUT (X, Y) et un point de FIN (X, Y).
+ * SynchronisÃ© avec les routes existantes (PK_DEB_X/Y, PK_FIN_X/Y).
  * =================================================================== */
 var PKModule = (function() {
   "use strict";
@@ -3870,16 +4283,16 @@ var PKModule = (function() {
   }
 
   /**
-   * Synchronise les PK à partir des données des routes existantes.
-   * Chaque route qui possède PK_DEB_X/Y et PK_FIN_X/Y génère un PK
-   * s'il n'existe pas déjà dans state.allPKs.
-   * N'invente aucune donnée — utilise uniquement les propriétés des routes.
+   * Synchronise les PK Ã  partir des donnÃ©es des routes existantes.
+   * Chaque route qui possÃ¨de PK_DEB_X/Y et PK_FIN_X/Y gÃ©nÃ¨re un PK
+   * s'il n'existe pas dÃ©jÃ  dans state.allPKs.
+   * N'invente aucune donnÃ©e â€” utilise uniquement les propriÃ©tÃ©s des routes.
    */
   function syncFromRoutes() {
     if (typeof json_Rseauroutier_6 === "undefined" || !json_Rseauroutier_6.features) return;
     var added = false;
     var baseTime = Date.now();
-    /* Index des routes déjà présentes dans les PK (par nom de route) */
+    /* Index des routes dÃ©jÃ  prÃ©sentes dans les PK (par nom de route) */
     var existingRoutes = {};
     state.allPKs.forEach(function(pk) {
       var r = (pk.properties || {}).route || "";
@@ -3889,7 +4302,7 @@ var PKModule = (function() {
     json_Rseauroutier_6.features.forEach(function(feat, idx) {
       var props = feat.properties || {};
       var routeName = props.Name || "";
-      /* Vérifier que la route a des coordonnées PK valides */
+      /* VÃ©rifier que la route a des coordonnÃ©es PK valides */
       var debX = props.PK_DEB_X;
       var debY = props.PK_DEB_Y;
       var finX = props.PK_FIN_X;
@@ -3897,10 +4310,10 @@ var PKModule = (function() {
       if (!routeName) return;
       if (debX === null || debX === undefined || finX === null || finX === undefined) return;
       if (debX === 0 && debY === 0 && finX === 0 && finY === 0) return;
-      /* Ne pas dupliquer si un PK existe déjà pour cette route */
+      /* Ne pas dupliquer si un PK existe dÃ©jÃ  pour cette route */
       if (existingRoutes[routeName]) return;
 
-      /* Créer le PK à partir des données existantes de la route */
+      /* CrÃ©er le PK Ã  partir des donnÃ©es existantes de la route */
       var pkProps = {
         numero: "PK 0+000",
         route: routeName,
@@ -3913,7 +4326,7 @@ var PKModule = (function() {
         source: "route",
         observations: "",
         lastModified: new Date().toISOString(),
-        modifiedBy: "Système (sync route)"
+        modifiedBy: "SystÃ¨me (sync route)"
       };
       var geom = {
         type: "LineString",
@@ -3930,7 +4343,7 @@ var PKModule = (function() {
       added = true;
     });
 
-    /* Persister uniquement si de nouveaux PK ont été ajoutés */
+    /* Persister uniquement si de nouveaux PK ont Ã©tÃ© ajoutÃ©s */
     if (added) {
       var fc2 = { type: "FeatureCollection", features: state.allPKs };
       window.json_PK = fc2;
@@ -3980,16 +4393,18 @@ var PKModule = (function() {
       try {
         var action = (detail && detail.action) ? detail.action : "UPDATE";
         var actionConst;
-        if (action === "CREATE") actionConst = SIGAuditTrail.ACTIONS.CREATE_ROUTE;
-        else if (action === "DELETE") actionConst = SIGAuditTrail.ACTIONS.DELETE_ROUTE;
-        else actionConst = SIGAuditTrail.ACTIONS.UPDATE_ROUTE;
+        if (action === "CREATE") actionConst = SIGAuditTrail.ACTIONS.CREATE_PK || SIGAuditTrail.ACTIONS.CREATE_ROUTE;
+        else if (action === "DELETE") actionConst = SIGAuditTrail.ACTIONS.DELETE_PK || SIGAuditTrail.ACTIONS.DELETE_ROUTE;
+        else actionConst = SIGAuditTrail.ACTIONS.UPDATE_PK || SIGAuditTrail.ACTIONS.UPDATE_ROUTE;
         SIGAuditTrail.log(actionConst, {
           featureId: (detail && detail.id) ? String(detail.id) : null,
           featureName: (detail && detail.numero) || 'PK',
           user: getSessionName(),
-          details: 'PK ' + ((detail && detail.numero) || '') + ' — action ' + action + ' (couche PK)',
+          details: 'PK ' + ((detail && detail.numero) || '') + ' â€” action ' + action + ' (couche PK)',
           before: null,
-          after: null
+          after: null,
+          result: 'SUCCESS',
+          entityType: 'pk'
         });
       } catch(e) {}
     }
@@ -4139,6 +4554,7 @@ var PKModule = (function() {
   function openViewModal(id) {
     var pk = findPK(id);
     if (!pk) return;
+    closeModal("modal-pk-view");
     var p = pk.properties || {};
 
     var html = '<div class="modal-admin-overlay" id="modal-pk-view" onclick="PKModule.closeModalOnOverlay(event, &#39;modal-pk-view&#39;)">';
@@ -4151,7 +4567,7 @@ var PKModule = (function() {
     html += df("Source", p.source === "route" ? "Donn\u00e9es route" : "Saisie manuelle");
     html += "</div>";
 
-    /* Point de début */
+    /* Point de dÃ©but */
     html += '<div style="margin-top:16px;padding:12px;background:var(--bg-2);border-radius:8px"><div style="font-size:.78rem;font-weight:600;color:var(--gold-dark);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px"><i class="fas fa-play" style="margin-right:6px"></i> Point de d\u00e9but</div><div class="detail-grid">';
     html += df("X (PK_DEB_X)", fc(p.PK_DEB_X));
     html += df("Y (PK_DEB_Y)", fc(p.PK_DEB_Y));
@@ -4182,12 +4598,15 @@ var PKModule = (function() {
     var title = isEdit ? "Modifier le PK" : "Ajouter un PK";
     var editId = isEdit ? pk.id : null;
     var routes = getRouteList();
+    var formId = "pk-form-" + safeDomId(editId !== null ? editId : "new");
+
+    closeModal("modal-pk-form");
 
     var html = '<div class="modal-admin-overlay" id="modal-pk-form" onclick="PKModule.closeModalOnOverlay(event, &#39;modal-pk-form&#39;)">';
     html += '<div class="modal-admin"><div class="modal-admin-header"><h2><i class="fas fa-' + (isEdit ? "pen" : "plus") + '" style="color:var(--gold);margin-right:8px"></i> ' + esc(title) + '</h2><button class="modal-admin-close" onclick="PKModule.closeModal(&#39;modal-pk-form&#39;)"><i class="fas fa-times"></i></button></div>';
-    html += '<div class="modal-admin-body"><form id="pk-form" onsubmit="return PKModule.savePK(event, ' + (editId !== null ? "&#39;" + ea(editId) + "&#39;" : "null") + ')">';
+    html += '<div class="modal-admin-body"><form id="' + formId + '" onsubmit="return PKModule.savePK(event, ' + (editId !== null ? "&#39;" + ea(editId) + "&#39;" : "null") + ')">';
 
-    /* Numéro */
+    /* NumÃ©ro */
     html += '<div class="form-row-single"><div class="fm-group"><label>Num\u00e9ro PK *</label>';
     html += '<input type="text" name="numero" required value="' + ea(p.numero || "") + '" placeholder="Ex: PK 0+000"></div></div>';
 
@@ -4202,7 +4621,7 @@ var PKModule = (function() {
     });
     html += "</select></div></div>";
 
-    /* Point de début */
+    /* Point de dÃ©but */
     html += '<div style="margin-top:12px;padding:10px 12px;background:var(--bg-2);border-radius:8px">';
     html += '<div style="font-size:.78rem;font-weight:600;color:var(--gold-dark);margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px"><i class="fas fa-play" style="margin-right:6px"></i> Point de d\u00e9but</div>';
     html += '<div class="form-row"><div class="fm-group"><label>X (PK_DEB_X) *</label>';
@@ -4232,7 +4651,7 @@ var PKModule = (function() {
 
     html += '</form></div><div class="modal-admin-footer">';
     html += '<button class="btn-sm ghost" onclick="PKModule.closeModal(&#39;modal-pk-form&#39;)">Annuler</button>';
-    html += '<button class="btn-sm primary" onclick="document.getElementById(&#39;pk-form&#39;).dispatchEvent(new Event(&#39;submit&#39;,{cancelable:true}))"><i class="fas fa-save"></i> ' + (isEdit ? "Enregistrer" : "Ajouter") + "</button>";
+    html += '<button class="btn-sm primary" type="submit" form="' + formId + '"><i class="fas fa-save"></i> ' + (isEdit ? "Enregistrer" : "Ajouter") + "</button>";
     html += "</div></div></div>";
     document.body.insertAdjacentHTML("beforeend", html);
   }
@@ -4241,6 +4660,7 @@ var PKModule = (function() {
     if (!isAdmin()) { notify("Seul un Administrateur peut supprimer.", "error"); return; }
     var pk = findPK(id);
     if (!pk) return;
+    closeModal("modal-pk-delete");
     var name = (pk.properties && pk.properties.numero) || "ce PK";
     var html = '<div class="modal-admin-overlay" id="modal-pk-delete"><div class="modal-admin" style="max-width:440px">';
     html += '<div class="modal-admin-header"><h2><i class="fas fa-exclamation-triangle" style="color:var(--red);margin-right:8px"></i> Confirmer</h2><button class="modal-admin-close" onclick="PKModule.closeModal(&#39;modal-pk-delete&#39;)"><i class="fas fa-times"></i></button></div>';
@@ -4253,9 +4673,12 @@ var PKModule = (function() {
   /* ===== CRUD ===== */
   function savePK(event, id) {
     if (event) event.preventDefault();
-    var form = document.getElementById("pk-form");
+    var form = event && event.target && event.target.tagName && event.target.tagName.toUpperCase() === "FORM"
+      ? event.target
+      : document.querySelector('#modal-pk-form form');
     if (!form) return false;
     if (!canEdit()) { notify("Permissions insuffisantes.", "error"); return false; }
+    if (typeof form.reportValidity === 'function' && !form.reportValidity()) return false;
 
     var data = {};
     form.querySelectorAll("input,select,textarea").forEach(function(el) {
@@ -4285,27 +4708,31 @@ var PKModule = (function() {
     if (id !== null && id !== undefined) {
       var pk = findPK(id);
       if (pk) {
-        /* Conserver createdAt si présent (PHASE 5) */
+        var previousRoute = (pk.properties && pk.properties.route) || "";
+        /* Conserver createdAt si prÃ©sent (PHASE 5) */
         if (pk.properties && pk.properties.createdAt) props.createdAt = pk.properties.createdAt;
         if (pk.properties) { for (var k in props) pk.properties[k] = props[k]; }
         else { pk.properties = props; }
         pk.geometry = geom;
-        /* Synchroniser les PK_DEB_X/Y et PK_FIN_X/Y de la route associée (sync PK→route) */
+        if (previousRoute && previousRoute !== props.route) {
+          clearPKFromRoute(previousRoute);
+        }
+        /* Synchroniser les PK_DEB_X/Y et PK_FIN_X/Y de la route associÃ©e (sync PKâ†’route) */
         syncPKToRoute(props.route, props);
         persistAndNotify("sig:feature:updated", { id: id, numero: data.numero, type: "pk", action: "UPDATE" });
         closeModal("modal-pk-form");
-        notify('"' + data.numero + '" modifié.', "success");
+        notify('"' + data.numero + '" modifiÃ©.', "success");
       }
     } else {
       props.createdAt = now;
       var newId = "pk_" + Date.now();
       var newPK = { type: "Feature", id: newId, geometry: geom, properties: props };
       state.allPKs.push(newPK);
-      /* Synchroniser les PK_DEB_X/Y et PK_FIN_X/Y de la route associée (sync PK→route) */
+      /* Synchroniser les PK_DEB_X/Y et PK_FIN_X/Y de la route associÃ©e (sync PKâ†’route) */
       syncPKToRoute(props.route, props);
       persistAndNotify("sig:feature:created", { id: newId, numero: data.numero, type: "pk", action: "CREATE" });
       closeModal("modal-pk-form");
-      notify('"' + data.numero + '" ajouté.', "success");
+      notify('"' + data.numero + '" ajoutÃ©.', "success");
     }
     refresh();
     return false;
@@ -4315,6 +4742,8 @@ var PKModule = (function() {
     if (!isAdmin()) { notify("Permissions insuffisantes.", "error"); return; }
     var pk = findPK(id);
     var name = pk ? ((pk.properties && pk.properties.numero) || "PK") : "PK";
+    var routeName = pk && pk.properties ? pk.properties.route : "";
+    if (routeName) clearPKFromRoute(routeName);
     state.allPKs = state.allPKs.filter(function(p) { return String(p.id) !== String(id); });
     persistAndNotify("sig:feature:deleted", { id: id, numero: name, type: "pk", action: "DELETE" });
     closeModal("modal-pk-delete");
@@ -4323,8 +4752,8 @@ var PKModule = (function() {
   }
 
   /**
-   * Synchronise les coordonnées du PK vers la route associée dans json_Rseauroutier_6.
-   * Met à jour PK_DEB_X/Y et PK_FIN_X/Y de la route. Sync bidirectionnelle PK→route.
+   * Synchronise les coordonnÃ©es du PK vers la route associÃ©e dans json_Rseauroutier_6.
+   * Met Ã  jour PK_DEB_X/Y et PK_FIN_X/Y de la route. Sync bidirectionnelle PKâ†’route.
    */
   function syncPKToRoute(routeName, pkProps) {
     if (!routeName || typeof json_Rseauroutier_6 === "undefined" || !json_Rseauroutier_6.features) return;
@@ -4336,31 +4765,31 @@ var PKModule = (function() {
         p.PK_FIN_X = pkProps.PK_FIN_X;
         p.PK_FIN_Y = pkProps.PK_FIN_Y;
         p.lastModified = new Date().toISOString();
-        p.modifiedBy = 'PKModule (sync PK→route)';
+        p.modifiedBy = 'PKModule (sync PKâ†’route)';
       }
     });
-    /* Persister la mise à jour de la route */
+    /* Persister la mise Ã  jour de la route */
     if (typeof SIGPersistence !== "undefined") {
       try { SIGPersistence.saveLayer(SIGPersistence.LAYERS.ROUTES, json_Rseauroutier_6); } catch(e) {}
     }
   }
 
   /**
-   * Calcule le chaînage d'un PK sous la forme "PK X+YYY" (km+ mètres)
-   * depuis la longueur connue de la route ou la distance haversine entre début et fin.
-   * @param {Object} pkProps - propriétés du PK (route, PK_DEB_X/Y, PK_FIN_X/Y, longueur)
-   * @returns {string} chaînage formaté, ex: "PK 12+450"
+   * Calcule le chaÃ®nage d'un PK sous la forme "PK X+YYY" (km+ mÃ¨tres)
+   * depuis la longueur connue de la route ou la distance haversine entre dÃ©but et fin.
+   * @param {Object} pkProps - propriÃ©tÃ©s du PK (route, PK_DEB_X/Y, PK_FIN_X/Y, longueur)
+   * @returns {string} chaÃ®nage formatÃ©, ex: "PK 12+450"
    */
   function computeChainage(pkProps) {
-    if (!pkProps) return "—";
-    /* Si on a la longueur explicite de la route, l'utiliser comme chaînage total */
+    if (!pkProps) return "â€”";
+    /* Si on a la longueur explicite de la route, l'utiliser comme chaÃ®nage total */
     var longueur = parseFloat(pkProps.longueur);
     if (!isNaN(longueur) && longueur > 0) {
       var km = Math.floor(longueur / 1000);
       var m = Math.round(longueur - km * 1000);
       return "PK " + km + "+" + (m < 10 ? "00" + m : m < 100 ? "0" + m : m);
     }
-    /* Sinon, calculer la distance haversine entre début et fin */
+    /* Sinon, calculer la distance haversine entre dÃ©but et fin */
     if (pkProps.PK_DEB_X !== undefined && pkProps.PK_FIN_X !== undefined) {
       var d = haversineDistance(pkProps.PK_DEB_X, pkProps.PK_DEB_Y, pkProps.PK_FIN_X, pkProps.PK_FIN_Y);
       if (!isNaN(d) && d > 0) {
@@ -4369,14 +4798,14 @@ var PKModule = (function() {
         return "PK " + km2 + "+" + (m2 < 10 ? "00" + m2 : m2 < 100 ? "0" + m2 : m2);
       }
     }
-    return pkProps.numero || "—";
+    return pkProps.numero || "â€”";
   }
 
   /**
-   * Distance haversine (en mètres) entre deux points [x=lon, y=lat].
+   * Distance haversine (en mÃ¨tres) entre deux points [x=lon, y=lat].
    */
   function haversineDistance(x1, y1, x2, y2) {
-    var R = 6371000; /* rayon Terre en mètres */
+    var R = 6371000; /* rayon Terre en mÃ¨tres */
     var toRad = function(d) { return d * Math.PI / 180; };
     var dLat = toRad(y2 - y1);
     var dLon = toRad(x2 - x1);
@@ -4388,7 +4817,7 @@ var PKModule = (function() {
   }
 
   /**
-   * Calcule la distance entre deux PKs donnés (par ID).
+   * Calcule la distance entre deux PKs donnÃ©s (par ID).
    * @returns {Object} { distance, formatted } ou { error } si PK introuvable
    */
   function computeDistanceBetweenPKs(id1, id2) {
@@ -4397,9 +4826,9 @@ var PKModule = (function() {
     if (!pk1 || !pk2) return { error: "PK introuvable" };
     var p1 = pk1.properties || {};
     var p2 = pk2.properties || {};
-    /* Distance entre le point de fin de pk1 et le point de début de pk2 (chaînage consécutif) */
+    /* Distance entre le point de fin de pk1 et le point de dÃ©but de pk2 (chaÃ®nage consÃ©cutif) */
     var d = haversineDistance(p1.PK_FIN_X, p1.PK_FIN_Y, p2.PK_DEB_X, p2.PK_DEB_Y);
-    if (isNaN(d)) return { error: "Coordonnées manquantes" };
+    if (isNaN(d)) return { error: "CoordonnÃ©es manquantes" };
     var km = (d / 1000).toFixed(2);
     return {
       distance: d,
@@ -4409,11 +4838,11 @@ var PKModule = (function() {
     };
   }
 
-  /* ===== ÉCOUTE SIGEventBus : supprimer les PK orphelins quand une route est supprimée ===== */
+  /* ===== Ã‰COUTE SIGEventBus : supprimer les PK orphelins quand une route est supprimÃ©e ===== */
   if (typeof SIGEventBus !== "undefined") {
     SIGEventBus.on(SIGEventBus.EVENTS.FEATURE_DELETED, function(data) {
       if (!data) return;
-      /* Si l'événement concerne une route (pas un PK), supprimer les PK orphelins */
+      /* Si l'Ã©vÃ©nement concerne une route (pas un PK), supprimer les PK orphelins */
       if (data.layer === 'routes' || data.layer === 'Rseauroutier_6') {
         var routeName = data.featureName;
         if (!routeName) return;
@@ -4430,6 +4859,24 @@ var PKModule = (function() {
         }
       }
     });
+  }
+
+  function clearPKFromRoute(routeName) {
+    if (!routeName || typeof json_Rseauroutier_6 === "undefined" || !json_Rseauroutier_6.features) return;
+    json_Rseauroutier_6.features.forEach(function(feat) {
+      var p = feat.properties || {};
+      if (p.Name === routeName) {
+        p.PK_DEB_X = null;
+        p.PK_DEB_Y = null;
+        p.PK_FIN_X = null;
+        p.PK_FIN_Y = null;
+        p.lastModified = new Date().toISOString();
+        p.modifiedBy = 'PKModule (clear PK)';
+      }
+    });
+    if (typeof SIGPersistence !== "undefined") {
+      try { SIGPersistence.saveLayer(SIGPersistence.LAYERS.ROUTES, json_Rseauroutier_6); } catch(e) {}
+    }
   }
 
   /* ===== EVENT HANDLERS ===== */
@@ -4452,8 +4899,12 @@ var PKModule = (function() {
   function onFilter(key, val) { state.filters[key] = val; state.page = 1; applyFilters(); refresh(); }
   function resetFilters() { state.search = ""; state.filters = { route: "" }; state.page = 1; applyFilters(); refresh(); }
   function goPage(p) { state.page = p; refresh(); }
-  function closeModal(id) { var el = document.getElementById(id); if (el) el.remove(); }
+  function closeModal(id) { document.querySelectorAll('[id="' + id + '"]').forEach(function(el) { el.remove(); }); }
   function closeModalOnOverlay(event, id) { if (event.target.id === id) closeModal(id); }
+
+  function safeDomId(value) {
+    return String(value || "").replace(/[^a-zA-Z0-9_-]/g, "_") || "item";
+  }
   function refresh() { applyFilters(); var el = document.getElementById("adminContent"); if (el) { el.innerHTML = buildPage(); el.scrollTop = 0; } }
 
   function df(l, v) { return '<div class="detail-item"><div class="detail-label">' + esc(l) + "</div><div class=\"detail-value\">" + esc(v || "\u2014") + "</div></div>"; }
@@ -4471,38 +4922,39 @@ var PKModule = (function() {
   };
 })();
 
-/* ===== admin-spatial.js ===== */
+/* ==== END admin-pk.js ==== */
 
+/* ==== BEGIN admin-spatial.js ==== */
 /* ===================================================================
- * GeoROAD TOGO — Module Gestion des Données Spatiales
+ * GeoROAD TOGO â€” Module Gestion des DonnÃ©es Spatiales
  *
- * Import : GeoJSON, CSV (avec détection automatique des colonnes de coordonnées)
- * Export : GeoJSON, CSV, PDF (fiche), Excel, Shapefile
+ * Import : GeoJSON, CSV (avec dÃ©tection automatique des colonnes de coordonnÃ©es)
+ * Export : GeoJSON, CSV, PDF (fiche), Excel
  *
- * L'import affiche un aperçu complet avant validation :
- *   - Nombre d'entités
- *   - Projection détectée
- *   - Types de géométrie
- *   - Étendue (bbox)
- *   - Erreurs éventuelles
+ * L'import affiche un aperÃ§u complet avant validation :
+ *   - Nombre d'entitÃ©s
+ *   - Projection dÃ©tectÃ©e
+ *   - Types de gÃ©omÃ©trie
+ *   - Ã‰tendue (bbox)
+ *   - Erreurs Ã©ventuelles
  *   - Choix de la couche de destination
  *   - Annuler / Confirmer
  *
- * Après validation :
+ * AprÃ¨s validation :
  *   - Import via SIGDataEngine
- *   - Déclenche EventBus
- *   - Met à jour carte, statistiques, dashboard, journal d'audit
+ *   - DÃ©clenche EventBus
+ *   - Met Ã  jour carte, statistiques, dashboard, journal d'audit
  *
- * Dépend : SIGEventBus, SIGAuditTrail, SIGPersistence, AdminAuth
+ * DÃ©pend : SIGEventBus, SIGAuditTrail, SIGPersistence, AdminAuth
  * =================================================================== */
 var SpatialModule = (function() {
   'use strict';
 
   /* ===== COUCHES DE DESTINATION ===== */
   var DESTINATION_LAYERS = [
-    { key: 'routes', label: 'Réseau routier', icon: 'fa-road', geomTypes: ['LineString', 'MultiLineString'] },
+    { key: 'routes', label: 'RÃ©seau routier', icon: 'fa-road', geomTypes: ['LineString', 'MultiLineString'] },
     { key: 'emprises', label: 'Emprises', icon: 'fa-vector-square', geomTypes: ['Polygon', 'MultiPolygon'] },
-    { key: 'pk', label: 'Points kilométriques', icon: 'fa-map-pin', geomTypes: ['Point'] }
+    { key: 'pk', label: 'Points kilomÃ©triques', icon: 'fa-map-pin', geomTypes: ['Point'] }
   ];
 
   /* ===== COORDINATE COLUMN PATTERNS ===== */
@@ -4543,7 +4995,7 @@ var SpatialModule = (function() {
 
   /* ===== CRS HELPERS ===== */
   var CRS_LABELS = {
-    'EPSG:4326': 'WGS 84 (géographique)',
+    'EPSG:4326': 'WGS 84 (gÃ©ographique)',
     'EPSG:32630': 'UTM Zone 30N',
     'EPSG:32631': 'UTM Zone 31N',
     'EPSG:32632': 'UTM Zone 32N'
@@ -4587,31 +5039,31 @@ var SpatialModule = (function() {
 
   /* ===== RENDER ===== */
   function render() {
-    var html = '<div class="page-header"><h1>Gestion des données spatiales</h1>'
-      + '<p>Importez et exportez vos données géographiques — GeoJSON, CSV</p></div>';
+    var html = '<div class="page-header"><h1>Gestion des donnÃ©es spatiales</h1>'
+      + '<p>Importez et exportez vos donnÃ©es gÃ©ographiques â€” GeoJSON, CSV</p></div>';
 
     /* Import / Export cards */
     html += '<div class="grid-2">';
     html += '<div class="admin-panel"><div class="panel-body" style="text-align:center;padding:40px 24px">'
       + '<div class="sc-icon gold" style="margin:0 auto 14px"><i class="fas fa-file-import"></i></div>'
-      + '<h3 style="font-size:1rem;font-weight:600;margin-bottom:4px">Importer des données</h3>'
+      + '<h3 style="font-size:1rem;font-weight:600;margin-bottom:4px">Importer des donnÃ©es</h3>'
       + '<p style="font-size:.82rem;color:var(--text-3);margin-bottom:16px">GeoJSON (.geojson, .json) et CSV (.csv)</p>'
       + '<button class="btn-sm primary" onclick="SpatialModule.openImportDialog()"><i class="fas fa-upload"></i> Importer</button>'
       + '</div></div>';
 
     html += '<div class="admin-panel"><div class="panel-body" style="text-align:center;padding:40px 24px">'
       + '<div class="sc-icon blue" style="margin:0 auto 14px"><i class="fas fa-file-export"></i></div>'
-      + '<h3 style="font-size:1rem;font-weight:600;margin-bottom:4px">Exporter des données</h3>'
-      + '<p style="font-size:.82rem;color:var(--text-3);margin-bottom:16px">GeoJSON, Shapefile, CSV, PDF, Excel</p>'
+      + '<h3 style="font-size:1rem;font-weight:600;margin-bottom:4px">Exporter des donnÃ©es</h3>'
+      + '<p style="font-size:.82rem;color:var(--text-3);margin-bottom:16px">GeoJSON, CSV, PDF, Excel</p>'
       + '<button class="btn-sm primary" onclick="SpatialModule.openExportDialog()"><i class="fas fa-download"></i> Exporter</button>'
       + '</div></div>';
     html += '</div>';
 
-    /* Layers table — vue enrichie PHASE 6 */
+    /* Layers table â€” vue enrichie PHASE 6 */
     html += '<div class="admin-panel" style="margin-top:20px"><div class="panel-header"><h3><i class="fas fa-layer-group"></i> Couches disponibles</h3>'
-      + '<button class="btn-sm ghost" style="margin-left:auto" onclick="SpatialModule.refreshLayers()"><i class="fas fa-rotate"></i> Rafraîchir</button></div>'
+      + '<button class="btn-sm ghost" style="margin-left:auto" onclick="SpatialModule.refreshLayers()"><i class="fas fa-rotate"></i> RafraÃ®chir</button></div>'
       + '<div class="panel-body"><div class="admin-table-wrap"><table class="admin-table"><thead><tr>'
-      + '<th>Couche</th><th>Type géom.</th><th>Entités</th><th>Projection</th><th>Date mise à jour</th><th>État</th><th>Santé</th><th style="text-align:right">Actions</th>'
+      + '<th>Couche</th><th>Type gÃ©om.</th><th>EntitÃ©s</th><th>Projection</th><th>Date mise Ã  jour</th><th>Ã‰tat</th><th>SantÃ©</th><th style="text-align:right">Actions</th>'
       + '</tr></thead><tbody>';
 
     var layers = getLayerInfo();
@@ -4631,8 +5083,8 @@ var SpatialModule = (function() {
         + '<td style="text-align:right;white-space:nowrap">'
         + '<button class="btn-icon" title="Exporter" onclick="SpatialModule.exportLayer(\'' + l.key + '\')"><i class="fas fa-download"></i></button>'
         + '<button class="btn-icon" title="Informations" onclick="SpatialModule.showLayerInfo(\'' + l.key + '\')"><i class="fas fa-circle-info"></i></button>'
-        + '<button class="btn-icon" title="Vérification géométrique" onclick="SpatialModule.validateLayerGeometry(\'' + l.key + '\')"><i class="fas fa-clipboard-check"></i></button>'
-        + '<a class="btn-icon" title="Voir sur le géoportail" href="geoportail.html" target="_blank" style="display:inline-flex;align-items:center;justify-content:center;text-decoration:none;color:inherit"><i class="fas fa-external-link-alt"></i></a>'
+        + '<button class="btn-icon" title="VÃ©rification gÃ©omÃ©trique" onclick="SpatialModule.validateLayerGeometry(\'' + l.key + '\')"><i class="fas fa-clipboard-check"></i></button>'
+        + '<a class="btn-icon" title="Voir sur le gÃ©oportail" href="geoportail.html" target="_blank" style="display:inline-flex;align-items:center;justify-content:center;text-decoration:none;color:inherit"><i class="fas fa-external-link-alt"></i></a>'
         + '</td></tr>';
     });
     html += '</tbody></table></div></div></div>';
@@ -4644,7 +5096,7 @@ var SpatialModule = (function() {
       html += '<div class="admin-panel" style="margin-top:4px"><div class="panel-body" style="display:flex;align-items:center;gap:14px">'
         + '<div class="sc-icon green"><i class="fas fa-database"></i></div>'
         + '<div><div style="font-weight:600;font-size:.92rem">Stockage local</div>'
-        + '<div style="font-size:.82rem;color:var(--text-3)">' + sizeStr + ' utilisés — Dernière synchro : '
+        + '<div style="font-size:.82rem;color:var(--text-3)">' + sizeStr + ' utilisÃ©s â€” DerniÃ¨re synchro : '
         + (SIGPersistence.getMeta('lastSync') ? new Date(SIGPersistence.getMeta('lastSync')).toLocaleString('fr-FR') : 'Jamais')
         + '</div></div></div></div>';
     }
@@ -4654,10 +5106,10 @@ var SpatialModule = (function() {
 
   function getLayerInfo() {
     var info = [
-      { name: 'Réseau routier', varName: 'json_Rseauroutier_6', icon: 'fa-road', geomType: 'Ligne', key: 'routes', storageKey: 'routes' },
+      { name: 'RÃ©seau routier', varName: 'json_Rseauroutier_6', icon: 'fa-road', geomType: 'Ligne', key: 'routes', storageKey: 'routes' },
       { name: 'Emprises', varName: 'json_Emprise_5', icon: 'fa-vector-square', geomType: 'Polygone', key: 'emprises', storageKey: 'emprises' },
-      { name: 'Régions', varName: 'json_Rgion_2', icon: 'fa-map', geomType: 'Polygone', key: 'regions', storageKey: null },
-      { name: 'Préfectures', varName: 'json_Prfecture_3', icon: 'fa-map-marker-alt', geomType: 'Polygone', key: 'prefectures', storageKey: null },
+      { name: 'RÃ©gions', varName: 'json_Rgion_2', icon: 'fa-map', geomType: 'Polygone', key: 'regions', storageKey: null },
+      { name: 'PrÃ©fectures', varName: 'json_Prfecture_3', icon: 'fa-map-marker-alt', geomType: 'Polygone', key: 'prefectures', storageKey: null },
       { name: 'Cantons', varName: 'json_Canton_4', icon: 'fa-location-dot', geomType: 'Polygone', key: 'cantons', storageKey: null }
     ];
     info.forEach(function(l) {
@@ -4665,7 +5117,7 @@ var SpatialModule = (function() {
       l.count = (data && data.features) ? data.features.length : 0;
       l.status = l.count > 0 ? 'active' : 'inactive';
       l.statusLabel = l.count > 0 ? 'Active' : 'Vide';
-      /* Projection — déduite du CRS de la couche */
+      /* Projection â€” dÃ©duite du CRS de la couche */
       l.projection = 'EPSG:4326';
       if (data && data.crs && data.crs.properties && data.crs.properties.name) {
         var n = data.crs.properties.name;
@@ -4675,8 +5127,8 @@ var SpatialModule = (function() {
         else if (n.indexOf('32632') !== -1) l.projection = 'EPSG:32632';
         else if (n.indexOf('3857') !== -1) l.projection = 'EPSG:3857';
       }
-      /* Date mise à jour — depuis les propriétés lastModified des features, ou meta SIGPersistence */
-      l.lastModified = '—';
+      /* Date mise Ã  jour â€” depuis les propriÃ©tÃ©s lastModified des features, ou meta SIGPersistence */
+      l.lastModified = 'â€”';
       if (data && data.features) {
         var latest = null;
         data.features.forEach(function(f) {
@@ -4687,13 +5139,13 @@ var SpatialModule = (function() {
           try { l.lastModified = new Date(latest).toLocaleDateString('fr-FR'); } catch(e) {}
         }
       }
-      if (l.lastModified === '—' && l.storageKey && typeof SIGPersistence !== 'undefined') {
+      if (l.lastModified === 'â€”' && l.storageKey && typeof SIGPersistence !== 'undefined') {
         try {
           var ls = SIGPersistence.getMeta('lastSync_' + l.storageKey);
           if (ls) l.lastModified = new Date(ls).toLocaleDateString('fr-FR');
         } catch(e) {}
       }
-      /* Indicateur de santé — validité géométrique + doublons */
+      /* Indicateur de santÃ© â€” validitÃ© gÃ©omÃ©trique + doublons */
       l.health = computeLayerHealth(data, l.key);
     });
     /* PK depuis localStorage */
@@ -4701,7 +5153,7 @@ var SpatialModule = (function() {
       var pkData = SIGPersistence.loadLayer(SIGPersistence.LAYERS.PK);
       if (pkData && pkData.features && pkData.features.length > 0) {
         info.push({
-          name: 'Points kilométriques', varName: null, icon: 'fa-map-pin', geomType: 'Point', key: 'pk',
+          name: 'Points kilomÃ©triques', varName: null, icon: 'fa-map-pin', geomType: 'Point', key: 'pk',
           count: pkData.features.length, status: 'active', statusLabel: 'Active',
           projection: 'EPSG:4326',
           lastModified: (function() {
@@ -4710,7 +5162,7 @@ var SpatialModule = (function() {
               var lm = f.properties && (f.properties.lastModified || f.properties.createdAt);
               if (lm && (!latest || new Date(lm) > new Date(latest))) latest = lm;
             });
-            return latest ? new Date(latest).toLocaleDateString('fr-FR') : '—';
+            return latest ? new Date(latest).toLocaleDateString('fr-FR') : 'â€”';
           })(),
           health: computeLayerHealth(pkData, 'pk')
         });
@@ -4720,34 +5172,34 @@ var SpatialModule = (function() {
   }
 
   /**
-   * Calcule l'indicateur de santé d'une couche : { errors, warnings, details }
-   * - errors : géométries invalides (null, type inconnu, self-intersections)
-   * - warnings : doublons potentiels (même Name), features sans géométrie
+   * Calcule l'indicateur de santÃ© d'une couche : { errors, warnings, details }
+   * - errors : gÃ©omÃ©tries invalides (null, type inconnu, self-intersections)
+   * - warnings : doublons potentiels (mÃªme Name), features sans gÃ©omÃ©trie
    */
   function computeLayerHealth(data, layerKey) {
     var result = { errors: 0, warnings: 0, details: [] };
     if (!data || !data.features) return result;
     var seen = {};
     data.features.forEach(function(f, idx) {
-      /* Vérifier que la feature a une géométrie */
+      /* VÃ©rifier que la feature a une gÃ©omÃ©trie */
       if (!f.geometry) {
         result.warnings++;
         return;
       }
-      /* Vérifier le type de géométrie */
+      /* VÃ©rifier le type de gÃ©omÃ©trie */
       var validTypes = ['Point', 'MultiPoint', 'LineString', 'MultiLineString', 'Polygon', 'MultiPolygon', 'GeometryCollection'];
       if (validTypes.indexOf(f.geometry.type) === -1) {
         result.errors++;
-        result.details.push('Feature ' + idx + ' : type géométrique inconnu ' + f.geometry.type);
+        result.details.push('Feature ' + idx + ' : type gÃ©omÃ©trique inconnu ' + f.geometry.type);
         return;
       }
-      /* Vérifier les coordonnées */
+      /* VÃ©rifier les coordonnÃ©es */
       if (!f.geometry.coordinates && f.geometry.type !== 'GeometryCollection') {
         result.errors++;
-        result.details.push('Feature ' + idx + ' : coordonnées manquantes');
+        result.details.push('Feature ' + idx + ' : coordonnÃ©es manquantes');
         return;
       }
-      /* Si SIGSpatialCalculator est disponible, valider la géométrie */
+      /* Si SIGSpatialCalculator est disponible, valider la gÃ©omÃ©trie */
       if (typeof SIGSpatialCalculator !== 'undefined' && typeof SIGSpatialCalculator.validateGeometry === 'function') {
         try {
           var v = SIGSpatialCalculator.validateGeometry(f.geometry);
@@ -4760,7 +5212,7 @@ var SpatialModule = (function() {
           }
         } catch(e) {}
       }
-      /* Détecter doublons potentiels (même Name) */
+      /* DÃ©tecter doublons potentiels (mÃªme Name) */
       var name = f.properties && f.properties.Name;
       if (name) {
         if (seen[name]) result.warnings++;
@@ -4770,12 +5222,12 @@ var SpatialModule = (function() {
     return result;
   }
 
-  /** Rafraîchit l'affichage des couches. */
+  /** RafraÃ®chit l'affichage des couches. */
   function refreshLayers() {
     if (typeof AdminUI !== 'undefined') AdminUI.navigate('spatial');
   }
 
-  /** Affiche les informations détaillées d'une couche dans un modal. */
+  /** Affiche les informations dÃ©taillÃ©es d'une couche dans un modal. */
   function showLayerInfo(layerKey) {
     var layers = getLayerInfo();
     var l = null;
@@ -4787,34 +5239,34 @@ var SpatialModule = (function() {
       + '<button class="modal-admin-close" onclick="SpatialModule.closeModal(\'modal-layer-info\')"><i class="fas fa-times"></i></button></div>'
       + '<div class="modal-admin-body">'
       + '<div class="detail-grid">'
-      + '<div class="detail-item"><div class="detail-label">Type géométrique</div><div class="detail-value">' + l.geomType + '</div></div>'
-      + '<div class="detail-item"><div class="detail-label">Nombre d\'entités</div><div class="detail-value">' + l.count + '</div></div>'
+      + '<div class="detail-item"><div class="detail-label">Type gÃ©omÃ©trique</div><div class="detail-value">' + l.geomType + '</div></div>'
+      + '<div class="detail-item"><div class="detail-label">Nombre d\'entitÃ©s</div><div class="detail-value">' + l.count + '</div></div>'
       + '<div class="detail-item"><div class="detail-label">Projection</div><div class="detail-value" style="font-family:monospace">' + l.projection + '</div></div>'
-      + '<div class="detail-item"><div class="detail-label">Date de mise à jour</div><div class="detail-value">' + l.lastModified + '</div></div>'
-      + '<div class="detail-item"><div class="detail-label">État</div><div class="detail-value"><span class="status-badge ' + l.status + '">' + l.statusLabel + '</span></div></div>'
-      + '<div class="detail-item"><div class="detail-label">Santé géométrique</div><div class="detail-value">' + l.health.errors + ' erreur(s), ' + l.health.warnings + ' avertissement(s)</div></div>'
+      + '<div class="detail-item"><div class="detail-label">Date de mise Ã  jour</div><div class="detail-value">' + l.lastModified + '</div></div>'
+      + '<div class="detail-item"><div class="detail-label">Ã‰tat</div><div class="detail-value"><span class="status-badge ' + l.status + '">' + l.statusLabel + '</span></div></div>'
+      + '<div class="detail-item"><div class="detail-label">SantÃ© gÃ©omÃ©trique</div><div class="detail-value">' + l.health.errors + ' erreur(s), ' + l.health.warnings + ' avertissement(s)</div></div>'
       + '</div>';
     if (l.health.details.length > 0) {
       html += '<div style="margin-top:14px;padding:12px;background:var(--cream);border-radius:8px;font-size:.82rem;color:var(--text-3);max-height:160px;overflow-y:auto">'
-        + '<strong>Détails :</strong><ul style="margin:6px 0 0 18px;padding:0">';
+        + '<strong>DÃ©tails :</strong><ul style="margin:6px 0 0 18px;padding:0">';
       l.health.details.slice(0, 20).forEach(function(d) { html += '<li>' + esc(d) + '</li>'; });
       if (l.health.details.length > 20) html += '<li>... et ' + (l.health.details.length - 20) + ' autre(s)</li>';
       html += '</ul></div>';
     }
     html += '</div><div class="modal-admin-footer">'
       + '<button class="btn-sm ghost" onclick="SpatialModule.closeModal(\'modal-layer-info\')">Fermer</button>'
-      + '<button class="btn-sm primary" onclick="SpatialModule.closeModal(\'modal-layer-info\');SpatialModule.validateLayerGeometry(\'' + l.key + '\')"><i class="fas fa-clipboard-check"></i> Vérification géométrique</button>'
+      + '<button class="btn-sm primary" onclick="SpatialModule.closeModal(\'modal-layer-info\');SpatialModule.validateLayerGeometry(\'' + l.key + '\')"><i class="fas fa-clipboard-check"></i> VÃ©rification gÃ©omÃ©trique</button>'
       + '</div></div></div>';
     document.body.insertAdjacentHTML('beforeend', html);
   }
 
-  /** Lance une vérification géométrique complète et affiche le rapport. */
+  /** Lance une vÃ©rification gÃ©omÃ©trique complÃ¨te et affiche le rapport. */
   function validateLayerGeometry(layerKey) {
     var layers = getLayerInfo();
     var l = null;
     for (var i = 0; i < layers.length; i++) { if (layers[i].key === layerKey) { l = layers[i]; break; } }
     if (!l) return;
-    /* Recalculer la santé en temps réel */
+    /* Recalculer la santÃ© en temps rÃ©el */
     var data = l.varName ? window[l.varName] : (function() {
       if (typeof SIGPersistence !== 'undefined' && layerKey === 'pk') {
         return SIGPersistence.loadLayer(SIGPersistence.LAYERS.PK);
@@ -4824,19 +5276,19 @@ var SpatialModule = (function() {
     var health = computeLayerHealth(data, layerKey);
     var html = '<div class="modal-admin-overlay" id="modal-layer-validate" onclick="if(event.target.id===\'modal-layer-validate\')SpatialModule.closeModal(\'modal-layer-validate\')">'
       + '<div class="modal-admin" style="max-width:560px">'
-      + '<div class="modal-admin-header"><h2><i class="fas fa-clipboard-check" style="color:var(--gold);margin-right:8px"></i> Vérification géométrique — ' + l.name + '</h2>'
+      + '<div class="modal-admin-header"><h2><i class="fas fa-clipboard-check" style="color:var(--gold);margin-right:8px"></i> VÃ©rification gÃ©omÃ©trique â€” ' + l.name + '</h2>'
       + '<button class="modal-admin-close" onclick="SpatialModule.closeModal(\'modal-layer-validate\')"><i class="fas fa-times"></i></button></div>'
       + '<div class="modal-admin-body">'
       + '<div style="text-align:center;padding:20px 0">'
       + '<div style="font-size:2.5rem;font-weight:700;color:' + (health.errors === 0 ? 'var(--green)' : 'var(--red)') + '">' + health.errors + '</div>'
-      + '<div style="font-size:.85rem;color:var(--text-3)">erreur(s) géométrique(s)</div>'
+      + '<div style="font-size:.85rem;color:var(--text-3)">erreur(s) gÃ©omÃ©trique(s)</div>'
       + '<div style="font-size:1.5rem;font-weight:600;color:var(--gold);margin-top:8px">' + health.warnings + '</div>'
       + '<div style="font-size:.85rem;color:var(--text-3)">avertissement(s)</div>'
       + '</div>';
     if (health.details.length === 0) {
-      html += '<div style="padding:14px;background:var(--cream);border-radius:8px;text-align:center;color:var(--green)"><i class="fas fa-circle-check"></i> Aucun problème détecté sur les ' + l.count + ' entités.</div>';
+      html += '<div style="padding:14px;background:var(--cream);border-radius:8px;text-align:center;color:var(--green)"><i class="fas fa-circle-check"></i> Aucun problÃ¨me dÃ©tectÃ© sur les ' + l.count + ' entitÃ©s.</div>';
     } else {
-      html += '<div style="margin-top:14px;padding:12px;background:var(--cream);border-radius:8px;font-size:.82rem;color:var(--text-3);max-height:200px;overflow-y:auto"><strong>Détails :</strong><ul style="margin:6px 0 0 18px;padding:0">';
+      html += '<div style="margin-top:14px;padding:12px;background:var(--cream);border-radius:8px;font-size:.82rem;color:var(--text-3);max-height:200px;overflow-y:auto"><strong>DÃ©tails :</strong><ul style="margin:6px 0 0 18px;padding:0">';
       health.details.forEach(function(d) { html += '<li>' + esc(d) + '</li>'; });
       html += '</ul></div>';
     }
@@ -4859,14 +5311,7 @@ var SpatialModule = (function() {
     if (!data) { alert('Couche introuvable'); return; }
     var json = JSON.stringify(data, null, 2);
     var blob = new Blob([json], { type: 'application/geo+json' });
-    var url = URL.createObjectURL(blob);
-    var a = document.createElement('a');
-    a.href = url;
-    a.download = l.name.replace(/\s/g, '_') + '.geojson';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    downloadBlob(blob, l.name.replace(/\s/g, '_') + '.geojson');
   }
 
   /* ===================================================================
@@ -4876,7 +5321,7 @@ var SpatialModule = (function() {
   var _pendingImport = null; /* { fileName, features, errors, warnings } */
 
   function openImportDialog() {
-    var html = '<div class="modal-header"><h2><i class="fas fa-file-import"></i> Importer des données spatiales</h2>'
+    var html = '<div class="modal-header"><h2><i class="fas fa-file-import"></i> Importer des donnÃ©es spatiales</h2>'
       + '<button class="modal-close" onclick="SpatialModule.closeModal(\'spatial-import-modal\')"><i class="fas fa-times"></i></button></div>'
       + '<div class="modal-body">'
       + '<div style="border:2px dashed var(--cream-border);border-radius:16px;padding:40px;text-align:center;margin-bottom:20px;transition:all .3s;cursor:pointer" '
@@ -4886,7 +5331,7 @@ var SpatialModule = (function() {
       + 'ondrop="event.preventDefault();this.style.borderColor=\'var(--cream-border)\';this.style.background=\'transparent\';SpatialModule.handleFileDrop(event)">'
       + '<i class="fas fa-cloud-arrow-up" style="font-size:2.5rem;color:var(--gold);margin-bottom:12px"></i>'
       + '<p style="font-weight:600;margin-bottom:4px">Glissez un fichier ici ou cliquez pour parcourir</p>'
-      + '<p style="font-size:.82rem;color:var(--text-3)">Formats acceptés : .geojson, .json, .csv</p>'
+      + '<p style="font-size:.82rem;color:var(--text-3)">Formats acceptÃ©s : .geojson, .json, .csv</p>'
       + '<input type="file" id="import-file-input" accept=".geojson,.json,.csv" style="display:none" onchange="SpatialModule.handleFileSelect(event)">'
       + '</div>'
       + '<div id="import-preview-area"></div>'
@@ -4930,7 +5375,7 @@ var SpatialModule = (function() {
       };
       reader.readAsText(file);
     } else {
-      showImportError('Format non supporté : .' + ext + '. Formats acceptés : GeoJSON (.geojson, .json) et CSV (.csv)');
+      showImportError('Format non supportÃ© : .' + ext + '. Formats acceptÃ©s : GeoJSON (.geojson, .json) et CSV (.csv)');
     }
   }
 
@@ -4999,26 +5444,26 @@ var SpatialModule = (function() {
     if (!area) return;
 
     var h = '<div style="background:rgba(184,92,56,.08);border:1px solid rgba(184,92,56,.2);border-radius:12px;padding:16px;margin-bottom:16px">'
-      + '<h4 style="color:var(--gold-dark);margin-bottom:8px"><i class="fas fa-columns"></i> Colonnes de coordonnées non détectées automatiquement</h4>'
-      + '<p style="font-size:.82rem;color:var(--text-2);margin-bottom:12px">Sélectionnez manuellement les colonnes contenant la latitude (Y) et la longitude (X) :</p>'
+      + '<h4 style="color:var(--gold-dark);margin-bottom:8px"><i class="fas fa-columns"></i> Colonnes de coordonnÃ©es non dÃ©tectÃ©es automatiquement</h4>'
+      + '<p style="font-size:.82rem;color:var(--text-2);margin-bottom:12px">SÃ©lectionnez manuellement les colonnes contenant la latitude (Y) et la longitude (X) :</p>'
       + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'
       + '<div><label style="font-size:.82rem;font-weight:600;display:block;margin-bottom:4px">Latitude / Y / Northing</label>'
       + '<select id="csv-map-lat" style="width:100%;padding:8px 10px;border:1.5px solid var(--cream-border);border-radius:8px;font-family:Outfit,sans-serif;font-size:.85rem;background:var(--white);color:var(--text);outline:none">'
-      + '<option value="-1">— Choisir —</option>';
+      + '<option value="-1">â€” Choisir â€”</option>';
     headers.forEach(function(hdr, idx) {
       h += '<option value="' + idx + '">' + esc(hdr) + '</option>';
     });
     h += '</select></div>'
       + '<div><label style="font-size:.82rem;font-weight:600;display:block;margin-bottom:4px">Longitude / X / Easting</label>'
       + '<select id="csv-map-lon" style="width:100%;padding:8px 10px;border:1.5px solid var(--cream-border);border-radius:8px;font-family:Outfit,sans-serif;font-size:.85rem;background:var(--white);color:var(--text);outline:none">'
-      + '<option value="-1">— Choisir —</option>';
+      + '<option value="-1">â€” Choisir â€”</option>';
     headers.forEach(function(hdr, idx) {
       h += '<option value="' + idx + '">' + esc(hdr) + '</option>';
     });
     h += '</select></div></div>'
-      + '<div style="margin-top:12px"><label style="font-size:.82rem;font-weight:600;display:block;margin-bottom:4px">Système de coordonnées (CRS)</label>'
+      + '<div style="margin-top:12px"><label style="font-size:.82rem;font-weight:600;display:block;margin-bottom:4px">SystÃ¨me de coordonnÃ©es (CRS)</label>'
       + '<select id="csv-map-crs" style="width:100%;padding:8px 10px;border:1.5px solid var(--cream-border);border-radius:8px;font-family:Outfit,sans-serif;font-size:.85rem;background:var(--white);color:var(--text);outline:none">'
-      + '<option value="EPSG:4326">WGS 84 (lat/lon géographiques)</option>'
+      + '<option value="EPSG:4326">WGS 84 (lat/lon gÃ©ographiques)</option>'
       + '<option value="EPSG:32630">UTM Zone 30N</option>'
       + '<option value="EPSG:32631">UTM Zone 31N (Togo)</option>'
       + '<option value="EPSG:32632">UTM Zone 32N</option>'
@@ -5044,7 +5489,7 @@ var SpatialModule = (function() {
     var crs = document.getElementById('csv-map-crs').value;
 
     if (latIdx < 0 || lonIdx < 0 || latIdx === lonIdx) {
-      showImportError('Veuillez sélectionner deux colonnes différentes pour la latitude et la longitude.');
+      showImportError('Veuillez sÃ©lectionner deux colonnes diffÃ©rentes pour la latitude et la longitude.');
       return;
     }
 
@@ -5071,7 +5516,7 @@ var SpatialModule = (function() {
     var features = [];
 
     if (needReproject) {
-      warnings.push('Données en ' + (CRS_LABELS[srcCRS] || srcCRS) + ' — reprojection automatique vers WGS 84 (EPSG:4326).');
+      warnings.push('DonnÃ©es en ' + (CRS_LABELS[srcCRS] || srcCRS) + ' â€” reprojection automatique vers WGS 84 (EPSG:4326).');
     }
 
     for (var i = 1; i < lines.length; i++) {
@@ -5080,7 +5525,7 @@ var SpatialModule = (function() {
       var lonVal = parseFloat(vals[lonIdx]);
 
       if (isNaN(latVal) || isNaN(lonVal)) {
-        errors.push('Ligne ' + (i + 1) + ' : coordonnées invalides (' + vals[latIdx] + ', ' + vals[lonIdx] + ')');
+        errors.push('Ligne ' + (i + 1) + ' : coordonnÃ©es invalides (' + vals[latIdx] + ', ' + vals[lonIdx] + ')');
         continue;
       }
 
@@ -5095,15 +5540,15 @@ var SpatialModule = (function() {
         lat = latVal;
         /* Validate geographic ranges */
         if (lat < -90 || lat > 90 || lon < -180 || lon > 180) {
-          /* Possibly UTM data mis-detected as WGS84 — try UTM reproj */
+          /* Possibly UTM data mis-detected as WGS84 â€” try UTM reproj */
           if (isUTMCoord(lonVal, latVal)) {
             var reproj2 = reprojectToWGS84(lonVal, latVal, 'EPSG:32631');
             lon = reproj2[0];
             lat = reproj2[1];
-            warnings.push('Ligne ' + (i + 1) + ' : coordonnées hors plage géographique, reprojection UTM 31N appliquée.');
+            warnings.push('Ligne ' + (i + 1) + ' : coordonnÃ©es hors plage gÃ©ographique, reprojection UTM 31N appliquÃ©e.');
             srcCRS = 'EPSG:32631';
           } else {
-            errors.push('Ligne ' + (i + 1) + ' : coordonnées hors plage (' + vals[latIdx] + ', ' + vals[lonIdx] + ')');
+            errors.push('Ligne ' + (i + 1) + ' : coordonnÃ©es hors plage (' + vals[latIdx] + ', ' + vals[lonIdx] + ')');
             continue;
           }
         }
@@ -5180,14 +5625,14 @@ var SpatialModule = (function() {
     }
 
     var html = '<div style="background:var(--gold-pale);border:1px solid var(--gold);border-radius:12px;padding:16px;margin-bottom:20px">'
-      + '<h4 style="margin-bottom:10px;color:var(--gold-dark)"><i class="fas fa-eye"></i> Aperçu de l\'import</h4>'
+      + '<h4 style="margin-bottom:10px;color:var(--gold-dark)"><i class="fas fa-eye"></i> AperÃ§u de l\'import</h4>'
       + '<div class="grid-2" style="gap:8px">'
       + previewStat('Fichier', esc(fileName))
       + previewStat('Format', format.toUpperCase())
-      + previewStat('Entités', features.length + '')
-      + previewStat('Géométries', Object.keys(geomTypes).map(function(g) { return g + ' (' + geomTypes[g] + ')'; }).join(', ') || 'Aucune')
-      + previewStat('Projection détectée', crsDisplay)
-      + previewStat('Étendue', bbox.minX.toFixed(4) + ', ' + bbox.minY.toFixed(4) + ' → ' + bbox.maxX.toFixed(4) + ', ' + bbox.maxY.toFixed(4))
+      + previewStat('EntitÃ©s', features.length + '')
+      + previewStat('GÃ©omÃ©tries', Object.keys(geomTypes).map(function(g) { return g + ' (' + geomTypes[g] + ')'; }).join(', ') || 'Aucune')
+      + previewStat('Projection dÃ©tectÃ©e', crsDisplay)
+      + previewStat('Ã‰tendue', bbox.minX.toFixed(4) + ', ' + bbox.minY.toFixed(4) + ' â†’ ' + bbox.maxX.toFixed(4) + ', ' + bbox.maxY.toFixed(4))
       + '</div></div>';
 
     /* Errors */
@@ -5210,7 +5655,7 @@ var SpatialModule = (function() {
     /* Action buttons */
     html += '<div style="display:flex;gap:10px;justify-content:flex-end">'
       + '<button class="btn-sm ghost" onclick="SpatialModule.closeModal(\'spatial-import-modal\')"><i class="fas fa-times"></i> Annuler</button>'
-      + '<button class="btn-sm primary" onclick="SpatialModule.confirmImport()"><i class="fas fa-check"></i> Confirmer l\'import (' + features.length + ' entités)</button>'
+      + '<button class="btn-sm primary" onclick="SpatialModule.confirmImport()"><i class="fas fa-check"></i> Confirmer l\'import (' + features.length + ' entitÃ©s)</button>'
       + '</div>';
 
     var area = document.getElementById('import-preview-area');
@@ -5231,6 +5676,39 @@ var SpatialModule = (function() {
     }
   }
 
+  function normalizePKImportFeature(feature, idx, timestamp) {
+    var geom = feature.geometry || {};
+    var start = [0, 0];
+    var end = [0, 0];
+
+    if (geom.type === 'Point' && Array.isArray(geom.coordinates)) {
+      start = [parseFloat(geom.coordinates[0]) || 0, parseFloat(geom.coordinates[1]) || 0];
+      end = start.slice();
+    } else if (geom.type === 'LineString' && Array.isArray(geom.coordinates) && geom.coordinates.length > 0) {
+      start = [parseFloat(geom.coordinates[0][0]) || 0, parseFloat(geom.coordinates[0][1]) || 0];
+      end = [parseFloat(geom.coordinates[geom.coordinates.length - 1][0]) || 0, parseFloat(geom.coordinates[geom.coordinates.length - 1][1]) || 0];
+    }
+
+    var props = Object.assign({}, feature.properties || {});
+    return {
+      type: 'Feature',
+      id: feature.id || ('pk_import_' + Date.now() + '_' + idx),
+      geometry: { type: 'LineString', coordinates: [start, end] },
+      properties: Object.assign({}, props, {
+        numero: props.numero || props.Numero || props.Name || ('PK import ' + (idx + 1)),
+        route: props.route || props.Route || props.Name || 'Non associÃ©e',
+        PK_DEB_X: start[0],
+        PK_DEB_Y: start[1],
+        PK_FIN_X: end[0],
+        PK_FIN_Y: end[1],
+        source: 'import',
+        createdAt: timestamp,
+        lastModified: timestamp,
+        modifiedBy: 'Import spatial'
+      })
+    };
+  }
+
   function confirmImport() {
     if (!_pendingImport || !_pendingImport.features.length) return;
 
@@ -5238,23 +5716,35 @@ var SpatialModule = (function() {
     if (!destKey) return;
     var destination = destKey.value;
 
-    /* Import features into the target data store */
     var imported = 0;
     var now = new Date().toISOString();
+    var pkCollection = null;
 
     _pendingImport.features.forEach(function(f, idx) {
-      /* Enrich with metadata */
       if (!f.properties) f.properties = {};
       f.properties.importedAt = now;
       f.properties.importSource = _pendingImport.fileName;
       f.id = f.id || ('import_' + Date.now() + '_' + idx);
 
-      /* Add to the appropriate store */
-      if (destination === 'routes' && typeof json_Rseauroutier_6 !== 'undefined') {
+      if (destination === 'routes' && typeof SIGDataEngine !== 'undefined') {
+        try {
+          SIGDataEngine.addFeature({
+            geometry: f.geometry,
+            properties: f.properties
+          });
+          imported++;
+        } catch (err) {}
+      } else if (destination === 'routes' && typeof json_Rseauroutier_6 !== 'undefined') {
         json_Rseauroutier_6.features.push(f);
         imported++;
       } else if (destination === 'emprises' && typeof json_Emprise_5 !== 'undefined') {
         json_Emprise_5.features.push(f);
+        imported++;
+      } else if (destination === 'pk' && typeof SIGPersistence !== 'undefined') {
+        if (!pkCollection) {
+          pkCollection = SIGPersistence.loadLayer(SIGPersistence.LAYERS.PK) || { type: 'FeatureCollection', features: [] };
+        }
+        pkCollection.features.push(normalizePKImportFeature(f, idx, now));
         imported++;
       } else if (typeof SIGPersistence !== 'undefined') {
         var existing = SIGPersistence.loadLayer('layers.' + destination);
@@ -5264,6 +5754,11 @@ var SpatialModule = (function() {
         imported++;
       }
     });
+
+    if (pkCollection && typeof SIGPersistence !== 'undefined') {
+      SIGPersistence.saveLayer(SIGPersistence.LAYERS.PK, pkCollection);
+      window.json_PK = pkCollection;
+    }
 
     /* Refresh OL layer on map */
     if (destination === 'routes' && typeof lyr_Rseauroutier_6 !== 'undefined') {
@@ -5288,12 +5783,16 @@ var SpatialModule = (function() {
     if (destination === 'pk' && typeof SIGMapLayers !== 'undefined' && typeof SIGMapLayers.reloadPK === 'function') {
       SIGMapLayers.reloadPK();
     }
+    if (destination === 'routes' && typeof RoadSync !== 'undefined') {
+      RoadSync.propagate('created', { fullReload: true, featureId: null });
+    }
 
     /* Audit */
     if (typeof SIGAuditTrail !== 'undefined') {
       SIGAuditTrail.log(SIGAuditTrail.ACTIONS.IMPORT, {
-        details: 'Import de ' + imported + ' entités depuis ' + _pendingImport.fileName + ' vers ' + destination,
-        after: { format: _pendingImport.format, destination: destination, count: imported }
+        details: 'Import de ' + imported + ' entitÃ©s depuis ' + _pendingImport.fileName + ' vers ' + destination,
+        after: { format: _pendingImport.format, destination: destination, count: imported },
+        result: imported > 0 ? 'SUCCESS' : 'FAILURE'
       });
     }
 
@@ -5303,6 +5802,7 @@ var SpatialModule = (function() {
         source: 'import',
         fileName: _pendingImport.fileName,
         destination: destination,
+        layer: destination,
         count: imported
       });
       SIGEventBus.emit(SIGEventBus.EVENTS.DASHBOARD_REFRESH, {});
@@ -5314,6 +5814,9 @@ var SpatialModule = (function() {
     }
 
     closeModal('spatial-import-modal');
+    if (typeof NotificationCenter !== 'undefined') {
+      NotificationCenter.add('import', 'Import terminÃƒÂ©', imported + ' entitÃƒÂ©(s) importÃƒÂ©e(s) vers ' + destination);
+    }
     _pendingImport = null;
 
     /* Refresh the spatial page */
@@ -5325,22 +5828,22 @@ var SpatialModule = (function() {
    * =================================================================== */
 
   function openExportDialog() {
-    var html = '<div class="modal-header"><h2><i class="fas fa-file-export"></i> Exporter les données</h2>'
+    var html = '<div class="modal-header"><h2><i class="fas fa-file-export"></i> Exporter les donnÃ©es</h2>'
       + '<button class="modal-close" onclick="SpatialModule.closeModal(\'spatial-export-modal\')"><i class="fas fa-times"></i></button></div>'
       + '<div class="modal-body">';
 
     /* Layer selection */
-    html += '<div style="margin-bottom:20px"><label style="display:block;font-size:.85rem;font-weight:600;margin-bottom:8px">Couche à exporter</label>'
+    html += '<div style="margin-bottom:20px"><label style="display:block;font-size:.85rem;font-weight:600;margin-bottom:8px">Couche Ã  exporter</label>'
       + '<select id="export-layer-select" style="width:100%;padding:10px 14px;border:1.5px solid var(--cream-border);border-radius:10px;font-family:Outfit,sans-serif;font-size:.9rem;background:var(--white);color:var(--text);outline:none">'
-      + '<option value="Rseauroutier_6">Réseau routier</option>'
+      + '<option value="Rseauroutier_6">RÃ©seau routier</option>'
       + '<option value="Emprise_5">Emprises</option>'
-      + '<option value="Rgion_2">Régions</option>'
-      + '<option value="Prfecture_3">Préfectures</option>'
+      + '<option value="Rgion_2">RÃ©gions</option>'
+      + '<option value="Prfecture_3">PrÃ©fectures</option>'
       + '<option value="Canton_4">Cantons</option>';
 
     /* Add PK from persistence if available */
     if (typeof SIGPersistence !== 'undefined') {
-      if (SIGPersistence.loadLayer('layers.pk')) html += '<option value="pk_persistence">Points kilométriques</option>';
+      if (SIGPersistence.loadLayer('layers.pk')) html += '<option value="pk_persistence">Points kilomÃ©triques</option>';
     }
     html += '</select></div>';
 
@@ -5350,8 +5853,7 @@ var SpatialModule = (function() {
 
     html += exportFormatCard('geojson', 'fa-code', 'GeoJSON', 'Format standard SIG');
     html += exportFormatCard('csv', 'fa-table', 'CSV', 'Tableur');
-    html += exportFormatCard('shapefile', 'fa-map', 'Shapefile', 'Archive .zip');
-    html += exportFormatCard('pdf', 'fa-file-pdf', 'PDF', 'Fiche récapitulative');
+    html += exportFormatCard('pdf', 'fa-file-pdf', 'PDF', 'Fiche rÃ©capitulative');
     html += exportFormatCard('excel', 'fa-file-excel', 'Excel', 'Classeur .xlsx');
 
     html += '</div></div>';
@@ -5372,7 +5874,7 @@ var SpatialModule = (function() {
     var val = select.value;
 
     if (val === 'pk_persistence' && typeof SIGPersistence !== 'undefined') {
-      return { data: SIGPersistence.loadLayer('layers.pk'), name: 'points_kilometriques' };
+      return { data: SIGPersistence.loadLayer(SIGPersistence.LAYERS.PK), name: 'points_kilometriques' };
     }
     var varMap = {
       'Rseauroutier_6': { varName: 'json_Rseauroutier_6', name: 'reseau_routier' },
@@ -5389,14 +5891,13 @@ var SpatialModule = (function() {
   function executeExport(format) {
     var exportInfo = getExportData();
     if (!exportInfo || !exportInfo.data) {
-      alert('Aucune donnée à exporter pour cette couche.');
+      alert('Aucune donnÃ©e Ã  exporter pour cette couche.');
       return;
     }
 
     switch (format) {
       case 'geojson': exportGeoJSON(exportInfo); break;
       case 'csv': exportCSV(exportInfo); break;
-      case 'shapefile': exportShapefile(exportInfo); break;
       case 'pdf': exportPDF(exportInfo); break;
       case 'excel': exportExcel(exportInfo); break;
     }
@@ -5404,21 +5905,27 @@ var SpatialModule = (function() {
     /* Audit */
     if (typeof SIGAuditTrail !== 'undefined') {
       SIGAuditTrail.log(SIGAuditTrail.ACTIONS.EXPORT, {
-        details: 'Export ' + format.toUpperCase() + ' — ' + exportInfo.name + ' (' + (exportInfo.data.features || []).length + ' entités)',
+        details: 'Export ' + format.toUpperCase() + ' â€” ' + exportInfo.name + ' (' + (exportInfo.data.features || []).length + ' entitÃ©s)',
         after: { format: format, layer: exportInfo.name }
       });
     }
   }
 
   function downloadBlob(blob, filename) {
+    if (typeof GeoROADDownload !== 'undefined' && typeof GeoROADDownload.downloadBlob === 'function') {
+      GeoROADDownload.downloadBlob(blob, filename);
+      return;
+    }
     var url = URL.createObjectURL(blob);
     var a = document.createElement('a');
     a.href = url;
     a.download = filename;
-    document.body.appendChild(a);
+    (document.body || document.documentElement).appendChild(a);
     a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    setTimeout(function() {
+      if (a.parentNode) a.parentNode.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 400);
   }
 
   function exportGeoJSON(info) {
@@ -5426,12 +5933,12 @@ var SpatialModule = (function() {
     var blob = new Blob([json], { type: 'application/geo+json' });
     downloadBlob(blob, info.name + '.geojson');
     closeModal('spatial-export-modal');
-    if (typeof NotificationCenter !== 'undefined') NotificationCenter.add('export', 'Données exportées en GeoJSON', info.name + ' (' + (info.data.features || []).length + ' entités)');
+    if (typeof NotificationCenter !== 'undefined') NotificationCenter.add('export', 'DonnÃ©es exportÃ©es en GeoJSON', info.name + ' (' + (info.data.features || []).length + ' entitÃ©s)');
   }
 
   function exportCSV(info) {
     var features = info.data.features || [];
-    if (features.length === 0) { alert('Aucune donnée à exporter.'); return; }
+    if (features.length === 0) { alert('Aucune donnÃ©e Ã  exporter.'); return; }
 
     /* Collect all property keys */
     var allKeys = [];
@@ -5464,7 +5971,7 @@ var SpatialModule = (function() {
     var blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
     downloadBlob(blob, info.name + '.csv');
     closeModal('spatial-export-modal');
-    if (typeof NotificationCenter !== 'undefined') NotificationCenter.add('export', 'Données exportées en CSV', info.name + ' (' + features.length + ' entités)');
+    if (typeof NotificationCenter !== 'undefined') NotificationCenter.add('export', 'DonnÃ©es exportÃ©es en CSV', info.name + ' (' + features.length + ' entitÃ©s)');
   }
 
   function geometryToWKT(geom) {
@@ -5490,17 +5997,17 @@ var SpatialModule = (function() {
         shp.writeFile(geojson).then(function(blob) {
           downloadBlob(blob, info.name + '.zip');
           closeModal('spatial-export-modal');
-          if (typeof NotificationCenter !== 'undefined') NotificationCenter.add('export', 'Données exportées en Shapefile', info.name + '.zip');
+          if (typeof NotificationCenter !== 'undefined') NotificationCenter.add('export', 'DonnÃ©es exportÃ©es en Shapefile', info.name + '.zip');
         }).catch(function(err) {
-          alert('Erreur lors de la génération du Shapefile : ' + (err.message || err));
+          alert('Erreur lors de la gÃ©nÃ©ration du Shapefile : ' + (err.message || err));
         });
       } catch (e) {
         /* Fallback: export as GeoJSON and notify */
-        alert('Export Shapefile non disponible. Un fichier GeoJSON sera exporté à la place.');
+        alert('Export Shapefile non disponible. Un fichier GeoJSON sera exportÃ© Ã  la place.');
         exportGeoJSON(info);
       }
     } else {
-      alert('La bibliothèque shp.js n\'est pas chargée. Export en GeoJSON à la place.');
+      alert('La bibliothÃ¨que shp.js n\'est pas chargÃ©e. Export en GeoJSON Ã  la place.');
       exportGeoJSON(info);
     }
   }
@@ -5513,10 +6020,10 @@ var SpatialModule = (function() {
 
         /* Header */
         doc.setFontSize(18);
-        doc.text('GeoROAD TOGO — Export de données', 14, 20);
+        doc.text('GeoROAD TOGO â€” Export de donnÃ©es', 14, 20);
         doc.setFontSize(10);
         doc.setTextColor(100);
-        doc.text('Couche : ' + info.name + ' | ' + features.length + ' entités | ' + new Date().toLocaleString('fr-FR'), 14, 28);
+        doc.text('Couche : ' + info.name + ' | ' + features.length + ' entitÃ©s | ' + new Date().toLocaleString('fr-FR'), 14, 28);
         doc.setTextColor(0);
 
         /* Collect property keys */
@@ -5532,7 +6039,7 @@ var SpatialModule = (function() {
         if (typeof doc.autoTable !== 'undefined') {
           var body = features.slice(0, 100).map(function(f) {
             return cols.map(function(k) {
-              var v = (f.properties && f.properties[k]) || '—';
+              var v = (f.properties && f.properties[k]) || 'â€”';
               return String(v).substring(0, 40);
             });
           });
@@ -5554,7 +6061,7 @@ var SpatialModule = (function() {
           features.slice(0, 50).forEach(function(f) {
             if (y > 190) { doc.addPage(); y = 20; }
             cols.forEach(function(k, i) {
-              var v = String((f.properties && f.properties[k]) || '—').substring(0, 15);
+              var v = String((f.properties && f.properties[k]) || 'â€”').substring(0, 15);
               doc.text(v, 14 + i * 22, y);
             });
             y += 5;
@@ -5567,17 +6074,17 @@ var SpatialModule = (function() {
           doc.setPage(p);
           doc.setFontSize(7);
           doc.setTextColor(150);
-          doc.text('GeoROAD TOGO — Ministère des Travaux Publics — Page ' + p + '/' + pageCount, 14, 200);
+          doc.text('GeoROAD TOGO â€” MinistÃ¨re des Travaux Publics â€” Page ' + p + '/' + pageCount, 14, 200);
         }
 
         doc.save(info.name + '.pdf');
         closeModal('spatial-export-modal');
-        if (typeof NotificationCenter !== 'undefined') NotificationCenter.add('export', 'Données exportées en PDF', info.name + ' (' + features.length + ' entités)');
+        if (typeof NotificationCenter !== 'undefined') NotificationCenter.add('export', 'DonnÃ©es exportÃ©es en PDF', info.name + ' (' + features.length + ' entitÃ©s)');
       } catch (e) {
-        alert('Erreur lors de la génération du PDF : ' + e.message);
+        alert('Erreur lors de la gÃ©nÃ©ration du PDF : ' + e.message);
       }
     } else {
-      alert('La bibliothèque jsPDF n\'est pas chargée.');
+      alert('La bibliothÃ¨que jsPDF n\'est pas chargÃ©e.');
     }
   }
 
@@ -5585,7 +6092,7 @@ var SpatialModule = (function() {
     if (typeof XLSX !== 'undefined') {
       try {
         var features = info.data.features || [];
-        if (features.length === 0) { alert('Aucune donnée à exporter.'); return; }
+        if (features.length === 0) { alert('Aucune donnÃ©e Ã  exporter.'); return; }
 
         /* Build worksheet data */
         var allKeys = [];
@@ -5610,12 +6117,12 @@ var SpatialModule = (function() {
         XLSX.utils.book_append_sheet(wb, ws, info.name.substring(0, 31));
         XLSX.writeFile(wb, info.name + '.xlsx');
         closeModal('spatial-export-modal');
-        if (typeof NotificationCenter !== 'undefined') NotificationCenter.add('export', 'Données exportées en Excel', info.name + ' (' + features.length + ' entités)');
+        if (typeof NotificationCenter !== 'undefined') NotificationCenter.add('export', 'DonnÃ©es exportÃ©es en Excel', info.name + ' (' + features.length + ' entitÃ©s)');
       } catch (e) {
-        alert('Erreur lors de la génération Excel : ' + e.message);
+        alert('Erreur lors de la gÃ©nÃ©ration Excel : ' + e.message);
       }
     } else {
-      alert('La bibliothèque XLSX n\'est pas chargée.');
+      alert('La bibliothÃ¨que XLSX n\'est pas chargÃ©e.');
     }
   }
 
@@ -5678,3 +6185,6 @@ var SpatialModule = (function() {
     exportLayer: exportLayer
   };
 })();
+
+/* ==== END admin-spatial.js ==== */
+
